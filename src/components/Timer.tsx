@@ -311,7 +311,7 @@ export const Timer: React.FC<TimerProps> = ({
 
       {/* Cute Bunny Mascot - Always White & Pink! */}
       {settings.showBunnyMascot && (
-        <div className="mb-4">
+        <div className="mb-2 sm:mb-3">
           <BunnyMascot mode={mode} isRunning={isRunning} theme={theme} />
         </div>
       )}

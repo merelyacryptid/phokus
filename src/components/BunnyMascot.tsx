@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import type { TimerMode, ThemeMode } from '../types';
 
 interface BunnyMascotProps {
@@ -8,196 +8,95 @@ interface BunnyMascotProps {
   onDismiss?: () => void;
 }
 
+const MOTIVATION_QUOTES = [
+  "can you lock the fuck in",
+  "you got this",
+  "go back to studying"
+];
+
 export const BunnyMascot: React.FC<BunnyMascotProps> = ({
-  mode,
   isRunning,
   theme
 }) => {
   const isDark = theme === 'dark-mesh';
+  const [quoteIndex, setQuoteIndex] = useState(0);
+  const [isBubbleVisible, setIsBubbleVisible] = useState(false);
+  const [isTapped, setIsTapped] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const getStatusText = () => {
-    if (mode === 'focus') {
-      return isRunning ? 'Quietly focusing with you' : 'Ready when you are';
+  // Click on bunny: alternates quote, triggers smooth speech bubble, disappears after 5 seconds
+  const handleClick = () => {
+    // If already showing, advance to the next quote; if not showing, show current quote
+    if (isBubbleVisible) {
+      setQuoteIndex((prev) => (prev + 1) % MOTIVATION_QUOTES.length);
     }
-    if (mode === 'shortBreak') {
-      return isRunning ? 'Take a slow sip of water' : 'Ready for a short rest';
+
+    setIsBubbleVisible(true);
+    setIsTapped(true);
+    setTimeout(() => setIsTapped(false), 200);
+
+    // Reset and start 5-second disappearance timer
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
     }
-    return isRunning ? 'Deep breath, long pause' : 'Time for a gentle recharge';
+    timerRef.current = setTimeout(() => {
+      setIsBubbleVisible(false);
+      // Advance quote so next time clicked it's the next one
+      setQuoteIndex((prev) => (prev + 1) % MOTIVATION_QUOTES.length);
+    }, 5000);
   };
 
+  // Clean up timer on unmount
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
+    };
+  }, []);
+
   return (
-    <div className="flex flex-col items-center select-none pointer-events-auto transition-all duration-300">
-      {/* Speech bubble */}
+    <div className="relative flex flex-col items-center select-none z-20">
+      {/* Smooth Animated White Speech Bubble */}
       <div
-        className={`mb-2 px-3 py-1 rounded-full text-xs font-medium tracking-wide shadow-sm transition-all duration-300 ${
-          isDark
-            ? 'bg-[#15141b]/90 text-pink-200 border border-pink-500/35 shadow-pink-950/40'
-            : 'bg-white/90 text-pink-800 border border-pink-200/60 shadow-pink-100'
+        className={`absolute bottom-full mb-3 left-1/2 -translate-x-1/2 whitespace-nowrap transition-all duration-300 ease-out pointer-events-none z-30 ${
+          isBubbleVisible
+            ? 'opacity-100 scale-100 translate-y-0'
+            : 'opacity-0 scale-90 translate-y-2'
         }`}
       >
-        <span className="inline-block w-1.5 h-1.5 rounded-full mr-1.5 bg-pink-400 animate-pulse" />
-        {getStatusText()}
+        <div className="relative bg-white text-neutral-800 text-xs sm:text-sm font-semibold px-4 py-2 rounded-2xl shadow-[0_8px_24px_rgba(0,0,0,0.18)] border border-pink-100/90 tracking-wide flex items-center gap-1.5">
+          <span className="w-1.5 h-1.5 rounded-full bg-pink-500 animate-pulse" />
+          <span>{MOTIVATION_QUOTES[quoteIndex]}</span>
+
+          {/* Speech bubble tail pointer pointing down to bunny */}
+          <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-white rotate-45 border-r border-b border-pink-100/90" />
+        </div>
       </div>
 
-      {/* Bunny Vector Illustration - ALWAYS pure White & Pink as requested! */}
-      <div className={`relative w-20 h-20 transition-transform duration-700 ${isRunning ? 'animate-float' : ''}`}>
-        <svg
-          viewBox="0 0 100 100"
-          className="w-full h-full drop-shadow-md"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          {/* Soft ambient pink glow circle behind bunny */}
-          <circle
-            cx="50"
-            cy="55"
-            r="38"
-            className={isDark ? "fill-pink-500/20" : "fill-pink-200/40"}
-          />
+      {/* Miffy Bunny in Pink Dress (Replaced as requested) */}
+      <div
+        onClick={handleClick}
+        title="Click me!"
+        className={`relative cursor-pointer transition-transform duration-200 group ${
+          isTapped ? 'scale-90' : 'hover:scale-105 active:scale-95'
+        } ${isRunning ? 'animate-float' : ''}`}
+      >
+        {/* Soft ambient aura glow behind Miffy */}
+        <div
+          className={`absolute inset-0 rounded-full blur-xl transition-all duration-500 -z-10 ${
+            isDark
+              ? 'bg-pink-500/25 group-hover:bg-pink-500/40'
+              : 'bg-pink-300/40 group-hover:bg-pink-300/60'
+          }`}
+        />
 
-          {/* Left Ear - White with Pink outline */}
-          <path
-            d="M36 45 C30 24 32 4 41 3 C49 2 47 24 43 45"
-            className="fill-white stroke-pink-400"
-            strokeWidth="3.5"
-            strokeLinecap="round"
-          />
-          {/* Left Inner Ear - Pastel Pink */}
-          <path
-            d="M37 36 C34 26 35 12 40 10 C44 9 43 24 41 36"
-            className="fill-pink-300"
-          />
-
-          {/* Right Ear - White with Pink outline */}
-          <path
-            d="M64 45 C70 24 68 4 59 3 C51 2 53 24 57 45"
-            className="fill-white stroke-pink-400"
-            strokeWidth="3.5"
-            strokeLinecap="round"
-          />
-          {/* Right Inner Ear - Pastel Pink */}
-          <path
-            d="M63 36 C66 26 65 12 60 10 C56 9 57 24 59 36"
-            className="fill-pink-300"
-          />
-
-          {/* Body - Pure White */}
-          <ellipse
-            cx="50"
-            cy="70"
-            rx="28"
-            ry="22"
-            className="fill-white stroke-pink-400"
-            strokeWidth="3.5"
-          />
-
-          {/* Head - Pure White */}
-          <circle
-            cx="50"
-            cy="52"
-            r="22"
-            className="fill-white stroke-pink-400"
-            strokeWidth="3.5"
-          />
-
-          {/* Cheeks - Sweet Rosy Pink */}
-          <ellipse
-            cx="37"
-            cy="56"
-            rx="3.2"
-            ry="2"
-            className="fill-pink-400/80"
-          />
-          <ellipse
-            cx="63"
-            cy="56"
-            rx="3.2"
-            ry="2"
-            className="fill-pink-400/80"
-          />
-
-          {/* Eyes: calm closed curved eyes when focusing, gentle open eyes when resting */}
-          {mode === 'focus' ? (
-            <>
-              {/* Quiet focusing eyes */}
-              <path
-                d="M40 50 Q43 53 46 50"
-                stroke="#831433"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                fill="none"
-              />
-              <path
-                d="M54 50 Q57 53 60 50"
-                stroke="#831433"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                fill="none"
-              />
-            </>
-          ) : (
-            <>
-              {/* Gentle open eyes */}
-              <circle cx="43" cy="49" r="2.2" fill="#831433" />
-              <circle cx="57" cy="49" r="2.2" fill="#831433" />
-              <circle cx="44" cy="48" r="0.8" fill="#ffffff" />
-              <circle cx="58" cy="48" r="0.8" fill="#ffffff" />
-            </>
-          )}
-
-          {/* Nose and Mouth - Pink */}
-          <polygon
-            points="48.5,54 51.5,54 50,56"
-            fill="#f43f5e"
-          />
-          <path
-            d="M47 57.5 Q50 59.5 50 56 Q50 59.5 53 57.5"
-            stroke="#9f1239"
-            strokeWidth="1.8"
-            strokeLinecap="round"
-            fill="none"
-          />
-
-          {/* Cute Tiny Paws - White */}
-          <ellipse
-            cx="42"
-            cy="70"
-            rx="4.5"
-            ry="3.5"
-            className="fill-white stroke-pink-400"
-            strokeWidth="2"
-          />
-          <ellipse
-            cx="58"
-            cy="70"
-            rx="4.5"
-            ry="3.5"
-            className="fill-white stroke-pink-400"
-            strokeWidth="2"
-          />
-
-          {/* Mode specific accessory */}
-          {mode === 'focus' ? (
-            /* Minimalist Pink Headband / Headphone band */
-            <path
-              d="M32 46 C32 30 68 30 68 46"
-              stroke="#fb7185"
-              strokeWidth="2.2"
-              strokeDasharray="2 1"
-              strokeLinecap="round"
-              fill="none"
-            />
-          ) : (
-            /* Tea cup during break */
-            <g transform="translate(46, 64) scale(0.65)">
-              <rect x="0" y="3" width="12" height="9" rx="2" fill="#ffe4ea" stroke="#fb7185" strokeWidth="1.5" />
-              <path d="M12 5 Q15 7.5 12 10" stroke="#fb7185" strokeWidth="1.5" fill="none" />
-              {/* Steam */}
-              <path d="M4 1 Q6 -1 5 -3" stroke="#f472b6" strokeWidth="1" strokeLinecap="round" fill="none" />
-              <path d="M8 1 Q10 -1 9 -3" stroke="#f472b6" strokeWidth="1" strokeLinecap="round" fill="none" />
-            </g>
-          )}
-        </svg>
+        <img
+          src="/miffy.png"
+          alt="Phokus Bunny"
+          className="w-20 sm:w-24 h-auto drop-shadow-md select-none pointer-events-none object-contain"
+          draggable={false}
+        />
       </div>
     </div>
   );
