@@ -15,13 +15,11 @@ const MOTIVATION_QUOTES = [
 ];
 
 export const BunnyMascot: React.FC<BunnyMascotProps> = ({
-  isRunning,
   theme
 }) => {
   const isDark = theme === 'dark-mesh';
   const [quoteIndex, setQuoteIndex] = useState(0);
   const [isBubbleVisible, setIsBubbleVisible] = useState(false);
-  const [isTapped, setIsTapped] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Click on bunny: alternates quote, triggers smooth speech bubble, disappears after 5 seconds
@@ -32,8 +30,6 @@ export const BunnyMascot: React.FC<BunnyMascotProps> = ({
     }
 
     setIsBubbleVisible(true);
-    setIsTapped(true);
-    setTimeout(() => setIsTapped(false), 200);
 
     // Reset and start 5-second disappearance timer
     if (timerRef.current) {
@@ -74,20 +70,18 @@ export const BunnyMascot: React.FC<BunnyMascotProps> = ({
         </div>
       </div>
 
-      {/* Miffy Bunny in Pink Dress (Replaced as requested) */}
+      {/* Miffy Bunny in Pink Dress - Completely still, no hover/float */}
       <div
         onClick={handleClick}
         title="Click me!"
-        className={`relative cursor-pointer transition-transform duration-200 group ${
-          isTapped ? 'scale-90' : 'hover:scale-105 active:scale-95'
-        } ${isRunning ? 'animate-float' : ''}`}
+        className="relative cursor-pointer select-none"
       >
         {/* Soft ambient aura glow behind Miffy */}
         <div
-          className={`absolute inset-0 rounded-full blur-xl transition-all duration-500 -z-10 ${
+          className={`absolute inset-0 rounded-full blur-xl -z-10 ${
             isDark
-              ? 'bg-pink-500/25 group-hover:bg-pink-500/40'
-              : 'bg-pink-300/40 group-hover:bg-pink-300/60'
+              ? 'bg-pink-500/20'
+              : 'bg-pink-300/35'
           }`}
         />
 
