@@ -52,3 +52,22 @@ export interface UserProfile {
   stats: UserStats;
 }
 
+export interface DocumentPictureInPictureOptions {
+  width?: number;
+  height?: number;
+  disallowReturnToOpener?: boolean;
+}
+
+export interface DocumentPictureInPicture {
+  requestWindow(options?: DocumentPictureInPictureOptions): Promise<Window>;
+  window: Window | null;
+  onenter: ((this: DocumentPictureInPicture, ev: Event) => unknown) | null;
+}
+
+declare global {
+  interface Window {
+    documentPictureInPicture?: DocumentPictureInPicture;
+  }
+}
+
+

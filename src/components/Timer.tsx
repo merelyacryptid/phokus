@@ -1,4 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import type { TimerMode, ThemeMode, TimerSettings, Task } from '../types';
 import { 
   Play, 
@@ -12,6 +13,7 @@ import {
   Plus
 } from 'lucide-react';
 import { BunnyMascot } from './BunnyMascot';
+import { PipWidget } from './PipWidget';
 import confetti from 'canvas-confetti';
 
 interface TimerProps {
@@ -52,7 +54,8 @@ export const Timer: React.FC<TimerProps> = ({
   const [editText, setEditText] = useState('');
   const taskInputRef = useRef<HTMLInputElement>(null);
 
-  // Canvas for native Picture-in-Picture
+  // Document Picture-in-Picture Window & Video fallback
+  const [pipDocWindow, setPipDocWindow] = useState<Window | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPiPActive, setIsPiPActive] = useState(false);
@@ -76,59 +79,146 @@ export const Timer: React.FC<TimerProps> = ({
 
     // Draw PiP frame
     const width = 360;
-    const height = 200;
+    const height = 210;
     canvas.width = width;
     canvas.height = height;
 
     // Background
-    ctx.fillStyle = isDark ? '#08080a' : '#fff0f4';
+    ctx.fillStyle = isDark ? '#08080a' : '#fff5ea';
     ctx.fillRect(0, 0, width, height);
 
     // Subtle border
-    ctx.strokeStyle = isDark ? '#f43f5e' : '#fbcfe8';
+    ctx.strokeStyle = isDark ? '#f43f5e' : '#fb7185';
     ctx.lineWidth = 4;
     ctx.strokeRect(2, 2, width - 4, height - 4);
 
     // Mode label
     ctx.fillStyle = isDark ? '#fb7185' : '#e11d48';
-    ctx.font = '600 16px "Plus Jakarta Sans", sans-serif';
+    ctx.font = '600 15px "Plus Jakarta Sans", sans-serif';
     ctx.textAlign = 'center';
     const modeLabel = mode === 'focus' ? 'FOCUS' : mode === 'shortBreak' ? 'SHORT BREAK' : 'LONG BREAK';
-    ctx.fillText(modeLabel, width / 2, 45);
+    ctx.fillText(modeLabel, width / 2, 38);
 
     // Digits
     ctx.fillStyle = isDark ? '#ffffff' : '#831433';
-    ctx.font = '700 68px "Plus Jakarta Sans", sans-serif';
-    ctx.fillText(formattedTime, width / 2, 125);
+    ctx.font = '800 64px "Plus Jakarta Sans", sans-serif';
+    ctx.fillText(formattedTime, width / 2, 108);
 
     // Active task or quote
     ctx.fillStyle = isDark ? '#fda4af' : '#9f1239';
-    ctx.font = '500 14px "Plus Jakarta Sans", sans-serif';
+    ctx.font = '600 13px "Plus Jakarta Sans", sans-serif';
     const subText = activeTask ? activeTask.title : (isRunning ? 'Stay in flow...' : 'Ready to begin');
-    ctx.fillText(subText.slice(0, 35), width / 2, 165);
+    ctx.fillText(subText.slice(0, 32), width / 2, 138);
+
+    // Pause / Resume Action Pill on canvas
+    ctx.fillStyle = '#f43f5e';
+    ctx.beginPath();
+    ctx.roundRect(width / 2 - 65, height - 44, 130, 28, 14);
+    ctx.fill();
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '700 13px "Plus Jakarta Sans", sans-serif';
+    ctx.fillText(isRunning ? '❚❚ PAUSE' : '▶ RESUME', width / 2, height - 25);
   }, [timeLeft, mode, isDark, formattedTime, activeTask, isRunning]);
 
-  // Picture in Picture toggle
+  // MediaSession integration for Video PiP controls
+  useEffect(() => {
+    if ('mediaSession' in navigator) {
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: `${formattedTime} - ${mode === 'focus' ? 'Focus' : 'Break'}`,
+        artist: activeTask?.title || 'Phokus Timer',
+        album: isRunning ? 'Running' : 'Paused',
+      });
+
+      navigator.mediaSession.setActionHandler('play', () => {
+        onTogglePlay();
+      });
+      navigator.mediaSession.setActionHandler('pause', () => {
+        onTogglePlay();
+      });
+      navigator.mediaSession.setActionHandler('nexttrack', () => {
+        onSkip();
+      });
+    }
+  }, [formattedTime, mode, activeTask, isRunning, onTogglePlay, onSkip]);
+
+  // Picture in Picture toggle: supports both Document PiP and Video PiP
   const togglePictureInPicture = async () => {
+    // If Document PiP is open, close it
+    if (pipDocWindow) {
+      pipDocWindow.close();
+      setPipDocWindow(null);
+      setIsPiPActive(false);
+      return;
+    }
+
+    // If Video PiP is open, close it
+    if (document.pictureInPictureElement) {
+      await document.exitPictureInPicture().catch(() => {});
+      setIsPiPActive(false);
+      return;
+    }
+
+    // 1. Try Document Picture-in-Picture (Chrome, Edge, Chromium)
+    if ('documentPictureInPicture' in window && window.documentPictureInPicture) {
+      try {
+        const pipWindow = await window.documentPictureInPicture.requestWindow({
+          width: 360,
+          height: 230,
+        });
+
+        // Copy styles to PiP window
+        [...document.styleSheets].forEach((styleSheet) => {
+          try {
+            const cssRules = [...styleSheet.cssRules].map((rule) => rule.cssText).join('');
+            const style = pipWindow.document.createElement('style');
+            style.textContent = cssRules;
+            pipWindow.document.head.appendChild(style);
+          } catch {
+            const link = pipWindow.document.createElement('link');
+            if (styleSheet.href) {
+              link.rel = 'stylesheet';
+              link.type = styleSheet.type;
+              link.media = styleSheet.media.toString();
+              link.href = styleSheet.href;
+              pipWindow.document.head.appendChild(link);
+            }
+          }
+        });
+
+        pipWindow.document.title = 'Phokus — Mini Timer';
+        pipWindow.document.body.style.margin = '0';
+        pipWindow.document.body.style.padding = '0';
+        pipWindow.document.body.style.overflow = 'hidden';
+
+        pipWindow.addEventListener('pagehide', () => {
+          setPipDocWindow(null);
+          setIsPiPActive(false);
+        });
+
+        setPipDocWindow(pipWindow);
+        setIsPiPActive(true);
+        return;
+      } catch (err) {
+        console.warn('Document PiP request failed, falling back to Video PiP:', err);
+      }
+    }
+
+    // 2. Video Picture-in-Picture fallback
     try {
       const video = videoRef.current;
       const canvas = canvasRef.current;
       if (!video || !canvas) return;
 
-      if (document.pictureInPictureElement) {
-        await document.exitPictureInPicture();
-        setIsPiPActive(false);
-      } else {
-        if (!video.srcObject) {
-          const stream = canvas.captureStream(30);
-          video.srcObject = stream;
-        }
-        await video.play();
-        await video.requestPictureInPicture();
-        setIsPiPActive(true);
+      if (!video.srcObject) {
+        const stream = canvas.captureStream(30);
+        video.srcObject = stream;
       }
+      await video.play();
+      await video.requestPictureInPicture();
+      setIsPiPActive(true);
     } catch (err) {
-      console.warn('PiP error:', err);
+      console.warn('Video PiP error:', err);
     }
   };
 
@@ -140,6 +230,15 @@ export const Timer: React.FC<TimerProps> = ({
       return () => video.removeEventListener('leavepictureinpicture', handleLeavePiP);
     }
   }, []);
+
+  // Close PiP window when component unmounts
+  useEffect(() => {
+    return () => {
+      if (pipDocWindow) {
+        pipDocWindow.close();
+      }
+    };
+  }, [pipDocWindow]);
 
   // Save inline task edit on main page
   const handleSaveEdit = () => {
@@ -181,9 +280,34 @@ export const Timer: React.FC<TimerProps> = ({
 
   return (
     <div className="flex flex-col items-center justify-center my-auto select-none z-10 transition-all duration-300">
-      {/* Hidden elements for PiP */}
+      {/* Hidden elements for Video PiP fallback */}
       <canvas ref={canvasRef} className="hidden" />
-      <video ref={videoRef} className="hidden" muted playsInline />
+      <video 
+        ref={videoRef} 
+        className="hidden" 
+        muted 
+        playsInline 
+        onClick={onTogglePlay} 
+      />
+
+      {/* Document Picture-in-Picture Portal with Pause / Resume controls */}
+      {pipDocWindow &&
+        createPortal(
+          <PipWidget
+            mode={mode}
+            timeLeft={timeLeft}
+            isRunning={isRunning}
+            activeTask={activeTask}
+            cycleCount={cycleCount}
+            totalIntervals={settings.longBreakInterval}
+            theme={theme}
+            onTogglePlay={onTogglePlay}
+            onSkip={onSkip}
+            onReset={onReset}
+            onCompleteActiveTask={onCompleteActiveTask}
+          />,
+          pipDocWindow.document.body
+        )}
 
       {/* Cute Bunny Mascot - Always White & Pink! */}
       {settings.showBunnyMascot && (
@@ -382,9 +506,9 @@ export const Timer: React.FC<TimerProps> = ({
         {/* Picture-in-Picture Button */}
         <button
           onClick={togglePictureInPicture}
-          title="Picture-in-Picture Mini Timer"
+          title="Picture-in-Picture Floating Timer (with Pause & Resume)"
           className={`p-3.5 sm:p-4 rounded-2xl transition-all duration-200 ${
-            isPiPActive ? 'ring-2 ring-pink-400' : ''
+            isPiPActive ? 'ring-2 ring-pink-400 shadow-[0_0_15px_rgba(244,63,94,0.5)]' : ''
           } ${isDark ? 'glass-btn-dark' : 'glass-btn-pink'}`}
         >
           <PictureInPicture2 size={22} className="stroke-[2.5]" />
