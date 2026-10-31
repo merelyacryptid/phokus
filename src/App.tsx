@@ -23,7 +23,7 @@ const DEFAULT_SETTINGS: TimerSettings = {
   shortBreakMinutes: 10,
   longBreakMinutes: 20,
   longBreakInterval: 4,
-  autoStartBreaks: false,
+  autoStartBreaks: true,
   autoStartFocus: false,
   soundAlerts: true,
   soundVolume: 0.7,
@@ -88,7 +88,8 @@ export function App() {
     const saved = localStorage.getItem('phokus_settings');
     if (saved) {
       try {
-        return { ...DEFAULT_SETTINGS, ...JSON.parse(saved) };
+        const parsed = JSON.parse(saved);
+        return { ...DEFAULT_SETTINGS, ...parsed, autoStartBreaks: true };
       } catch {
         return DEFAULT_SETTINGS;
       }
@@ -308,15 +309,15 @@ export function App() {
       };
     });
 
-    // Advance session cycle
+    // Advance session cycle: Break timer starts right after a focus session
     if (mode === 'focus') {
       const nextCycle = cycleCount + 1;
       if (nextCycle > settings.longBreakInterval) {
         setCycleCount(0);
-        switchMode('longBreak', settings.autoStartBreaks);
+        switchMode('longBreak', true);
       } else {
         setCycleCount(nextCycle);
-        switchMode('shortBreak', settings.autoStartBreaks);
+        switchMode('shortBreak', true);
       }
     } else {
       // Break is finished, go back to focus
@@ -384,10 +385,10 @@ export function App() {
       const nextCycle = cycleCount + 1;
       if (nextCycle > settings.longBreakInterval) {
         setCycleCount(0);
-        switchMode('longBreak', false);
+        switchMode('longBreak', true);
       } else {
         setCycleCount(nextCycle);
-        switchMode('shortBreak', false);
+        switchMode('shortBreak', true);
       }
     } else {
       switchMode('focus', false);

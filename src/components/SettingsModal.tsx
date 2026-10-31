@@ -35,7 +35,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       shortBreakMinutes: 10,
       longBreakMinutes: 20,
       longBreakInterval: 4,
-      autoStartBreaks: false,
+      autoStartBreaks: true,
       autoStartFocus: false,
       soundAlerts: true,
       soundVolume: 0.7,
