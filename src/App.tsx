@@ -567,10 +567,15 @@ export function App() {
     }
   };
 
-  // Toggle Theme
+  // Toggle Theme (cycles through Light Aura -> Strawberry Silk -> Dark Aura)
   const handleToggleTheme = () => {
     soundEngine.unlockAudio();
-    const nextTheme: ThemeMode = theme === 'bunny-pink' ? 'dark-mesh' : 'bunny-pink';
+    const nextTheme: ThemeMode = 
+      theme === 'light-aura' 
+        ? 'bunny-pink' 
+        : theme === 'bunny-pink' 
+          ? 'dark-mesh' 
+          : 'light-aura';
     setTheme(nextTheme);
   };
 

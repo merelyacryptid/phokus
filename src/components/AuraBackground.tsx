@@ -7,6 +7,7 @@ interface AuraBackgroundProps {
 
 export const AuraBackground: React.FC<AuraBackgroundProps> = ({ theme }) => {
   const isDark = theme === 'dark-mesh';
+  const isLightAura = theme === 'light-aura';
 
   return (
     <div className="fixed inset-0 overflow-hidden pointer-events-none select-none z-0">
@@ -47,6 +48,47 @@ export const AuraBackground: React.FC<AuraBackgroundProps> = ({ theme }) => {
               className="absolute -left-24 -bottom-20 w-[600px] h-[70vh] rounded-[50%] opacity-70 blur-[120px] animate-aura-dark-glow"
               style={{
                 background: 'radial-gradient(circle, rgba(190,24,93,0.65) 0%, rgba(131,24,67,0.4) 60%, transparent 85%)',
+              }}
+            />
+          </div>
+        </div>
+      ) : isLightAura ? (
+        /* Light Aura Theme: Ethereal, Very Light White & Pastel Pink Aura */
+        <div className="absolute inset-0 bg-[#ffffff]">
+          {/* Luminous clean white base with micro-subtle rose mist */}
+          <div className="absolute inset-0 bg-gradient-to-br from-[#ffffff] via-[#fffbfd] to-[#fff3f8]" />
+
+          {/* Ethereal flowing light pink aura orbs */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            {/* Top-Left Soft Blush Mist */}
+            <div 
+              className="absolute -top-28 -left-20 w-[720px] h-[90vh] rounded-[50%] opacity-65 blur-[110px] sm:blur-[135px] transform rotate-[18deg] animate-aura-light-pink"
+              style={{
+                background: 'radial-gradient(circle, rgba(254,205,211,0.85) 0%, rgba(251,113,133,0.3) 45%, rgba(255,245,248,0.15) 75%, transparent 100%)',
+              }}
+            />
+
+            {/* Center-Right Cotton Candy Pink Aura Wave */}
+            <div 
+              className="absolute top-1/6 right-1/4 w-[640px] h-[85vh] rounded-[48%] opacity-60 blur-[115px] sm:blur-[140px] transform -rotate-[22deg] animate-aura-light-rose"
+              style={{
+                background: 'linear-gradient(135deg, rgba(244,114,182,0.45) 0%, rgba(249,168,212,0.6) 45%, rgba(255,228,235,0.4) 80%, transparent 100%)',
+              }}
+            />
+
+            {/* Bottom-Center Whispering Petal Glow */}
+            <div 
+              className="absolute -bottom-24 left-1/4 w-[800px] h-[75vh] rounded-[54%] opacity-55 blur-[125px] sm:blur-[145px] animate-aura-light-cream"
+              style={{
+                background: 'radial-gradient(circle, rgba(251,207,232,0.7) 0%, rgba(253,242,248,0.5) 55%, transparent 100%)',
+              }}
+            />
+
+            {/* Pure White Luminous Core for high contrast text readability */}
+            <div 
+              className="absolute w-[520px] h-[70vh] rounded-full opacity-80 blur-[85px]"
+              style={{
+                background: 'radial-gradient(circle, #ffffff 0%, rgba(255,255,255,0.85) 55%, transparent 100%)',
               }}
             />
           </div>
@@ -96,7 +138,7 @@ export const AuraBackground: React.FC<AuraBackgroundProps> = ({ theme }) => {
 
       {/* Film Grain / Noise Overlay (The authentic aura grain seen in both images!) */}
       <div 
-        className="absolute inset-0 opacity-[0.045] pointer-events-none"
+        className="absolute inset-0 opacity-[0.04] pointer-events-none"
         style={{
           backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
           mixBlendMode: isDark ? 'screen' : 'multiply',
@@ -105,4 +147,3 @@ export const AuraBackground: React.FC<AuraBackgroundProps> = ({ theme }) => {
     </div>
   );
 };
-

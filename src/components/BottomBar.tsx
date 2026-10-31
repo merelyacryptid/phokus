@@ -9,7 +9,8 @@ import {
   Minimize2, 
   User, 
   Sun, 
-  Moon 
+  Moon,
+  Sparkles 
 } from 'lucide-react';
 
 interface BottomBarProps {
@@ -104,16 +105,24 @@ export const BottomBar: React.FC<BottomBarProps> = ({
           <span>{stats.streakDays}</span>
         </button>
 
-        {/* Theme Switcher Toggle (White & Pink Bunny <-> Pink & Dark Mode) */}
+        {/* Theme Switcher Toggle */}
         <button
           onClick={onToggleTheme}
-          title={`Switch to ${isDark ? 'White & Pink Bunny Theme' : 'Pink & Dark Mode'}`}
+          title={`Theme: ${
+            theme === 'light-aura' 
+              ? 'Light White & Pink Aura' 
+              : theme === 'bunny-pink' 
+                ? 'Strawberry Silk Aura' 
+                : 'Pink & Dark Mode'
+          } (Click to cycle)`}
           className={`p-3 rounded-2xl transition-all duration-200 ${
             isDark ? 'glass-btn-dark' : 'glass-btn-pink'
           }`}
         >
           {isDark ? (
             <Sun size={20} className="stroke-[2.2] text-pink-300 drop-shadow-[0_0_6px_rgba(244,63,94,0.5)]" />
+          ) : theme === 'light-aura' ? (
+            <Sparkles size={20} className="stroke-[2.2] text-pink-500" />
           ) : (
             <Moon size={20} className="stroke-[2.2] text-pink-700" />
           )}

@@ -180,31 +180,50 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               <h4 className="text-xs font-bold uppercase tracking-wider">Appearance Theme</h4>
             </div>
 
-            <div className="grid grid-cols-2 gap-2.5 pt-1">
+            <div className="grid grid-cols-3 gap-2 pt-1">
+              {/* 1. Very Light White & Pink Aura */}
               <button
                 type="button"
-                onClick={() => onThemeChange('bunny-pink')}
-                className={`p-3 rounded-2xl flex flex-col items-center justify-center space-y-1.5 transition-all ${
-                  theme === 'bunny-pink'
-                    ? 'ring-2 ring-pink-500 bg-pink-100/80 text-pink-950'
+                onClick={() => onThemeChange('light-aura')}
+                className={`p-2.5 rounded-2xl flex flex-col items-center justify-center space-y-1.5 transition-all ${
+                  theme === 'light-aura'
+                    ? 'ring-2 ring-pink-500 bg-pink-100/90 text-pink-950 shadow-[0_0_12px_rgba(244,63,94,0.25)]'
                     : isDark ? 'bg-white/[0.04] hover:bg-white/10 text-pink-200/70' : 'bg-pink-50/50 hover:bg-pink-50 text-pink-900/70'
                 }`}
               >
-                <div className="w-5 h-5 rounded-full bg-gradient-to-tr from-pink-300 to-pink-100 border border-pink-400" />
-                <span className="text-xs font-bold">White & Pink (Bunnies)</span>
+                <div className="w-5 h-5 rounded-full bg-gradient-to-tr from-white via-pink-100 to-pink-300 border border-pink-300 shadow-sm" />
+                <span className="text-[11px] font-bold text-center leading-tight">Light Aura</span>
+                <span className="text-[9px] opacity-70 text-center leading-none">White & Pink</span>
               </button>
 
+              {/* 2. Strawberry Silk Warm Pink */}
+              <button
+                type="button"
+                onClick={() => onThemeChange('bunny-pink')}
+                className={`p-2.5 rounded-2xl flex flex-col items-center justify-center space-y-1.5 transition-all ${
+                  theme === 'bunny-pink'
+                    ? 'ring-2 ring-pink-500 bg-pink-100/90 text-pink-950 shadow-[0_0_12px_rgba(244,63,94,0.25)]'
+                    : isDark ? 'bg-white/[0.04] hover:bg-white/10 text-pink-200/70' : 'bg-pink-50/50 hover:bg-pink-50 text-pink-900/70'
+                }`}
+              >
+                <div className="w-5 h-5 rounded-full bg-gradient-to-tr from-amber-100 via-pink-200 to-pink-400 border border-pink-300 shadow-sm" />
+                <span className="text-[11px] font-bold text-center leading-tight">Strawberry Silk</span>
+                <span className="text-[9px] opacity-70 text-center leading-none">Cream & Pink</span>
+              </button>
+
+              {/* 3. Pink & Dark Style */}
               <button
                 type="button"
                 onClick={() => onThemeChange('dark-mesh')}
-                className={`p-3 rounded-2xl flex flex-col items-center justify-center space-y-1.5 transition-all ${
+                className={`p-2.5 rounded-2xl flex flex-col items-center justify-center space-y-1.5 transition-all ${
                   theme === 'dark-mesh'
                     ? 'ring-2 ring-pink-500 bg-pink-950/70 text-pink-100 shadow-[0_0_15px_rgba(244,63,94,0.3)]'
                     : isDark ? 'bg-white/[0.04] hover:bg-white/10 text-pink-200/70' : 'bg-pink-50/50 hover:bg-pink-50 text-pink-900/70'
                 }`}
               >
-                <div className="w-5 h-5 rounded-full bg-gradient-to-tr from-pink-500 to-[#10050e] border border-pink-400" />
-                <span className="text-xs font-bold">Pink & Dark Style</span>
+                <div className="w-5 h-5 rounded-full bg-gradient-to-tr from-pink-500 via-purple-900 to-[#10050e] border border-pink-400 shadow-sm" />
+                <span className="text-[11px] font-bold text-center leading-tight">Dark Aura</span>
+                <span className="text-[9px] opacity-70 text-center leading-none">Midnight & Pink</span>
               </button>
             </div>
           </div>
