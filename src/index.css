@@ -109,3 +109,23 @@
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(244, 63, 142, 0.6);
 }
+
+/* GPU Compositor Layer Isolation for Smooth UI & Aura animations */
+.aura-orb {
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  contain: layout style paint;
+}
+
+/* Smooth Scrolling Optimizations */
+.smooth-scroll-container {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  will-change: scroll-position;
+  transform: translateZ(0);
+}
+

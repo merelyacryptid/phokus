@@ -30,6 +30,7 @@ export const TasksDrawer: React.FC<TasksDrawerProps> = ({
 }) => {
   const [newTitle, setNewTitle] = useState('');
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const isDark = theme === 'dark-mesh';
 
   if (!isOpen) return null;
@@ -55,46 +56,61 @@ export const TasksDrawer: React.FC<TasksDrawerProps> = ({
   };
 
   const moveTask = (fromIndex: number, toIndex: number) => {
-    if (toIndex < 0 || toIndex >= tasks.length) return;
+    if (toIndex < 0 || toIndex >= tasks.length || fromIndex === toIndex) return;
     const reordered = [...tasks];
     const [moved] = reordered.splice(fromIndex, 1);
     reordered.splice(toIndex, 0, moved);
     onReorderTasks(reordered);
   };
 
-  // Drag and drop handlers
-  const handleDragStart = (index: number) => {
+  // Drag and drop handlers - isolated to Grip Handle to prevent scroll hijacking
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    e.stopPropagation();
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', String(index));
     setDraggedIndex(index);
   };
 
-  const handleDragOver = (e: React.DragEvent) => {
+  const handleDragOver = (e: React.DragEvent, index: number) => {
     e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    if (dragOverIndex !== index) {
+      setDragOverIndex(index);
+    }
   };
 
-  const handleDrop = (dropIndex: number) => {
+  const handleDrop = (e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault();
+    e.stopPropagation();
     if (draggedIndex !== null && draggedIndex !== dropIndex) {
       moveTask(draggedIndex, dropIndex);
     }
     setDraggedIndex(null);
+    setDragOverIndex(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedIndex(null);
+    setDragOverIndex(null);
   };
 
   const completedCount = tasks.filter(t => t.completed).length;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/65 animate-fade-in">
       {/* Background click to dismiss */}
       <div className="absolute inset-0" onClick={onClose} />
 
-      {/* Main Card */}
+      {/* Main Card with GPU Isolation */}
       <div
-        className={`relative w-full max-w-md max-h-[85vh] flex flex-col rounded-3xl p-6 shadow-2xl transition-all duration-300 ${
+        className={`relative w-full max-w-md max-h-[85vh] flex flex-col rounded-3xl p-6 shadow-2xl transition-colors duration-200 transform-gpu ${
           isDark
-            ? 'bg-[#100f14]/95 border border-pink-500/25 text-white shadow-2xl shadow-black/80'
-            : 'bg-white/95 border border-pink-200 text-pink-950 shadow-pink-200/50'
+            ? 'bg-[#100f14]/98 border border-pink-500/25 text-white shadow-2xl shadow-black/80'
+            : 'bg-white/98 border border-pink-200 text-pink-950 shadow-pink-200/50'
         }`}
       >
         {/* Header */}
-        <div className="flex items-center justify-between pb-4 border-b border-pink-500/20 mb-4">
+        <div className="flex items-center justify-between pb-4 border-b border-pink-500/20 mb-4 select-none">
           <div className="flex items-center space-x-3">
             <div
               className={`p-2.5 rounded-2xl flex items-center justify-center ${
@@ -123,8 +139,8 @@ export const TasksDrawer: React.FC<TasksDrawerProps> = ({
           </button>
         </div>
 
-        {/* Task List (reorderable, appends to bottom) */}
-        <div className="flex-1 overflow-y-auto space-y-2.5 pr-1 min-h-[160px] max-h-[420px]">
+        {/* Task List (Optimized smooth scrolling container) */}
+        <div className="smooth-scroll-container flex-1 space-y-2.5 pr-1.5 min-h-[160px] max-h-[420px]">
           {tasks.length === 0 ? (
             <div className={`py-12 text-center text-sm font-medium ${isDark ? 'text-pink-300/40' : 'text-pink-900/50'}`}>
               No tasks yet. Add your first task below.
@@ -133,32 +149,38 @@ export const TasksDrawer: React.FC<TasksDrawerProps> = ({
             tasks.map((task, idx) => {
               const isCurrentFocus = activeTaskId === task.id && !task.completed;
               const isDragging = draggedIndex === idx;
+              const isOver = dragOverIndex === idx && draggedIndex !== idx;
 
               return (
                 <div
                   key={task.id}
-                  draggable
-                  onDragStart={() => handleDragStart(idx)}
-                  onDragOver={handleDragOver}
-                  onDrop={() => handleDrop(idx)}
-                  className={`group flex items-center justify-between p-3 rounded-2xl transition-all duration-200 cursor-default ${
-                    isDragging ? 'opacity-40 scale-95' : 'opacity-100'
+                  onDragOver={(e) => handleDragOver(e, idx)}
+                  onDrop={(e) => handleDrop(e, idx)}
+                  className={`group relative flex items-center justify-between p-3 rounded-2xl transition-colors duration-150 select-none ${
+                    isDragging ? 'opacity-35 scale-[0.98]' : 'opacity-100'
                   } ${
-                    isCurrentFocus
-                      ? isDark
-                        ? 'bg-pink-950/40 border border-pink-500/50 shadow-[0_0_12px_rgba(244,63,94,0.2)]'
-                        : 'bg-pink-100/90 border border-pink-400 shadow-sm'
-                      : isDark
-                        ? 'bg-white/[0.04] hover:bg-white/[0.07] border border-pink-500/15'
-                        : 'bg-pink-50/80 hover:bg-pink-100/60 border border-pink-100'
+                    isOver
+                      ? 'border-2 border-dashed border-pink-500 bg-pink-500/10'
+                      : isCurrentFocus
+                        ? isDark
+                          ? 'bg-pink-950/40 border border-pink-500/50 shadow-[0_0_12px_rgba(244,63,94,0.2)]'
+                          : 'bg-pink-100/90 border border-pink-400 shadow-sm'
+                        : isDark
+                          ? 'bg-white/[0.04] hover:bg-white/[0.07] border border-pink-500/15'
+                          : 'bg-pink-50/80 hover:bg-pink-100/60 border border-pink-100'
                   }`}
                 >
                   <div className="flex items-center space-x-2.5 flex-1 min-w-0">
-                    {/* Drag Handle */}
+                    {/* Dedicated Drag Handle: Draggable isolated here so scrolling is 100% fluid */}
                     <div
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, idx)}
+                      onDragEnd={handleDragEnd}
                       title="Drag to reorder"
-                      className={`cursor-grab active:cursor-grabbing p-1 rounded transition-colors ${
-                        isDark ? 'text-pink-400/30 hover:text-pink-300' : 'text-pink-900/30 hover:text-pink-700'
+                      className={`cursor-grab active:cursor-grabbing p-1.5 rounded-lg transition-colors touch-none ${
+                        isDark 
+                          ? 'text-pink-400/40 hover:text-pink-300 hover:bg-white/10' 
+                          : 'text-pink-900/35 hover:text-pink-700 hover:bg-pink-200/50'
                       }`}
                     >
                       <GripVertical size={16} />
@@ -168,7 +190,7 @@ export const TasksDrawer: React.FC<TasksDrawerProps> = ({
                     <button
                       onClick={() => handleToggle(task)}
                       title={task.completed ? "Mark as uncompleted" : "Mark as completed"}
-                      className={`w-6 h-6 rounded-lg flex items-center justify-center transition-all duration-200 shrink-0 ${
+                      className={`w-6 h-6 rounded-lg flex items-center justify-center transition-colors duration-150 shrink-0 ${
                         task.completed
                           ? 'bg-pink-600 text-white border border-pink-500 shadow-[0_0_10px_rgba(244,63,94,0.4)]'
                           : isDark
@@ -183,7 +205,7 @@ export const TasksDrawer: React.FC<TasksDrawerProps> = ({
                     <div className="flex flex-col min-w-0 flex-1">
                       <span
                         onClick={() => handleToggle(task)}
-                        className={`text-sm sm:text-base font-medium truncate cursor-pointer transition-all ${
+                        className={`text-sm sm:text-base font-medium truncate cursor-pointer transition-colors ${
                           task.completed
                             ? isDark
                               ? 'line-through text-pink-300/35'
@@ -210,7 +232,7 @@ export const TasksDrawer: React.FC<TasksDrawerProps> = ({
                       onClick={() => moveTask(idx, idx - 1)}
                       disabled={idx === 0}
                       title="Move Up"
-                      className={`p-1 rounded-lg transition-colors disabled:opacity-20 disabled:cursor-not-allowed ${
+                      className={`p-1.5 rounded-lg transition-colors disabled:opacity-20 disabled:cursor-not-allowed ${
                         isDark ? 'hover:bg-white/10 text-pink-300/60 hover:text-pink-200' : 'hover:bg-pink-200/60 text-pink-900/50 hover:text-pink-900'
                       }`}
                     >
@@ -222,7 +244,7 @@ export const TasksDrawer: React.FC<TasksDrawerProps> = ({
                       onClick={() => moveTask(idx, idx + 1)}
                       disabled={idx === tasks.length - 1}
                       title="Move Down"
-                      className={`p-1 rounded-lg transition-colors disabled:opacity-20 disabled:cursor-not-allowed ${
+                      className={`p-1.5 rounded-lg transition-colors disabled:opacity-20 disabled:cursor-not-allowed ${
                         isDark ? 'hover:bg-white/10 text-pink-300/60 hover:text-pink-200' : 'hover:bg-pink-200/60 text-pink-900/50 hover:text-pink-900'
                       }`}
                     >
@@ -267,14 +289,14 @@ export const TasksDrawer: React.FC<TasksDrawerProps> = ({
           )}
         </div>
 
-        {/* Add Task Form (Appends below previously added task!) */}
+        {/* Add Task Form (Appends below previously added task) */}
         <form onSubmit={handleSubmit} className="mt-4 pt-4 border-t border-pink-500/20 flex items-center space-x-2">
           <input
             type="text"
             value={newTitle}
             onChange={(e) => setNewTitle(e.target.value)}
             placeholder="Add a new task... (press Enter)"
-            className={`flex-1 px-4 py-2.5 rounded-2xl text-sm font-medium outline-none transition-all ${
+            className={`flex-1 px-4 py-2.5 rounded-2xl text-sm font-medium outline-none transition-colors ${
               isDark
                 ? 'bg-white/[0.06] text-pink-100 placeholder-pink-300/30 border border-pink-500/25 focus:border-pink-500'
                 : 'bg-pink-50 text-pink-950 placeholder-pink-900/40 border border-pink-200 focus:border-pink-500'
@@ -283,7 +305,7 @@ export const TasksDrawer: React.FC<TasksDrawerProps> = ({
           <button
             type="submit"
             disabled={!newTitle.trim()}
-            className="p-2.5 rounded-2xl transition-all disabled:opacity-40 disabled:cursor-not-allowed bg-pink-600 hover:bg-pink-500 text-white shadow-[0_0_12px_rgba(244,63,94,0.4)]"
+            className="p-2.5 rounded-2xl transition-all disabled:opacity-40 disabled:cursor-not-allowed bg-pink-600 hover:bg-pink-500 active:scale-95 text-white shadow-[0_0_12px_rgba(244,63,94,0.4)]"
           >
             <Plus size={20} className="stroke-[2.5]" />
           </button>
