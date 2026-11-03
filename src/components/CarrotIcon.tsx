@@ -90,3 +90,4 @@ export const CarrotIcon: React.FC<CarrotIconProps> = ({
     </svg>
   );
 };
+
