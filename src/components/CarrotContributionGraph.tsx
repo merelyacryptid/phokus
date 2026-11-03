@@ -26,7 +26,8 @@ interface WeekColumn {
 }
 
 // Pure helper function defined outside the component to satisfy react(purity)
-function buildContributionWeeks(dailyActivity: Record<string, number>) {
+function buildContributionWeeks(dailyActivity: Record<string, number> = {}) {
+  const safeDaily = dailyActivity || {};
   const now = new Date();
   const todayStr = now.toISOString().split('T')[0];
   const currentDayOfWeek = now.getDay(); // 0 (Sun) to 6 (Sat)
@@ -50,7 +51,7 @@ function buildContributionWeeks(dailyActivity: Record<string, number>) {
     for (let d = 0; d < 7; d++) {
       const cellDate = new Date(startDate.getTime() + (w * 7 + d) * 86400000);
       const dateStr = cellDate.toISOString().split('T')[0];
-      const minutes = dailyActivity[dateStr] || 0;
+      const minutes = safeDaily[dateStr] || 0;
       const hours = Number((minutes / 60).toFixed(1));
 
       const isToday = dateStr === todayStr;

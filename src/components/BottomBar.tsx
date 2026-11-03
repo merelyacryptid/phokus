@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import type { ThemeMode, UserProfile, UserStats } from '../types';
+import { CarrotIcon } from './CarrotIcon';
 import { 
   ListTodo, 
   Headphones, 
@@ -91,18 +92,25 @@ export const BottomBar: React.FC<BottomBarProps> = ({
 
       {/* Bottom Right Controls (Matching Image 1: Streak pill, theme, profile, settings, fullscreen) */}
       <div className="flex items-center space-x-2 sm:space-x-3">
-        {/* Streak Pill (Matching Image 1 bottom right flame icon with streak count) */}
+        {/* Streak & Carrot Graph Stats Pill */}
         <button
           onClick={onOpenStats}
-          title="View Focus Streak & Statistics"
-          className={`flex items-center space-x-1.5 px-3.5 py-2.5 rounded-2xl font-bold text-xs sm:text-sm transition-all duration-200 ${
+          title="Open Focus Statistics & Carrot Graph"
+          className={`flex items-center space-x-2 px-3 sm:px-3.5 py-2.5 rounded-2xl font-bold text-xs sm:text-sm transition-all duration-200 cursor-pointer ${
             isDark
               ? 'glass-btn-dark hover:text-pink-300'
               : 'glass-btn-pink hover:text-orange-600'
           }`}
         >
-          <Flame size={17} className="text-orange-400 stroke-[2.5]" />
-          <span>{stats.streakDays}</span>
+          <div className="flex items-center space-x-1">
+            <Flame size={16} className="text-orange-400 stroke-[2.5]" />
+            <span>{stats.streakDays}</span>
+          </div>
+          <span className="opacity-25">|</span>
+          <div className="flex items-center space-x-1 text-pink-500">
+            <CarrotIcon size={14} level={3} />
+            <span className="font-semibold text-xs hidden sm:inline">Stats</span>
+          </div>
         </button>
 
         {/* Theme Switcher Toggle */}

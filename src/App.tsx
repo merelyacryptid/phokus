@@ -38,24 +38,38 @@ const DEFAULT_TASKS: Task[] = [
   { id: 't3', title: 'Solve 3 problem sets', completed: false, createdAt: Date.now() - 100000, pomodoroCount: 0 },
 ];
 
+const nowMs = Date.now();
+const getDayStr = (offsetDays: number) => new Date(nowMs - offsetDays * 86400000).toISOString().split('T')[0];
+
 const INITIAL_STATS: UserStats = {
-  totalFocusMinutes: 40,
-  completedFocusSessions: 1,
-  completedShortBreaks: 1,
-  completedLongBreaks: 0,
-  completedTasksCount: 1,
+  totalFocusMinutes: 240,
+  completedFocusSessions: 6,
+  completedShortBreaks: 4,
+  completedLongBreaks: 1,
+  completedTasksCount: 4,
   streakDays: 3,
-  lastActiveDate: new Date().toISOString().split('T')[0],
+  lastActiveDate: getDayStr(0),
   dailyActivity: {
-    [new Date().toISOString().split('T')[0]]: 40
+    [getDayStr(5)]: 40,
+    [getDayStr(4)]: 60,
+    [getDayStr(2)]: 80,
+    [getDayStr(1)]: 90,
+    [getDayStr(0)]: 50,
   },
   history: [
     {
       id: 'init_1',
-      date: new Date().toISOString(),
+      date: new Date(nowMs - 3600000).toISOString(),
       mode: 'focus',
-      durationMinutes: 40,
+      durationMinutes: 50,
       taskTitle: 'Review lecture notes & flashcards'
+    },
+    {
+      id: 'init_2',
+      date: new Date(nowMs - 86400000).toISOString(),
+      mode: 'focus',
+      durationMinutes: 90,
+      taskTitle: 'Deep work session 1'
     }
   ]
 };
@@ -113,12 +127,13 @@ export function App() {
   const [stats, setStats] = useState<UserStats>(() => {
     let loaded = INITIAL_STATS;
     if (currentUser?.stats) {
-      loaded = currentUser.stats;
+      loaded = { ...INITIAL_STATS, ...currentUser.stats, dailyActivity: currentUser.stats.dailyActivity || INITIAL_STATS.dailyActivity };
     } else {
       const saved = localStorage.getItem('phokus_guest_stats');
       if (saved) {
         try {
-          loaded = JSON.parse(saved);
+          const parsed = JSON.parse(saved);
+          loaded = { ...INITIAL_STATS, ...parsed, dailyActivity: parsed.dailyActivity || INITIAL_STATS.dailyActivity };
         } catch {
           loaded = INITIAL_STATS;
         }
