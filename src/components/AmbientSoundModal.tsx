@@ -18,7 +18,8 @@ export const AmbientSoundModal: React.FC<AmbientSoundModalProps> = ({
     soundEngine.getActiveAmbient()
   );
   const [volume, setVolume] = useState(0.4);
-  const isDark = theme === 'dark-mesh';
+  const isMatteBlack = theme === 'matte-black';
+  const isDark = theme === 'dark-mesh' || isMatteBlack;
 
   if (!isOpen) return null;
 

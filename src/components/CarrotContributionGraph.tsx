@@ -110,7 +110,8 @@ export const CarrotContributionGraph: React.FC<CarrotContributionGraphProps> = (
   dailyActivity,
   theme,
 }) => {
-  const isDark = theme === 'dark-mesh';
+  const isMatteBlack = theme === 'matte-black';
+  const isDark = theme === 'dark-mesh' || isMatteBlack;
   const [hoveredCell, setHoveredCell] = useState<DayCell | null>(null);
 
   // Generate 14 weeks of GitHub-style contribution data
@@ -121,9 +122,11 @@ export const CarrotContributionGraph: React.FC<CarrotContributionGraphProps> = (
   return (
     <div
       className={`p-4 rounded-2xl select-none transition-all duration-200 ${
-        isDark
-          ? 'bg-white/[0.04] border border-pink-500/15'
-          : 'bg-pink-50/80 border border-pink-100/90'
+        isMatteBlack
+          ? 'bg-neutral-900/60 border border-neutral-800'
+          : isDark
+            ? 'bg-white/[0.04] border border-pink-500/15'
+            : 'bg-pink-50/80 border border-pink-100/90'
       }`}
     >
       {/* Header Info */}
@@ -224,7 +227,9 @@ export const CarrotContributionGraph: React.FC<CarrotContributionGraphProps> = (
                                 : 'bg-pink-100/40 border border-pink-200/60 hover:border-pink-300'
                         } ${
                           cell.isToday
-                            ? 'ring-1.5 ring-pink-500 shadow-[0_0_6px_rgba(244,63,94,0.6)]'
+                            ? isMatteBlack
+                              ? 'ring-1.5 ring-white shadow-[0_0_6px_rgba(255,255,255,0.6)]'
+                              : 'ring-1.5 ring-pink-500 shadow-[0_0_6px_rgba(244,63,94,0.6)]'
                             : ''
                         }`}
                       >

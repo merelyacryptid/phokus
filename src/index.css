@@ -75,6 +75,26 @@
   transform: translateY(1px);
 }
 
+/* Matte Black & White Glass Button */
+.glass-btn-matte {
+  background: rgba(24, 24, 27, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
+}
+.glass-btn-matte:hover {
+  background: rgba(39, 39, 42, 0.95);
+  border-color: rgba(255, 255, 255, 0.45);
+  box-shadow: 0 0 18px rgba(255, 255, 255, 0.18);
+  transform: translateY(-1px);
+}
+.glass-btn-matte:active {
+  transform: translateY(1px);
+}
+
 .glass-btn-pink {
   background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(10px);

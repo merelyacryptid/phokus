@@ -197,7 +197,7 @@ export function App() {
   // Sync theme changes with DOM
   useEffect(() => {
     localStorage.setItem('phokus_theme', theme);
-    if (theme === 'dark-mesh') {
+    if (theme === 'dark-mesh' || theme === 'matte-black') {
       document.documentElement.classList.add('dark');
     } else {
       document.documentElement.classList.remove('dark');
@@ -589,7 +589,7 @@ export function App() {
     }
   };
 
-  // Toggle Theme (cycles through Light Aura -> Strawberry Silk -> Dark Aura)
+  // Toggle Theme (cycles through Light Aura -> Strawberry Silk -> Dark Aura -> Matte Black)
   const handleToggleTheme = () => {
     soundEngine.unlockAudio();
     const nextTheme: ThemeMode = 
@@ -597,14 +597,16 @@ export function App() {
         ? 'bunny-pink' 
         : theme === 'bunny-pink' 
           ? 'dark-mesh' 
-          : 'light-aura';
+          : theme === 'dark-mesh'
+            ? 'matte-black'
+            : 'light-aura';
     setTheme(nextTheme);
   };
 
   return (
     <div
       className={`min-h-screen w-full flex flex-col justify-between relative overflow-hidden transition-all duration-700 ${
-        theme === 'dark-mesh' ? 'text-white' : 'text-pink-950'
+        theme === 'dark-mesh' || theme === 'matte-black' ? 'text-white' : 'text-pink-950'
       }`}
     >
       {/* Dynamic Smooth Aura Gradient with Film Grain (Matching Images 1 & 2) */}

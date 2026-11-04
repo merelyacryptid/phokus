@@ -30,7 +30,8 @@ export const PipWidget: React.FC<PipWidgetProps> = ({
   onReset,
   onCompleteActiveTask,
 }) => {
-  const isDark = theme === 'dark-mesh';
+  const isMatteBlack = theme === 'matte-black';
+  const isDark = theme === 'dark-mesh' || isMatteBlack;
 
   const minutes = Math.floor(timeLeft / 60);
   const seconds = timeLeft % 60;
@@ -50,9 +51,9 @@ export const PipWidget: React.FC<PipWidgetProps> = ({
         padding: '16px',
         userSelect: 'none',
         fontFamily: "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif",
-        backgroundColor: isDark ? '#09080e' : '#fff5ea',
+        backgroundColor: isMatteBlack ? '#0a0a0c' : isDark ? '#09080e' : '#fff5ea',
         color: isDark ? '#ffffff' : '#831433',
-        border: isDark ? '1px solid rgba(244, 63, 142, 0.25)' : '1px solid rgba(251, 113, 133, 0.3)',
+        border: isMatteBlack ? '1px solid rgba(255, 255, 255, 0.2)' : isDark ? '1px solid rgba(244, 63, 142, 0.25)' : '1px solid rgba(251, 113, 133, 0.3)',
       }}
     >
       {/* Top Header */}
@@ -62,8 +63,8 @@ export const PipWidget: React.FC<PipWidgetProps> = ({
             style={{
               padding: '4px',
               borderRadius: '8px',
-              backgroundColor: isDark ? 'rgba(244, 63, 142, 0.15)' : 'rgba(244, 63, 94, 0.1)',
-              color: isDark ? '#f472b6' : '#e11d48',
+              backgroundColor: isMatteBlack ? 'rgba(255, 255, 255, 0.12)' : isDark ? 'rgba(244, 63, 142, 0.15)' : 'rgba(244, 63, 94, 0.1)',
+              color: isMatteBlack ? '#ffffff' : isDark ? '#f472b6' : '#e11d48',
             }}
           >
             <BunnyEarsLogo className="w-4 h-4" />
@@ -76,9 +77,9 @@ export const PipWidget: React.FC<PipWidgetProps> = ({
               textTransform: 'uppercase',
               padding: '2px 8px',
               borderRadius: '9999px',
-              backgroundColor: isDark ? 'rgba(244, 63, 142, 0.2)' : 'rgba(255, 255, 255, 0.9)',
-              color: isDark ? '#fda4af' : '#9f1239',
-              border: isDark ? '1px solid rgba(244, 63, 142, 0.35)' : '1px solid rgba(251, 113, 133, 0.3)',
+              backgroundColor: isMatteBlack ? '#ffffff' : isDark ? 'rgba(244, 63, 142, 0.2)' : 'rgba(255, 255, 255, 0.9)',
+              color: isMatteBlack ? '#000000' : isDark ? '#fda4af' : '#9f1239',
+              border: isMatteBlack ? 'none' : isDark ? '1px solid rgba(244, 63, 142, 0.35)' : '1px solid rgba(251, 113, 133, 0.3)',
             }}
           >
             {modeLabel}
@@ -92,8 +93,8 @@ export const PipWidget: React.FC<PipWidgetProps> = ({
               key={idx}
               size={14}
               style={{
-                fill: idx < cycleCount ? '#f43f5e' : 'none',
-                color: idx < cycleCount ? '#f43f5e' : isDark ? 'rgba(255,255,255,0.2)' : 'rgba(131,20,51,0.2)',
+                fill: idx < cycleCount ? (isMatteBlack ? '#ffffff' : '#f43f5e') : 'none',
+                color: idx < cycleCount ? (isMatteBlack ? '#ffffff' : '#f43f5e') : isDark ? 'rgba(255,255,255,0.2)' : 'rgba(131,20,51,0.2)',
               }}
             />
           ))}
@@ -190,9 +191,9 @@ export const PipWidget: React.FC<PipWidgetProps> = ({
             fontSize: '13px',
             border: 'none',
             cursor: 'pointer',
-            backgroundColor: '#f43f5e',
-            color: '#ffffff',
-            boxShadow: '0 4px 14px rgba(244, 63, 94, 0.35)',
+            backgroundColor: isMatteBlack ? '#ffffff' : '#f43f5e',
+            color: isMatteBlack ? '#000000' : '#ffffff',
+            boxShadow: isMatteBlack ? '0 4px 14px rgba(255, 255, 255, 0.25)' : '0 4px 14px rgba(244, 63, 94, 0.35)',
             transition: 'transform 0.15s ease',
           }}
         >
@@ -220,8 +221,8 @@ export const PipWidget: React.FC<PipWidgetProps> = ({
             width: '36px',
             height: '36px',
             borderRadius: '12px',
-            border: isDark ? '1px solid rgba(244, 63, 142, 0.3)' : '1px solid rgba(251, 113, 133, 0.4)',
-            backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.85)',
+            border: isMatteBlack ? '1px solid rgba(255, 255, 255, 0.2)' : isDark ? '1px solid rgba(244, 63, 142, 0.3)' : '1px solid rgba(251, 113, 133, 0.4)',
+            backgroundColor: isMatteBlack ? 'rgba(255,255,255,0.08)' : isDark ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.85)',
             color: isDark ? '#ffffff' : '#831433',
             cursor: 'pointer',
           }}
@@ -240,8 +241,8 @@ export const PipWidget: React.FC<PipWidgetProps> = ({
             width: '36px',
             height: '36px',
             borderRadius: '12px',
-            border: isDark ? '1px solid rgba(244, 63, 142, 0.3)' : '1px solid rgba(251, 113, 133, 0.4)',
-            backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.85)',
+            border: isMatteBlack ? '1px solid rgba(255, 255, 255, 0.2)' : isDark ? '1px solid rgba(244, 63, 142, 0.3)' : '1px solid rgba(251, 113, 133, 0.4)',
+            backgroundColor: isMatteBlack ? 'rgba(255,255,255,0.08)' : isDark ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.85)',
             color: isDark ? '#ffffff' : '#831433',
             cursor: 'pointer',
           }}

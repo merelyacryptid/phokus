@@ -21,7 +21,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   onThemeChange,
 }) => {
   const [formData, setFormData] = useState<TimerSettings>({ ...settings });
-  const isDark = theme === 'dark-mesh';
+  const isMatteBlack = theme === 'matte-black';
+  const isDark = theme === 'dark-mesh' || isMatteBlack;
 
   if (!isOpen) return null;
 
@@ -180,7 +181,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               <h4 className="text-xs font-bold uppercase tracking-wider">Appearance Theme</h4>
             </div>
 
-            <div className="grid grid-cols-3 gap-2 pt-1">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
               {/* 1. Very Light White & Pink Aura */}
               <button
                 type="button"
@@ -224,6 +225,21 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 <div className="w-5 h-5 rounded-full bg-gradient-to-tr from-pink-500 via-purple-900 to-[#10050e] border border-pink-400 shadow-sm" />
                 <span className="text-[11px] font-bold text-center leading-tight">Dark Aura</span>
                 <span className="text-[9px] opacity-70 text-center leading-none">Midnight & Pink</span>
+              </button>
+
+              {/* 4. Matte Black & White */}
+              <button
+                type="button"
+                onClick={() => onThemeChange('matte-black')}
+                className={`p-2.5 rounded-2xl flex flex-col items-center justify-center space-y-1.5 transition-all ${
+                  theme === 'matte-black'
+                    ? 'ring-2 ring-white bg-neutral-900 text-white shadow-[0_0_15px_rgba(255,255,255,0.2)]'
+                    : isDark ? 'bg-white/[0.04] hover:bg-white/10 text-neutral-300' : 'bg-pink-50/50 hover:bg-pink-50 text-pink-900/70'
+                }`}
+              >
+                <div className="w-5 h-5 rounded-full bg-gradient-to-tr from-black via-neutral-900 to-white border border-neutral-500 shadow-sm" />
+                <span className="text-[11px] font-bold text-center leading-tight">Matte Black</span>
+                <span className="text-[9px] opacity-70 text-center leading-none">Black & White</span>
               </button>
             </div>
           </div>

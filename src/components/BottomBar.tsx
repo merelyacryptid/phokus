@@ -40,7 +40,9 @@ export const BottomBar: React.FC<BottomBarProps> = ({
   onOpenSettings,
 }) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const isDark = theme === 'dark-mesh';
+  const isMatteBlack = theme === 'matte-black';
+  const isDark = theme === 'dark-mesh' || isMatteBlack;
+  const btnClass = isMatteBlack ? 'glass-btn-matte' : isDark ? 'glass-btn-dark' : 'glass-btn-pink';
 
   useEffect(() => {
     const handleFullscreenChange = () => {
@@ -66,13 +68,13 @@ export const BottomBar: React.FC<BottomBarProps> = ({
         <button
           onClick={onToggleTasks}
           title="Toggle Tasks (To-Do List)"
-          className={`relative p-3 rounded-2xl transition-all duration-200 ${
-            isDark ? 'glass-btn-dark' : 'glass-btn-pink'
-          }`}
+          className={`relative p-3 rounded-2xl transition-all duration-200 ${btnClass}`}
         >
           <ListTodo size={20} className="stroke-[2.2]" />
           {taskCount > 0 && (
-            <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full text-[10px] font-bold flex items-center justify-center bg-pink-600 text-white shadow-[0_0_8px_rgba(244,63,94,0.5)]">
+            <span className={`absolute -top-1 -right-1 w-4 h-4 rounded-full text-[10px] font-bold flex items-center justify-center ${
+              isMatteBlack ? 'bg-white text-black shadow-md' : 'bg-pink-600 text-white shadow-[0_0_8px_rgba(244,63,94,0.5)]'
+            }`}>
               {taskCount}
             </span>
           )}
@@ -82,9 +84,7 @@ export const BottomBar: React.FC<BottomBarProps> = ({
         <button
           onClick={onToggleAmbient}
           title="Ambient Nature & Focus Audio"
-          className={`p-3 rounded-2xl transition-all duration-200 ${
-            isDark ? 'glass-btn-dark' : 'glass-btn-pink'
-          }`}
+          className={`p-3 rounded-2xl transition-all duration-200 ${btnClass}`}
         >
           <Headphones size={20} className="stroke-[2.2]" />
         </button>
@@ -97,9 +97,11 @@ export const BottomBar: React.FC<BottomBarProps> = ({
           onClick={onOpenStats}
           title="Open Focus Statistics & Carrot Graph"
           className={`flex items-center space-x-2 px-3 sm:px-3.5 py-2.5 rounded-2xl font-bold text-xs sm:text-sm transition-all duration-200 cursor-pointer ${
-            isDark
-              ? 'glass-btn-dark hover:text-pink-300'
-              : 'glass-btn-pink hover:text-orange-600'
+            isMatteBlack
+              ? 'glass-btn-matte hover:text-neutral-200'
+              : isDark
+                ? 'glass-btn-dark hover:text-pink-300'
+                : 'glass-btn-pink hover:text-orange-600'
           }`}
         >
           <div className="flex items-center space-x-1">
@@ -107,7 +109,7 @@ export const BottomBar: React.FC<BottomBarProps> = ({
             <span>{stats.streakDays}</span>
           </div>
           <span className="opacity-25">|</span>
-          <div className="flex items-center space-x-1 text-pink-500">
+          <div className={`flex items-center space-x-1 ${isMatteBlack ? 'text-white' : 'text-pink-500'}`}>
             <CarrotIcon size={14} level={3} />
             <span className="font-semibold text-xs hidden sm:inline">Stats</span>
           </div>
@@ -121,13 +123,17 @@ export const BottomBar: React.FC<BottomBarProps> = ({
               ? 'Light White & Pink Aura' 
               : theme === 'bunny-pink' 
                 ? 'Strawberry Silk Aura' 
-                : 'Pink & Dark Mode'
+                : theme === 'dark-mesh'
+                  ? 'Dark Aura'
+                  : 'Matte Black & White'
           } (Click to cycle)`}
-          className={`p-3 rounded-2xl transition-all duration-200 ${
-            isDark ? 'glass-btn-dark' : 'glass-btn-pink'
-          }`}
+          className={`p-3 rounded-2xl transition-all duration-200 ${btnClass}`}
         >
-          {isDark ? (
+          {theme === 'matte-black' ? (
+            <div className="w-5 h-5 rounded-full border-2 border-white bg-black flex items-center justify-center">
+              <div className="w-2 h-2 rounded-full bg-white" />
+            </div>
+          ) : isDark ? (
             <Sun size={20} className="stroke-[2.2] text-pink-300 drop-shadow-[0_0_6px_rgba(244,63,94,0.5)]" />
           ) : theme === 'light-aura' ? (
             <Sparkles size={20} className="stroke-[2.2] text-pink-500" />
@@ -142,10 +148,12 @@ export const BottomBar: React.FC<BottomBarProps> = ({
           title={currentUser ? `Signed in as ${currentUser.name}` : "Sign in to sync focus stats"}
           className={`flex items-center space-x-1.5 px-3 py-2.5 rounded-2xl text-xs font-semibold transition-all duration-200 ${
             currentUser
-              ? isDark
-                ? 'bg-pink-950/50 text-pink-200 border border-pink-500/35 hover:bg-pink-900/40 shadow-[0_0_10px_rgba(244,63,94,0.2)]'
-                : 'bg-pink-100 text-pink-700 border border-pink-300 hover:bg-pink-200'
-              : isDark ? 'glass-btn-dark' : 'glass-btn-pink'
+              ? isMatteBlack
+                ? 'bg-neutral-800 text-white border border-neutral-600 hover:bg-neutral-700 shadow-md'
+                : isDark
+                  ? 'bg-pink-950/50 text-pink-200 border border-pink-500/35 hover:bg-pink-900/40 shadow-[0_0_10px_rgba(244,63,94,0.2)]'
+                  : 'bg-pink-100 text-pink-700 border border-pink-300 hover:bg-pink-200'
+              : btnClass
           }`}
         >
           <User size={18} className="stroke-[2.2]" />
@@ -158,9 +166,7 @@ export const BottomBar: React.FC<BottomBarProps> = ({
         <button
           onClick={onOpenSettings}
           title="Preferences & Timer Durations"
-          className={`p-3 rounded-2xl transition-all duration-200 ${
-            isDark ? 'glass-btn-dark' : 'glass-btn-pink'
-          }`}
+          className={`p-3 rounded-2xl transition-all duration-200 ${btnClass}`}
         >
           <Settings size={20} className="stroke-[2.2]" />
         </button>
@@ -169,9 +175,7 @@ export const BottomBar: React.FC<BottomBarProps> = ({
         <button
           onClick={toggleFullscreen}
           title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
-          className={`p-3 rounded-2xl transition-all duration-200 ${
-            isDark ? 'glass-btn-dark' : 'glass-btn-pink'
-          }`}
+          className={`p-3 rounded-2xl transition-all duration-200 ${btnClass}`}
         >
           {isFullscreen ? (
             <Minimize2 size={20} className="stroke-[2.2]" />

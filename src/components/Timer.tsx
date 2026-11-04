@@ -49,7 +49,9 @@ export const Timer: React.FC<TimerProps> = ({
   onUpdateActiveTaskTitle,
   onCreateActiveTask,
 }) => {
-  const isDark = theme === 'dark-mesh';
+  const isMatteBlack = theme === 'matte-black';
+  const isDark = theme === 'dark-mesh' || isMatteBlack;
+  const btnClass = isMatteBlack ? 'glass-btn-matte' : isDark ? 'glass-btn-dark' : 'glass-btn-pink';
   const [isEditingTask, setIsEditingTask] = useState(false);
   const [editText, setEditText] = useState('');
   const taskInputRef = useRef<HTMLInputElement>(null);
@@ -84,16 +86,16 @@ export const Timer: React.FC<TimerProps> = ({
     canvas.height = height;
 
     // Background
-    ctx.fillStyle = isDark ? '#08080a' : '#fff5ea';
+    ctx.fillStyle = isMatteBlack ? '#09090b' : isDark ? '#08080a' : '#fff5ea';
     ctx.fillRect(0, 0, width, height);
 
     // Subtle border
-    ctx.strokeStyle = isDark ? '#f43f5e' : '#fb7185';
+    ctx.strokeStyle = isMatteBlack ? '#ffffff' : isDark ? '#f43f5e' : '#fb7185';
     ctx.lineWidth = 4;
     ctx.strokeRect(2, 2, width - 4, height - 4);
 
     // Mode label
-    ctx.fillStyle = isDark ? '#fb7185' : '#e11d48';
+    ctx.fillStyle = isMatteBlack ? '#ffffff' : isDark ? '#fb7185' : '#e11d48';
     ctx.font = '600 15px "Plus Jakarta Sans", sans-serif';
     ctx.textAlign = 'center';
     const modeLabel = mode === 'focus' ? 'FOCUS' : mode === 'shortBreak' ? 'SHORT BREAK' : 'LONG BREAK';
@@ -105,21 +107,21 @@ export const Timer: React.FC<TimerProps> = ({
     ctx.fillText(formattedTime, width / 2, 108);
 
     // Active task or quote
-    ctx.fillStyle = isDark ? '#fda4af' : '#9f1239';
+    ctx.fillStyle = isMatteBlack ? '#a1a1aa' : isDark ? '#fda4af' : '#9f1239';
     ctx.font = '600 13px "Plus Jakarta Sans", sans-serif';
     const subText = activeTask ? activeTask.title : (isRunning ? 'Stay in flow...' : 'Ready to begin');
     ctx.fillText(subText.slice(0, 32), width / 2, 138);
 
     // Pause / Resume Action Pill on canvas
-    ctx.fillStyle = '#f43f5e';
+    ctx.fillStyle = isMatteBlack ? '#ffffff' : '#f43f5e';
     ctx.beginPath();
     ctx.roundRect(width / 2 - 65, height - 44, 130, 28, 14);
     ctx.fill();
 
-    ctx.fillStyle = '#ffffff';
+    ctx.fillStyle = isMatteBlack ? '#000000' : '#ffffff';
     ctx.font = '700 13px "Plus Jakarta Sans", sans-serif';
     ctx.fillText(isRunning ? '❚❚ PAUSE' : '▶ RESUME', width / 2, height - 25);
-  }, [timeLeft, mode, isDark, formattedTime, activeTask, isRunning]);
+  }, [timeLeft, mode, isDark, isMatteBlack, formattedTime, activeTask, isRunning]);
 
   // MediaSession integration for Video PiP controls
   useEffect(() => {
@@ -262,7 +264,9 @@ export const Timer: React.FC<TimerProps> = ({
       particleCount: 38,
       spread: 60,
       origin: { y: 0.4 },
-      colors: isDark ? ['#f43f5e', '#ec4899', '#fb7185', '#fda4af'] : ['#f43f5e', '#fb7185', '#fda4af']
+      colors: isMatteBlack 
+        ? ['#ffffff', '#e4e4e7', '#a1a1aa', '#71717a'] 
+        : isDark ? ['#f43f5e', '#ec4899', '#fb7185', '#fda4af'] : ['#f43f5e', '#fb7185', '#fda4af']
     });
 
     onCompleteActiveTask();
@@ -309,7 +313,7 @@ export const Timer: React.FC<TimerProps> = ({
           pipDocWindow.document.body
         )}
 
-      {/* Cute Bunny Mascot - Always White & Pink! */}
+      {/* Mascot Character (Hollow Knight in Matte Black, Miffy in Pink) */}
       {settings.showBunnyMascot && (
         <div className="mb-2 sm:mb-3">
           <BunnyMascot mode={mode} isRunning={isRunning} theme={theme} />
@@ -333,9 +337,11 @@ export const Timer: React.FC<TimerProps> = ({
               placeholder="What do you want to focus on?"
               autoFocus
               className={`w-full text-center text-lg sm:text-xl font-bold bg-transparent border-b-2 outline-none pb-1 transition-all ${
-                isDark 
-                  ? 'text-pink-100 border-pink-500 placeholder-pink-400/40' 
-                  : 'text-pink-950 border-pink-500 placeholder-pink-900/40'
+                isMatteBlack
+                  ? 'text-white border-white placeholder-neutral-500'
+                  : isDark 
+                    ? 'text-pink-100 border-pink-500 placeholder-pink-400/40' 
+                    : 'text-pink-950 border-pink-500 placeholder-pink-900/40'
               }`}
             />
           </div>
@@ -348,28 +354,34 @@ export const Timer: React.FC<TimerProps> = ({
                   onClick={handleMainCheckboxClick}
                   title="Mark active task as done (advances to next task below)"
                   className={`w-7 h-7 rounded-xl flex items-center justify-center transition-all duration-200 shrink-0 ${
-                    isDark
-                      ? 'border-2 border-pink-400/60 hover:border-pink-400 bg-white/5 hover:bg-pink-600/25 shadow-[0_0_10px_rgba(244,63,94,0.3)]'
-                      : 'border-2 border-pink-400 hover:border-pink-600 bg-white hover:bg-pink-100/60 shadow-sm'
+                    isMatteBlack
+                      ? 'border-2 border-neutral-400 hover:border-white bg-neutral-900 hover:bg-neutral-800 shadow-sm'
+                      : isDark
+                        ? 'border-2 border-pink-400/60 hover:border-pink-400 bg-white/5 hover:bg-pink-600/25 shadow-[0_0_10px_rgba(244,63,94,0.3)]'
+                        : 'border-2 border-pink-400 hover:border-pink-600 bg-white hover:bg-pink-100/60 shadow-sm'
                   }`}
                 >
-                  <Check size={16} className="text-pink-400 opacity-0 group-hover:opacity-100 transition-opacity stroke-[3]" />
+                  <Check size={16} className={`${isMatteBlack ? 'text-white' : 'text-pink-400'} opacity-0 group-hover:opacity-100 transition-opacity stroke-[3]`} />
                 </button>
 
                 {/* Editable Task Title */}
                 <div
                   onClick={startEditing}
                   title="Click to edit task title directly"
-                  className="flex items-center space-x-2 truncate py-1 px-2.5 rounded-xl transition-colors hover:bg-pink-500/10"
+                  className={`flex items-center space-x-2 truncate py-1 px-2.5 rounded-xl transition-colors ${
+                    isMatteBlack ? 'hover:bg-white/5' : 'hover:bg-pink-500/10'
+                  }`}
                 >
                   <span
                     className={`text-lg sm:text-xl font-bold tracking-tight truncate transition-colors ${
-                      isDark ? 'text-pink-100 drop-shadow-[0_0_10px_rgba(244,63,94,0.3)]' : 'text-pink-950 font-bold'
+                      isMatteBlack
+                        ? 'text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.2)]'
+                        : isDark ? 'text-pink-100 drop-shadow-[0_0_10px_rgba(244,63,94,0.3)]' : 'text-pink-950 font-bold'
                     }`}
                   >
                     {activeTask.title}
                   </span>
-                  <Pencil size={14} className="opacity-0 group-hover:opacity-80 transition-opacity text-pink-400 shrink-0" />
+                  <Pencil size={14} className={`opacity-0 group-hover:opacity-80 transition-opacity ${isMatteBlack ? 'text-neutral-400' : 'text-pink-400'} shrink-0`} />
                 </div>
               </>
             ) : (
@@ -378,12 +390,14 @@ export const Timer: React.FC<TimerProps> = ({
                 onClick={startEditing}
                 title="Click to add a task"
                 className={`flex items-center space-x-2 py-1.5 px-4 rounded-xl border border-dashed transition-all ${
-                  isDark
-                    ? 'border-pink-500/30 hover:border-pink-400 bg-white/[0.03] text-pink-200/80'
-                    : 'border-pink-300 hover:border-pink-500 bg-pink-50/50 text-pink-900/80'
+                  isMatteBlack
+                    ? 'border-neutral-700 hover:border-white bg-white/5 text-neutral-300'
+                    : isDark
+                      ? 'border-pink-500/30 hover:border-pink-400 bg-white/[0.03] text-pink-200/80'
+                      : 'border-pink-300 hover:border-pink-500 bg-pink-50/50 text-pink-900/80'
                 }`}
               >
-                <Plus size={16} className="text-pink-400" />
+                <Plus size={16} className={isMatteBlack ? 'text-white' : 'text-pink-400'} />
                 <span className="text-base font-semibold">What do you want to focus on?</span>
               </div>
             )}
@@ -403,12 +417,16 @@ export const Timer: React.FC<TimerProps> = ({
               onClick={() => onModeChange(m)}
               className={`text-xs sm:text-sm font-bold tracking-wider uppercase transition-all duration-300 py-1.5 px-3.5 rounded-full ${
                 isActive
-                  ? isDark
-                    ? 'text-pink-100 bg-pink-600/30 border border-pink-500/50 shadow-[0_0_15px_rgba(244,63,94,0.3)]'
-                    : 'text-pink-950 bg-white/90 shadow-sm border border-pink-200'
-                  : isDark
-                    ? 'text-pink-200/50 hover:text-pink-100'
-                    : 'text-pink-900/50 hover:text-pink-900'
+                  ? isMatteBlack
+                    ? 'text-black bg-white shadow-[0_0_15px_rgba(255,255,255,0.35)] font-extrabold'
+                    : isDark
+                      ? 'text-pink-100 bg-pink-600/30 border border-pink-500/50 shadow-[0_0_15px_rgba(244,63,94,0.3)]'
+                      : 'text-pink-950 bg-white/90 shadow-sm border border-pink-200'
+                  : isMatteBlack
+                    ? 'text-neutral-500 hover:text-white'
+                    : isDark
+                      ? 'text-pink-200/50 hover:text-pink-100'
+                      : 'text-pink-900/50 hover:text-pink-900'
               }`}
             >
               {label}
@@ -428,12 +446,16 @@ export const Timer: React.FC<TimerProps> = ({
               strokeWidth={2}
               className={`transition-all duration-300 ${
                 isCompleted
-                  ? isDark
-                    ? 'fill-pink-400 text-pink-400 filter drop-shadow-[0_0_8px_rgba(244,63,94,0.7)]'
-                    : 'fill-amber-400 text-amber-400 filter drop-shadow'
-                  : isDark
-                    ? 'text-pink-950/60 fill-none'
-                    : 'text-pink-300/40 fill-none'
+                  ? isMatteBlack
+                    ? 'fill-white text-white filter drop-shadow-[0_0_8px_rgba(255,255,255,0.7)]'
+                    : isDark
+                      ? 'fill-pink-400 text-pink-400 filter drop-shadow-[0_0_8px_rgba(244,63,94,0.7)]'
+                      : 'fill-amber-400 text-amber-400 filter drop-shadow'
+                  : isMatteBlack
+                    ? 'text-neutral-700 fill-none'
+                    : isDark
+                      ? 'text-pink-950/60 fill-none'
+                      : 'text-pink-300/40 fill-none'
               }`}
             />
           );
@@ -444,7 +466,9 @@ export const Timer: React.FC<TimerProps> = ({
       <div className="relative my-1 flex flex-col items-center">
         <h1
           className={`text-7xl sm:text-8xl md:text-9xl font-bold tracking-tight select-none font-sans transition-all duration-300 ${
-            isDark ? 'text-white drop-shadow-[0_0_30px_rgba(244,63,94,0.3)]' : 'text-pink-950 drop-shadow-sm'
+            isMatteBlack
+              ? 'text-white drop-shadow-[0_0_24px_rgba(255,255,255,0.2)]'
+              : isDark ? 'text-white drop-shadow-[0_0_30px_rgba(244,63,94,0.3)]' : 'text-pink-950 drop-shadow-sm'
           }`}
           style={{ fontVariantNumeric: 'tabular-nums' }}
         >
@@ -453,11 +477,15 @@ export const Timer: React.FC<TimerProps> = ({
 
         {/* Minimal Progress Bar under the clock */}
         <div className={`w-48 sm:w-64 h-1.5 rounded-full mt-2 overflow-hidden ${
-          isDark ? 'bg-pink-950/60' : 'bg-pink-200/60'
+          isMatteBlack ? 'bg-neutral-800' : isDark ? 'bg-pink-950/60' : 'bg-pink-200/60'
         }`}>
           <div
             className={`h-full rounded-full transition-all duration-1000 ${
-              isDark ? 'bg-gradient-to-r from-pink-500 via-rose-400 to-pink-300 shadow-[0_0_10px_rgba(244,63,94,0.6)]' : 'bg-gradient-to-r from-pink-400 to-rose-500'
+              isMatteBlack
+                ? 'bg-white shadow-[0_0_12px_rgba(255,255,255,0.8)]'
+                : isDark
+                  ? 'bg-gradient-to-r from-pink-500 via-rose-400 to-pink-300 shadow-[0_0_10px_rgba(244,63,94,0.6)]'
+                  : 'bg-gradient-to-r from-pink-400 to-rose-500'
             }`}
             style={{ width: `${progressPercent}%` }}
           />
@@ -470,9 +498,7 @@ export const Timer: React.FC<TimerProps> = ({
         <button
           onClick={onTogglePlay}
           title={isRunning ? "Pause (Space)" : "Start (Space)"}
-          className={`p-3.5 sm:p-4 rounded-2xl transition-all duration-200 ${
-            isDark ? 'glass-btn-dark' : 'glass-btn-pink'
-          }`}
+          className={`p-3.5 sm:p-4 rounded-2xl transition-all duration-200 ${btnClass}`}
         >
           {isRunning ? (
             <Pause size={22} className="stroke-[2.5]" />
@@ -485,9 +511,7 @@ export const Timer: React.FC<TimerProps> = ({
         <button
           onClick={onSkip}
           title="Skip to next session"
-          className={`p-3.5 sm:p-4 rounded-2xl transition-all duration-200 ${
-            isDark ? 'glass-btn-dark' : 'glass-btn-pink'
-          }`}
+          className={`p-3.5 sm:p-4 rounded-2xl transition-all duration-200 ${btnClass}`}
         >
           <SkipForward size={22} className="stroke-[2.5]" />
         </button>
@@ -496,9 +520,7 @@ export const Timer: React.FC<TimerProps> = ({
         <button
           onClick={onReset}
           title="Reset timer (R)"
-          className={`p-3.5 sm:p-4 rounded-2xl transition-all duration-200 ${
-            isDark ? 'glass-btn-dark' : 'glass-btn-pink'
-          }`}
+          className={`p-3.5 sm:p-4 rounded-2xl transition-all duration-200 ${btnClass}`}
         >
           <RotateCcw size={22} className="stroke-[2.5]" />
         </button>
@@ -508,8 +530,12 @@ export const Timer: React.FC<TimerProps> = ({
           onClick={togglePictureInPicture}
           title="Picture-in-Picture Floating Timer (with Pause & Resume)"
           className={`p-3.5 sm:p-4 rounded-2xl transition-all duration-200 ${
-            isPiPActive ? 'ring-2 ring-pink-400 shadow-[0_0_15px_rgba(244,63,94,0.5)]' : ''
-          } ${isDark ? 'glass-btn-dark' : 'glass-btn-pink'}`}
+            isPiPActive 
+              ? isMatteBlack
+                ? 'ring-2 ring-white shadow-[0_0_15px_rgba(255,255,255,0.5)]'
+                : 'ring-2 ring-pink-400 shadow-[0_0_15px_rgba(244,63,94,0.5)]' 
+              : ''
+          } ${btnClass}`}
         >
           <PictureInPicture2 size={22} className="stroke-[2.5]" />
         </button>

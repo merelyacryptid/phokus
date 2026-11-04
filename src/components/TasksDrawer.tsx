@@ -34,7 +34,8 @@ export const TasksDrawer: React.FC<TasksDrawerProps> = ({
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const [confirmClear, setConfirmClear] = useState(false);
-  const isDark = theme === 'dark-mesh';
+  const isMatteBlack = theme === 'matte-black';
+  const isDark = theme === 'dark-mesh' || isMatteBlack;
 
   if (!isOpen) return null;
 
@@ -117,26 +118,30 @@ export const TasksDrawer: React.FC<TasksDrawerProps> = ({
       {/* Main Card with Fixed Height & Solid Opaque Background */}
       <div
         className={`relative w-full max-w-md h-[580px] max-h-[88vh] flex flex-col rounded-3xl p-6 shadow-2xl transition-colors duration-200 ${
-          isDark
-            ? 'bg-[#161420] border border-pink-500/30 text-white shadow-2xl shadow-black/90'
-            : 'bg-white border border-pink-200 text-pink-950 shadow-2xl shadow-pink-200/50'
+          isMatteBlack
+            ? 'bg-[#0f0f12] border border-neutral-700/80 text-white shadow-2xl shadow-black/95'
+            : isDark
+              ? 'bg-[#161420] border border-pink-500/30 text-white shadow-2xl shadow-black/90'
+              : 'bg-white border border-pink-200 text-pink-950 shadow-2xl shadow-pink-200/50'
         }`}
       >
         {/* Header */}
-        <div className="flex items-center justify-between pb-4 border-b border-pink-500/20 mb-4 select-none shrink-0">
+        <div className={`flex items-center justify-between pb-4 border-b ${isMatteBlack ? 'border-neutral-800' : 'border-pink-500/20'} mb-4 select-none shrink-0`}>
           <div className="flex items-center space-x-3">
             <div
               className={`p-2.5 rounded-2xl flex items-center justify-center ${
-                isDark
-                  ? 'bg-pink-600/20 text-pink-400 border border-pink-500/35 shadow-[0_0_12px_rgba(244,63,94,0.25)]'
-                  : 'bg-pink-100 text-pink-600 border border-pink-200'
+                isMatteBlack
+                  ? 'bg-neutral-800 text-white border border-neutral-700 shadow-sm'
+                  : isDark
+                    ? 'bg-pink-600/20 text-pink-400 border border-pink-500/35 shadow-[0_0_12px_rgba(244,63,94,0.25)]'
+                    : 'bg-pink-100 text-pink-600 border border-pink-200'
               }`}
             >
               <ListTodo size={22} className="stroke-[2.5]" />
             </div>
             <div>
               <h2 className={`text-xl font-bold tracking-tight ${isDark ? 'text-white' : 'text-pink-950'}`}>Tasks</h2>
-              <p className={`text-xs font-medium ${isDark ? 'text-pink-300/80' : 'text-pink-900/70'}`}>
+              <p className={`text-xs font-medium ${isMatteBlack ? 'text-neutral-400' : isDark ? 'text-pink-300/80' : 'text-pink-900/70'}`}>
                 {completedCount} of {tasks.length} completed
               </p>
             </div>
@@ -152,9 +157,11 @@ export const TasksDrawer: React.FC<TasksDrawerProps> = ({
                 className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center space-x-1.5 transition-all duration-200 active:scale-95 ${
                   confirmClear
                     ? 'bg-red-600 text-white border border-red-500 shadow-[0_0_12px_rgba(239,68,68,0.5)] animate-pulse'
-                    : isDark
-                      ? 'bg-red-500/15 hover:bg-red-500/25 text-red-300 border border-red-500/30 hover:border-red-500/50'
-                      : 'bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 hover:border-red-300'
+                    : isMatteBlack
+                      ? 'bg-neutral-800 hover:bg-neutral-700 text-neutral-300 border border-neutral-700'
+                      : isDark
+                        ? 'bg-red-500/15 hover:bg-red-500/25 text-red-300 border border-red-500/30 hover:border-red-500/50'
+                        : 'bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 hover:border-red-300'
                 }`}
               >
                 <Trash2 size={13} className="stroke-[2.2]" />
@@ -165,7 +172,7 @@ export const TasksDrawer: React.FC<TasksDrawerProps> = ({
             <button
               onClick={onClose}
               className={`p-2 rounded-xl transition-colors ${
-                isDark ? 'hover:bg-white/10 text-pink-200/70 hover:text-white' : 'hover:bg-pink-100 text-pink-800 hover:text-pink-950'
+                isDark ? 'hover:bg-white/10 text-neutral-400 hover:text-white' : 'hover:bg-pink-100 text-pink-800 hover:text-pink-950'
               }`}
             >
               <X size={20} />
@@ -179,18 +186,20 @@ export const TasksDrawer: React.FC<TasksDrawerProps> = ({
             <div className="h-full flex flex-col items-center justify-center text-center p-6 space-y-3 select-none">
               <div
                 className={`p-4 rounded-2xl ${
-                  isDark
-                    ? 'bg-pink-500/10 text-pink-400 border border-pink-500/20'
-                    : 'bg-pink-100/80 text-pink-600 border border-pink-200'
+                  isMatteBlack
+                    ? 'bg-neutral-800/80 text-white border border-neutral-700'
+                    : isDark
+                      ? 'bg-pink-500/10 text-pink-400 border border-pink-500/20'
+                      : 'bg-pink-100/80 text-pink-600 border border-pink-200'
                 }`}
               >
                 <ListTodo size={30} className="stroke-[2]" />
               </div>
               <div>
-                <p className={`text-base font-semibold ${isDark ? 'text-pink-100' : 'text-pink-950'}`}>
+                <p className={`text-base font-semibold ${isDark ? 'text-white' : 'text-pink-950'}`}>
                   No tasks yet
                 </p>
-                <p className={`text-xs mt-1 ${isDark ? 'text-pink-300/70' : 'text-pink-900/60'}`}>
+                <p className={`text-xs mt-1 ${isMatteBlack ? 'text-neutral-400' : isDark ? 'text-pink-300/70' : 'text-pink-900/60'}`}>
                   Add a task below to stay focused and track progress
                 </p>
               </div>
@@ -210,14 +219,20 @@ export const TasksDrawer: React.FC<TasksDrawerProps> = ({
                     isDragging ? 'opacity-35 scale-[0.98]' : 'opacity-100'
                   } ${
                     isOver
-                      ? 'border-2 border-dashed border-pink-500 bg-pink-500/15'
+                      ? isMatteBlack
+                        ? 'border-2 border-dashed border-white bg-white/10'
+                        : 'border-2 border-dashed border-pink-500 bg-pink-500/15'
                       : isCurrentFocus
-                        ? isDark
-                          ? 'bg-[#282136] border-2 border-pink-500 shadow-[0_0_14px_rgba(244,63,94,0.3)]'
-                          : 'bg-pink-100 border-2 border-pink-400 shadow-sm'
-                        : isDark
-                          ? 'bg-[#1f1b2b] hover:bg-[#272236] border border-pink-500/20 hover:border-pink-500/40'
-                          : 'bg-pink-50/90 hover:bg-pink-100/80 border border-pink-200/80 hover:border-pink-300'
+                        ? isMatteBlack
+                          ? 'bg-[#1b1b1e] border-2 border-white shadow-[0_0_14px_rgba(255,255,255,0.2)]'
+                          : isDark
+                            ? 'bg-[#282136] border-2 border-pink-500 shadow-[0_0_14px_rgba(244,63,94,0.3)]'
+                            : 'bg-pink-100 border-2 border-pink-400 shadow-sm'
+                        : isMatteBlack
+                          ? 'bg-[#151518] hover:bg-[#1c1c20] border border-neutral-800 hover:border-neutral-700'
+                          : isDark
+                            ? 'bg-[#1f1b2b] hover:bg-[#272236] border border-pink-500/20 hover:border-pink-500/40'
+                            : 'bg-pink-50/90 hover:bg-pink-100/80 border border-pink-200/80 hover:border-pink-300'
                   }`}
                 >
                   <div className="flex items-center space-x-2.5 flex-1 min-w-0">
@@ -228,9 +243,11 @@ export const TasksDrawer: React.FC<TasksDrawerProps> = ({
                       onDragEnd={handleDragEnd}
                       title="Drag to reorder"
                       className={`cursor-grab active:cursor-grabbing p-1.5 rounded-lg transition-colors touch-none ${
-                        isDark 
-                          ? 'text-pink-400/60 hover:text-pink-200 hover:bg-white/10' 
-                          : 'text-pink-900/40 hover:text-pink-700 hover:bg-pink-200/50'
+                        isMatteBlack
+                          ? 'text-neutral-500 hover:text-white hover:bg-white/10'
+                          : isDark 
+                            ? 'text-pink-400/60 hover:text-pink-200 hover:bg-white/10' 
+                            : 'text-pink-900/40 hover:text-pink-700 hover:bg-pink-200/50'
                       }`}
                     >
                       <GripVertical size={16} />
@@ -242,10 +259,14 @@ export const TasksDrawer: React.FC<TasksDrawerProps> = ({
                       title={task.completed ? "Mark as uncompleted" : "Mark as completed"}
                       className={`w-6 h-6 rounded-lg flex items-center justify-center transition-colors duration-150 shrink-0 ${
                         task.completed
-                          ? 'bg-pink-600 text-white border border-pink-500 shadow-[0_0_10px_rgba(244,63,94,0.4)]'
-                          : isDark
-                            ? 'border-2 border-pink-400/50 hover:border-pink-400 bg-white/10'
-                            : 'border-2 border-pink-300 hover:border-pink-500 bg-white'
+                          ? isMatteBlack
+                            ? 'bg-white text-black border border-white shadow-[0_0_8px_rgba(255,255,255,0.4)]'
+                            : 'bg-pink-600 text-white border border-pink-500 shadow-[0_0_10px_rgba(244,63,94,0.4)]'
+                          : isMatteBlack
+                            ? 'border-2 border-neutral-500 hover:border-white bg-white/5'
+                            : isDark
+                              ? 'border-2 border-pink-400/50 hover:border-pink-400 bg-white/10'
+                              : 'border-2 border-pink-300 hover:border-pink-500 bg-white'
                       }`}
                     >
                       {task.completed && <Check size={16} className="stroke-[3]" />}
@@ -257,9 +278,11 @@ export const TasksDrawer: React.FC<TasksDrawerProps> = ({
                         onClick={() => handleToggle(task)}
                         className={`text-sm sm:text-base truncate cursor-pointer transition-colors ${
                           task.completed
-                            ? isDark
-                              ? 'line-through text-pink-300/50 font-normal'
-                              : 'line-through text-pink-900/50 font-normal'
+                            ? isMatteBlack
+                              ? 'line-through text-neutral-500 font-normal'
+                              : isDark
+                                ? 'line-through text-pink-300/50 font-normal'
+                                : 'line-through text-pink-900/50 font-normal'
                             : isDark
                               ? 'text-white font-semibold'
                               : 'text-pink-950 font-semibold'
@@ -268,7 +291,7 @@ export const TasksDrawer: React.FC<TasksDrawerProps> = ({
                         {task.title}
                       </span>
                       {isCurrentFocus && (
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-pink-400">
+                        <span className={`text-[10px] font-bold uppercase tracking-wider ${isMatteBlack ? 'text-neutral-300' : 'text-pink-400'}`}>
                           Current Focus
                         </span>
                       )}
@@ -283,7 +306,9 @@ export const TasksDrawer: React.FC<TasksDrawerProps> = ({
                       disabled={idx === 0}
                       title="Move Up"
                       className={`p-1.5 rounded-lg transition-colors disabled:opacity-20 disabled:cursor-not-allowed ${
-                        isDark ? 'hover:bg-white/10 text-pink-300/70 hover:text-pink-100' : 'hover:bg-pink-200/60 text-pink-900/60 hover:text-pink-950'
+                        isMatteBlack
+                          ? 'hover:bg-white/10 text-neutral-400 hover:text-white'
+                          : isDark ? 'hover:bg-white/10 text-pink-300/70 hover:text-pink-100' : 'hover:bg-pink-200/60 text-pink-900/60 hover:text-pink-950'
                       }`}
                     >
                       <ChevronUp size={16} />
@@ -295,7 +320,9 @@ export const TasksDrawer: React.FC<TasksDrawerProps> = ({
                       disabled={idx === tasks.length - 1}
                       title="Move Down"
                       className={`p-1.5 rounded-lg transition-colors disabled:opacity-20 disabled:cursor-not-allowed ${
-                        isDark ? 'hover:bg-white/10 text-pink-300/70 hover:text-pink-100' : 'hover:bg-pink-200/60 text-pink-900/60 hover:text-pink-950'
+                        isMatteBlack
+                          ? 'hover:bg-white/10 text-neutral-400 hover:text-white'
+                          : isDark ? 'hover:bg-white/10 text-pink-300/70 hover:text-pink-100' : 'hover:bg-pink-200/60 text-pink-900/60 hover:text-pink-950'
                       }`}
                     >
                       <ChevronDown size={16} />
@@ -308,12 +335,16 @@ export const TasksDrawer: React.FC<TasksDrawerProps> = ({
                         title="Set as Current Focus on Timer"
                         className={`p-1.5 rounded-lg text-xs flex items-center transition-colors ${
                           isCurrentFocus
-                            ? isDark
-                              ? 'bg-pink-600/30 text-pink-300 border border-pink-500/40'
-                              : 'bg-pink-200 text-pink-700 font-semibold'
-                            : isDark
-                              ? 'hover:bg-pink-950/50 text-pink-200/60 hover:text-pink-200'
-                              : 'hover:bg-pink-200/60 text-pink-700/60 hover:text-pink-900'
+                            ? isMatteBlack
+                              ? 'bg-white/20 text-white border border-white/40'
+                              : isDark
+                                ? 'bg-pink-600/30 text-pink-300 border border-pink-500/40'
+                                : 'bg-pink-200 text-pink-700 font-semibold'
+                            : isMatteBlack
+                              ? 'hover:bg-white/10 text-neutral-400 hover:text-white'
+                              : isDark
+                                ? 'hover:bg-pink-950/50 text-pink-200/60 hover:text-pink-200'
+                                : 'hover:bg-pink-200/60 text-pink-700/60 hover:text-pink-900'
                         }`}
                       >
                         <Target size={15} />
@@ -326,7 +357,7 @@ export const TasksDrawer: React.FC<TasksDrawerProps> = ({
                       title="Delete task"
                       className={`p-1.5 rounded-lg transition-colors ${
                         isDark
-                          ? 'hover:bg-red-500/20 text-pink-300/50 hover:text-red-400'
+                          ? 'hover:bg-red-500/20 text-neutral-400 hover:text-red-400'
                           : 'hover:bg-red-100 text-pink-800/50 hover:text-red-600'
                       }`}
                     >
@@ -340,22 +371,28 @@ export const TasksDrawer: React.FC<TasksDrawerProps> = ({
         </div>
 
         {/* Add Task Form (Appends below previously added task) */}
-        <form onSubmit={handleSubmit} className="mt-4 pt-4 border-t border-pink-500/20 flex items-center space-x-2 shrink-0">
+        <form onSubmit={handleSubmit} className={`mt-4 pt-4 border-t ${isMatteBlack ? 'border-neutral-800' : 'border-pink-500/20'} flex items-center space-x-2 shrink-0`}>
           <input
             type="text"
             value={newTitle}
             onChange={(e) => setNewTitle(e.target.value)}
             placeholder="Add a new task... (press Enter)"
             className={`flex-1 px-4 py-2.5 rounded-2xl text-sm font-medium outline-none transition-colors ${
-              isDark
-                ? 'bg-[#1f1b2b] text-white placeholder-pink-300/40 border border-pink-500/30 focus:border-pink-400 focus:ring-1 focus:ring-pink-500/50'
-                : 'bg-pink-50 text-pink-950 placeholder-pink-900/40 border border-pink-200 focus:border-pink-500'
+              isMatteBlack
+                ? 'bg-[#151518] text-white placeholder-neutral-500 border border-neutral-700 focus:border-white focus:ring-1 focus:ring-white/50'
+                : isDark
+                  ? 'bg-[#1f1b2b] text-white placeholder-pink-300/40 border border-pink-500/30 focus:border-pink-400 focus:ring-1 focus:ring-pink-500/50'
+                  : 'bg-pink-50 text-pink-950 placeholder-pink-900/40 border border-pink-200 focus:border-pink-500'
             }`}
           />
           <button
             type="submit"
             disabled={!newTitle.trim()}
-            className="p-2.5 rounded-2xl transition-all disabled:opacity-40 disabled:cursor-not-allowed bg-pink-600 hover:bg-pink-500 active:scale-95 text-white shadow-[0_0_12px_rgba(244,63,94,0.4)] shrink-0"
+            className={`p-2.5 rounded-2xl transition-all disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 text-white shadow-md shrink-0 ${
+              isMatteBlack
+                ? 'bg-white hover:bg-neutral-200 text-black shadow-[0_0_12px_rgba(255,255,255,0.3)]'
+                : 'bg-pink-600 hover:bg-pink-500 active:scale-95 text-white shadow-[0_0_12px_rgba(244,63,94,0.4)]'
+            }`}
           >
             <Plus size={20} className="stroke-[2.5]" />
           </button>

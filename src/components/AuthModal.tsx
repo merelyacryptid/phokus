@@ -24,8 +24,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
-
-  const isDark = theme === 'dark-mesh';
+  const isMatteBlack = theme === 'matte-black';
+  const isDark = theme === 'dark-mesh' || isMatteBlack;
 
   if (!isOpen) return null;
 
@@ -154,9 +154,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
       <div
         className={`relative w-full max-w-sm rounded-3xl p-6 shadow-2xl transition-all duration-300 ${
-          isDark
-            ? 'bg-[#140a12]/95 border border-pink-500/25 text-white shadow-2xl shadow-pink-950/60'
-            : 'bg-white/95 border border-pink-200 text-pink-950 shadow-pink-200/50'
+          isMatteBlack
+            ? 'bg-[#0f0f12] border border-neutral-700/80 text-white shadow-2xl shadow-black/95'
+            : isDark
+              ? 'bg-[#140a12]/95 border border-pink-500/25 text-white shadow-2xl shadow-pink-950/60'
+              : 'bg-white/95 border border-pink-200 text-pink-950 shadow-pink-200/50'
         }`}
       >
         {/* Header */}
