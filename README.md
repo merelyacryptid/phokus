@@ -11,7 +11,7 @@ I built a simple, sweet and minimalist customisable pomodoro web application for
   - Cycle progress indicator - clean star indicators showing current session in cycle (so you can feel accomplished).
   - Picture-in-Picture (PiP) mini floating timer window.
 
-- **productivity helpers**:
+- **Productivity helpers**:
   - Maintain a list of todos and strike them out as you get through each session
     - Task completion confetti!!
   - Encouraging quotes : Click anytime to cycle through soothing, mindful quotes.
@@ -28,6 +28,7 @@ I built a simple, sweet and minimalist customisable pomodoro web application for
 - **Themes**:
   - **White & Pink & Bunnies (Default)**: Soft pastel blush pinks, creamy white glassmorphism, and some bunnies.
   - **Midnight Glow (Dark Mode)**: Ambient indigo/purple/magenta glowing mesh gradient
+  - more themes coming soon
   - Instant theme toggle in the bottom control bar or settings.
 
 
