@@ -14,7 +14,7 @@ interface PipWidgetProps {
   onTogglePlay: () => void;
   onSkip: () => void;
   onReset: () => void;
-  onCompleteActiveTask: () => void;
+  onCompleteActiveTask: (taskId?: string) => void;
 }
 
 interface PipThemeConfig {
@@ -258,7 +258,7 @@ export const PipWidget: React.FC<PipWidgetProps> = ({
           {activeTask ? (
             <>
               <button
-                onClick={onCompleteActiveTask}
+                onClick={() => onCompleteActiveTask(activeTask.id)}
                 title="Mark task done"
                 style={{
                   width: '20px',

@@ -28,7 +28,7 @@ interface TimerProps {
   onTogglePlay: () => void;
   onSkip: () => void;
   onReset: () => void;
-  onCompleteActiveTask: () => void;
+  onCompleteActiveTask: (taskId?: string) => void;
   onUpdateActiveTaskTitle: (newTitle: string) => void;
   onCreateActiveTask: (title: string) => void;
 }
@@ -53,6 +53,7 @@ export const Timer: React.FC<TimerProps> = ({
   const isDark = theme === 'dark-mesh' || isMatteBlack;
   const btnClass = isMatteBlack ? 'glass-btn-matte' : isDark ? 'glass-btn-dark' : 'glass-btn-pink';
   const [isEditingTask, setIsEditingTask] = useState(false);
+  const [isCompleting, setIsCompleting] = useState(false);
   const [editText, setEditText] = useState('');
   const taskInputRef = useRef<HTMLInputElement>(null);
 
@@ -306,8 +307,11 @@ export const Timer: React.FC<TimerProps> = ({
   };
 
   // Checkbox clicked on main page
-  const handleMainCheckboxClick = () => {
-    if (!activeTask) return;
+  const handleMainCheckboxClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!activeTask || isCompleting) return;
+
+    setIsCompleting(true);
 
     // Confetti celebration
     confetti({
@@ -319,7 +323,11 @@ export const Timer: React.FC<TimerProps> = ({
         : isDark ? ['#f43f5e', '#ec4899', '#fb7185', '#fda4af'] : ['#f43f5e', '#fb7185', '#fda4af']
     });
 
-    onCompleteActiveTask();
+    const completedTaskId = activeTask.id;
+    setTimeout(() => {
+      onCompleteActiveTask(completedTaskId);
+      setIsCompleting(false);
+    }, 280);
   };
 
   // Calculate percentage for subtle progress accent
@@ -404,21 +412,36 @@ export const Timer: React.FC<TimerProps> = ({
                   onClick={handleMainCheckboxClick}
                   title="Mark active task as done (advances to next task below)"
                   className={`w-7 h-7 rounded-xl flex items-center justify-center transition-all duration-200 shrink-0 ${
-                    isMatteBlack
-                      ? 'border-2 border-neutral-400 hover:border-white bg-neutral-900 hover:bg-neutral-800 shadow-sm'
-                      : isDark
-                        ? 'border-2 border-pink-400/60 hover:border-pink-400 bg-white/5 hover:bg-pink-600/25 shadow-[0_0_10px_rgba(244,63,94,0.3)]'
-                        : 'border-2 border-pink-400 hover:border-pink-600 bg-white hover:bg-pink-100/60 shadow-sm'
+                    isCompleting
+                      ? isMatteBlack
+                        ? 'bg-white text-black border border-white shadow-[0_0_10px_rgba(255,255,255,0.6)] scale-105'
+                        : isDark
+                          ? 'bg-pink-500 text-white border border-pink-400 shadow-[0_0_12px_rgba(244,63,94,0.6)] scale-105'
+                          : 'bg-pink-600 text-white border border-pink-500 shadow-[0_0_10px_rgba(244,63,94,0.4)] scale-105'
+                      : isMatteBlack
+                        ? 'border-2 border-neutral-400 hover:border-white bg-neutral-900 hover:bg-neutral-800 shadow-sm'
+                        : isDark
+                          ? 'border-2 border-pink-400/60 hover:border-pink-400 bg-white/5 hover:bg-pink-600/25 shadow-[0_0_10px_rgba(244,63,94,0.3)]'
+                          : 'border-2 border-pink-400 hover:border-pink-600 bg-white hover:bg-pink-100/60 shadow-sm'
                   }`}
                 >
-                  <Check size={16} className={`${isMatteBlack ? 'text-white' : 'text-pink-400'} opacity-0 group-hover:opacity-100 transition-opacity stroke-[3]`} />
+                  <Check
+                    size={16}
+                    className={`stroke-[3] transition-all duration-150 ${
+                      isCompleting
+                        ? isMatteBlack ? 'text-black opacity-100 scale-110' : 'text-white opacity-100 scale-110'
+                        : `${isMatteBlack ? 'text-white' : 'text-pink-400'} opacity-0 group-hover:opacity-100`
+                    }`}
+                  />
                 </button>
 
                 {/* Editable Task Title */}
                 <div
                   onClick={startEditing}
                   title="Click to edit task title directly"
-                  className={`flex items-center space-x-2 truncate py-1 px-2.5 rounded-xl transition-colors ${
+                  className={`flex items-center space-x-2 truncate py-1 px-2.5 rounded-xl transition-all duration-200 ${
+                    isCompleting ? 'line-through opacity-50 scale-[0.98]' : ''
+                  } ${
                     isMatteBlack ? 'hover:bg-white/5' : 'hover:bg-pink-500/10'
                   }`}
                 >
@@ -431,7 +454,9 @@ export const Timer: React.FC<TimerProps> = ({
                   >
                     {activeTask.title}
                   </span>
-                  <Pencil size={14} className={`opacity-0 group-hover:opacity-80 transition-opacity ${isMatteBlack ? 'text-neutral-400' : 'text-pink-400'} shrink-0`} />
+                  {!isCompleting && (
+                    <Pencil size={14} className={`opacity-0 group-hover:opacity-80 transition-opacity ${isMatteBlack ? 'text-neutral-400' : 'text-pink-400'} shrink-0`} />
+                  )}
                 </div>
               </>
             ) : (

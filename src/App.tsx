@@ -472,44 +472,43 @@ export function App() {
   // 2. When a task is marked complete, the task below it appears as current doing task
   const handleToggleTask = (taskId: string) => {
     soundEngine.unlockAudio();
-    setTasks(prev => {
-      const taskIndex = prev.findIndex(t => t.id === taskId);
-      if (taskIndex === -1) return prev;
-      const willBeCompleted = !prev[taskIndex].completed;
+    const taskIndex = tasks.findIndex(t => t.id === taskId);
+    if (taskIndex === -1) return;
 
-      if (willBeCompleted) {
-        updateStats(s => ({ ...s, completedTasksCount: s.completedTasksCount + 1 }));
+    const currentTask = tasks[taskIndex];
+    const willBeCompleted = !currentTask.completed;
 
-        // If the task being completed is the currently active task
-        if (activeTaskId === taskId || !activeTaskId) {
-          // Look for the next uncompleted task below it
-          let nextTask: Task | undefined;
-          for (let i = taskIndex + 1; i < prev.length; i++) {
-            if (!prev[i].completed && prev[i].id !== taskId) {
-              nextTask = prev[i];
+    if (willBeCompleted) {
+      updateStats(s => ({ ...s, completedTasksCount: s.completedTasksCount + 1 }));
+
+      // If the task being completed is the currently active task
+      const currentActiveId = activeTask?.id || activeTaskId;
+      if (currentActiveId === taskId) {
+        // Look for the next uncompleted task below it
+        let nextTask: Task | undefined;
+        for (let i = taskIndex + 1; i < tasks.length; i++) {
+          if (!tasks[i].completed && tasks[i].id !== taskId) {
+            nextTask = tasks[i];
+            break;
+          }
+        }
+        // If none below it, check from top
+        if (!nextTask) {
+          for (let i = 0; i < taskIndex; i++) {
+            if (!tasks[i].completed && tasks[i].id !== taskId) {
+              nextTask = tasks[i];
               break;
             }
           }
-          // If none below it, check from top
-          if (!nextTask) {
-            for (let i = 0; i < taskIndex; i++) {
-              if (!prev[i].completed && prev[i].id !== taskId) {
-                nextTask = prev[i];
-                break;
-              }
-            }
-          }
-          setActiveTaskId(nextTask ? nextTask.id : null);
         }
-      } else {
-        // If uncompleting and no active task, set it as active
-        if (!activeTaskId) {
-          setActiveTaskId(taskId);
-        }
+        setActiveTaskId(nextTask ? nextTask.id : null);
       }
+    } else {
+      // If uncompleting, set it as active
+      setActiveTaskId(taskId);
+    }
 
-      return prev.map(t => t.id === taskId ? { ...t, completed: willBeCompleted } : t);
-    });
+    setTasks(prev => prev.map(t => t.id === taskId ? { ...t, completed: willBeCompleted } : t));
   };
 
   // Delete task
@@ -546,14 +545,16 @@ export function App() {
 
   // Two-way sync: update active task title directly from main page
   const handleUpdateActiveTaskTitle = (newTitle: string) => {
-    if (!activeTaskId) return;
-    setTasks(prev => prev.map(t => t.id === activeTaskId ? { ...t, title: newTitle } : t));
+    const targetId = activeTask?.id || activeTaskId;
+    if (!targetId) return;
+    setTasks(prev => prev.map(t => t.id === targetId ? { ...t, title: newTitle } : t));
   };
 
   // Mark active task complete directly from main page checkbox
-  const handleCompleteActiveTask = () => {
-    if (activeTaskId) {
-      handleToggleTask(activeTaskId);
+  const handleCompleteActiveTask = (taskId?: string) => {
+    const targetId = taskId || activeTask?.id || activeTaskId;
+    if (targetId) {
+      handleToggleTask(targetId);
     }
   };
 
