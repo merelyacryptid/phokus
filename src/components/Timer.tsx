@@ -79,6 +79,56 @@ export const Timer: React.FC<TimerProps> = ({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
+    // Palette per theme
+    const paletteMap: Record<ThemeMode, {
+      bg: string;
+      border: string;
+      modeText: string;
+      digits: string;
+      subText: string;
+      btnBg: string;
+      btnText: string;
+    }> = {
+      'matte-black': {
+        bg: '#09090b',
+        border: '#ffffff',
+        modeText: '#ffffff',
+        digits: '#ffffff',
+        subText: '#a1a1aa',
+        btnBg: '#ffffff',
+        btnText: '#000000',
+      },
+      'dark-mesh': {
+        bg: '#07050d',
+        border: '#f43f5e',
+        modeText: '#fb7185',
+        digits: '#ffffff',
+        subText: '#fda4af',
+        btnBg: '#f43f5e',
+        btnText: '#ffffff',
+      },
+      'light-aura': {
+        bg: '#ffffff',
+        border: '#f472b6',
+        modeText: '#ec4899',
+        digits: '#831433',
+        subText: '#9d174d',
+        btnBg: '#ec4899',
+        btnText: '#ffffff',
+      },
+      'bunny-pink': {
+        bg: '#fff5ea',
+        border: '#fb7185',
+        modeText: '#e11d48',
+        digits: '#831433',
+        subText: '#9f1239',
+        btnBg: '#f43f5e',
+        btnText: '#ffffff',
+      },
+    };
+
+    const p = paletteMap[theme] || paletteMap['bunny-pink'];
+
     // Draw PiP frame
     const width = 360;
     const height = 210;
@@ -86,42 +136,42 @@ export const Timer: React.FC<TimerProps> = ({
     canvas.height = height;
 
     // Background
-    ctx.fillStyle = isMatteBlack ? '#09090b' : isDark ? '#08080a' : '#fff5ea';
+    ctx.fillStyle = p.bg;
     ctx.fillRect(0, 0, width, height);
 
     // Subtle border
-    ctx.strokeStyle = isMatteBlack ? '#ffffff' : isDark ? '#f43f5e' : '#fb7185';
+    ctx.strokeStyle = p.border;
     ctx.lineWidth = 4;
     ctx.strokeRect(2, 2, width - 4, height - 4);
 
     // Mode label
-    ctx.fillStyle = isMatteBlack ? '#ffffff' : isDark ? '#fb7185' : '#e11d48';
+    ctx.fillStyle = p.modeText;
     ctx.font = '600 15px "Plus Jakarta Sans", sans-serif';
     ctx.textAlign = 'center';
     const modeLabel = mode === 'focus' ? 'FOCUS' : mode === 'shortBreak' ? 'SHORT BREAK' : 'LONG BREAK';
     ctx.fillText(modeLabel, width / 2, 38);
 
     // Digits
-    ctx.fillStyle = isDark ? '#ffffff' : '#831433';
+    ctx.fillStyle = p.digits;
     ctx.font = '800 64px "Plus Jakarta Sans", sans-serif';
     ctx.fillText(formattedTime, width / 2, 108);
 
     // Active task or quote
-    ctx.fillStyle = isMatteBlack ? '#a1a1aa' : isDark ? '#fda4af' : '#9f1239';
+    ctx.fillStyle = p.subText;
     ctx.font = '600 13px "Plus Jakarta Sans", sans-serif';
     const subText = activeTask ? activeTask.title : (isRunning ? 'Stay in flow...' : 'Ready to begin');
     ctx.fillText(subText.slice(0, 32), width / 2, 138);
 
     // Pause / Resume Action Pill on canvas
-    ctx.fillStyle = isMatteBlack ? '#ffffff' : '#f43f5e';
+    ctx.fillStyle = p.btnBg;
     ctx.beginPath();
     ctx.roundRect(width / 2 - 65, height - 44, 130, 28, 14);
     ctx.fill();
 
-    ctx.fillStyle = isMatteBlack ? '#000000' : '#ffffff';
+    ctx.fillStyle = p.btnText;
     ctx.font = '700 13px "Plus Jakarta Sans", sans-serif';
     ctx.fillText(isRunning ? '❚❚ PAUSE' : '▶ RESUME', width / 2, height - 25);
-  }, [timeLeft, mode, isDark, isMatteBlack, formattedTime, activeTask, isRunning]);
+  }, [timeLeft, mode, theme, formattedTime, activeTask, isRunning]);
 
   // MediaSession integration for Video PiP controls
   useEffect(() => {

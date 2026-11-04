@@ -17,6 +17,135 @@ interface PipWidgetProps {
   onCompleteActiveTask: () => void;
 }
 
+interface PipThemeConfig {
+  bg: string;
+  color: string;
+  borderColor: string;
+  logoBg: string;
+  logoColor: string;
+  badgeBg: string;
+  badgeColor: string;
+  badgeBorder: string;
+  starActive: string;
+  starInactive: string;
+  digitColor: string;
+  digitShadow: string;
+  taskCheckboxBorder: string;
+  taskCheckboxBg: string;
+  taskCheckColor: string;
+  taskTextColor: string;
+  taskPlaceholderColor: string;
+  mainBtnBg: string;
+  mainBtnColor: string;
+  mainBtnShadow: string;
+  secBtnBg: string;
+  secBtnBorder: string;
+  secBtnColor: string;
+}
+
+const PIP_THEMES: Record<ThemeMode, PipThemeConfig> = {
+  'matte-black': {
+    bg: '#09090b',
+    color: '#ffffff',
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+    logoBg: 'rgba(255, 255, 255, 0.12)',
+    logoColor: '#ffffff',
+    badgeBg: '#ffffff',
+    badgeColor: '#000000',
+    badgeBorder: 'none',
+    starActive: '#ffffff',
+    starInactive: 'rgba(255, 255, 255, 0.2)',
+    digitColor: '#ffffff',
+    digitShadow: '0 0 16px rgba(255, 255, 255, 0.25)',
+    taskCheckboxBorder: '2px solid rgba(255, 255, 255, 0.6)',
+    taskCheckboxBg: 'rgba(255, 255, 255, 0.08)',
+    taskCheckColor: '#ffffff',
+    taskTextColor: '#e4e4e7',
+    taskPlaceholderColor: 'rgba(255, 255, 255, 0.45)',
+    mainBtnBg: '#ffffff',
+    mainBtnColor: '#000000',
+    mainBtnShadow: '0 4px 14px rgba(255, 255, 255, 0.25)',
+    secBtnBg: 'rgba(255, 255, 255, 0.08)',
+    secBtnBorder: 'rgba(255, 255, 255, 0.22)',
+    secBtnColor: '#ffffff',
+  },
+  'dark-mesh': {
+    bg: '#07050d',
+    color: '#ffffff',
+    borderColor: 'rgba(244, 63, 142, 0.35)',
+    logoBg: 'rgba(244, 63, 142, 0.2)',
+    logoColor: '#f472b6',
+    badgeBg: 'rgba(244, 63, 142, 0.25)',
+    badgeColor: '#fda4af',
+    badgeBorder: '1px solid rgba(244, 63, 142, 0.45)',
+    starActive: '#f43f5e',
+    starInactive: 'rgba(244, 63, 142, 0.25)',
+    digitColor: '#ffffff',
+    digitShadow: '0 0 24px rgba(244, 63, 142, 0.4)',
+    taskCheckboxBorder: '2px solid rgba(244, 63, 142, 0.6)',
+    taskCheckboxBg: 'rgba(255, 255, 255, 0.06)',
+    taskCheckColor: '#f43f5e',
+    taskTextColor: '#fda4af',
+    taskPlaceholderColor: 'rgba(255, 255, 255, 0.4)',
+    mainBtnBg: '#f43f5e',
+    mainBtnColor: '#ffffff',
+    mainBtnShadow: '0 4px 16px rgba(244, 63, 94, 0.45)',
+    secBtnBg: 'rgba(255, 255, 255, 0.06)',
+    secBtnBorder: 'rgba(244, 63, 142, 0.35)',
+    secBtnColor: '#ffffff',
+  },
+  'light-aura': {
+    bg: '#ffffff',
+    color: '#831433',
+    borderColor: 'rgba(244, 114, 182, 0.35)',
+    logoBg: 'rgba(254, 205, 211, 0.65)',
+    logoColor: '#ec4899',
+    badgeBg: '#fff0f5',
+    badgeColor: '#9d174d',
+    badgeBorder: '1px solid rgba(244, 114, 182, 0.35)',
+    starActive: '#ec4899',
+    starInactive: 'rgba(244, 114, 182, 0.25)',
+    digitColor: '#831433',
+    digitShadow: 'none',
+    taskCheckboxBorder: '2px solid #f472b6',
+    taskCheckboxBg: '#fff0f5',
+    taskCheckColor: '#ec4899',
+    taskTextColor: '#831433',
+    taskPlaceholderColor: 'rgba(131, 20, 51, 0.45)',
+    mainBtnBg: '#ec4899',
+    mainBtnColor: '#ffffff',
+    mainBtnShadow: '0 4px 14px rgba(236, 72, 153, 0.3)',
+    secBtnBg: 'rgba(255, 240, 245, 0.9)',
+    secBtnBorder: 'rgba(244, 114, 182, 0.35)',
+    secBtnColor: '#9d174d',
+  },
+  'bunny-pink': {
+    bg: '#fff5ea',
+    color: '#831433',
+    borderColor: 'rgba(251, 113, 133, 0.35)',
+    logoBg: 'rgba(254, 205, 215, 0.8)',
+    logoColor: '#e11d48',
+    badgeBg: 'rgba(255, 255, 255, 0.95)',
+    badgeColor: '#9f1239',
+    badgeBorder: '1px solid rgba(251, 113, 133, 0.35)',
+    starActive: '#f43f5e',
+    starInactive: 'rgba(251, 113, 133, 0.25)',
+    digitColor: '#831433',
+    digitShadow: 'none',
+    taskCheckboxBorder: '2px solid #fb7185',
+    taskCheckboxBg: '#ffffff',
+    taskCheckColor: '#f43f5e',
+    taskTextColor: '#9f1239',
+    taskPlaceholderColor: 'rgba(159, 18, 57, 0.5)',
+    mainBtnBg: '#f43f5e',
+    mainBtnColor: '#ffffff',
+    mainBtnShadow: '0 4px 14px rgba(244, 63, 94, 0.35)',
+    secBtnBg: 'rgba(255, 255, 255, 0.85)',
+    secBtnBorder: 'rgba(251, 113, 133, 0.35)',
+    secBtnColor: '#831433',
+  },
+};
+
 export const PipWidget: React.FC<PipWidgetProps> = ({
   mode,
   timeLeft,
@@ -30,8 +159,7 @@ export const PipWidget: React.FC<PipWidgetProps> = ({
   onReset,
   onCompleteActiveTask,
 }) => {
-  const isMatteBlack = theme === 'matte-black';
-  const isDark = theme === 'dark-mesh' || isMatteBlack;
+  const c = PIP_THEMES[theme] || PIP_THEMES['bunny-pink'];
 
   const minutes = Math.floor(timeLeft / 60);
   const seconds = timeLeft % 60;
@@ -51,9 +179,9 @@ export const PipWidget: React.FC<PipWidgetProps> = ({
         padding: '16px',
         userSelect: 'none',
         fontFamily: "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif",
-        backgroundColor: isMatteBlack ? '#0a0a0c' : isDark ? '#09080e' : '#fff5ea',
-        color: isDark ? '#ffffff' : '#831433',
-        border: isMatteBlack ? '1px solid rgba(255, 255, 255, 0.2)' : isDark ? '1px solid rgba(244, 63, 142, 0.25)' : '1px solid rgba(251, 113, 133, 0.3)',
+        backgroundColor: c.bg,
+        color: c.color,
+        border: '1px solid ' + c.borderColor,
       }}
     >
       {/* Top Header */}
@@ -63,8 +191,8 @@ export const PipWidget: React.FC<PipWidgetProps> = ({
             style={{
               padding: '4px',
               borderRadius: '8px',
-              backgroundColor: isMatteBlack ? 'rgba(255, 255, 255, 0.12)' : isDark ? 'rgba(244, 63, 142, 0.15)' : 'rgba(244, 63, 94, 0.1)',
-              color: isMatteBlack ? '#ffffff' : isDark ? '#f472b6' : '#e11d48',
+              backgroundColor: c.logoBg,
+              color: c.logoColor,
             }}
           >
             <BunnyEarsLogo className="w-4 h-4" />
@@ -77,9 +205,9 @@ export const PipWidget: React.FC<PipWidgetProps> = ({
               textTransform: 'uppercase',
               padding: '2px 8px',
               borderRadius: '9999px',
-              backgroundColor: isMatteBlack ? '#ffffff' : isDark ? 'rgba(244, 63, 142, 0.2)' : 'rgba(255, 255, 255, 0.9)',
-              color: isMatteBlack ? '#000000' : isDark ? '#fda4af' : '#9f1239',
-              border: isMatteBlack ? 'none' : isDark ? '1px solid rgba(244, 63, 142, 0.35)' : '1px solid rgba(251, 113, 133, 0.3)',
+              backgroundColor: c.badgeBg,
+              color: c.badgeColor,
+              border: c.badgeBorder,
             }}
           >
             {modeLabel}
@@ -93,8 +221,8 @@ export const PipWidget: React.FC<PipWidgetProps> = ({
               key={idx}
               size={14}
               style={{
-                fill: idx < cycleCount ? (isMatteBlack ? '#ffffff' : '#f43f5e') : 'none',
-                color: idx < cycleCount ? (isMatteBlack ? '#ffffff' : '#f43f5e') : isDark ? 'rgba(255,255,255,0.2)' : 'rgba(131,20,51,0.2)',
+                fill: idx < cycleCount ? c.starActive : 'none',
+                color: idx < cycleCount ? c.starActive : c.starInactive,
               }}
             />
           ))}
@@ -110,8 +238,8 @@ export const PipWidget: React.FC<PipWidgetProps> = ({
             lineHeight: 1,
             letterSpacing: '-0.03em',
             fontVariantNumeric: 'tabular-nums',
-            color: isDark ? '#ffffff' : '#831433',
-            textShadow: isDark ? '0 0 20px rgba(244, 63, 142, 0.35)' : 'none',
+            color: c.digitColor,
+            textShadow: c.digitShadow,
           }}
         >
           {formattedTime}
@@ -136,8 +264,8 @@ export const PipWidget: React.FC<PipWidgetProps> = ({
                   width: '20px',
                   height: '20px',
                   borderRadius: '6px',
-                  border: isDark ? '2px solid rgba(244, 63, 142, 0.6)' : '2px solid #fb7185',
-                  backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : '#ffffff',
+                  border: c.taskCheckboxBorder,
+                  backgroundColor: c.taskCheckboxBg,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -146,7 +274,7 @@ export const PipWidget: React.FC<PipWidgetProps> = ({
                   padding: 0,
                 }}
               >
-                <Check size={13} style={{ color: '#f43f5e' }} />
+                <Check size={13} style={{ color: c.taskCheckColor }} />
               </button>
               <span
                 style={{
@@ -155,7 +283,7 @@ export const PipWidget: React.FC<PipWidgetProps> = ({
                   whiteSpace: 'nowrap',
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
-                  color: isDark ? '#fda4af' : '#9f1239',
+                  color: c.taskTextColor,
                 }}
               >
                 {activeTask.title}
@@ -166,7 +294,7 @@ export const PipWidget: React.FC<PipWidgetProps> = ({
               style={{
                 fontSize: '12px',
                 fontWeight: 500,
-                color: isDark ? 'rgba(255,255,255,0.4)' : 'rgba(131,20,51,0.5)',
+                color: c.taskPlaceholderColor,
               }}
             >
               {isRunning ? 'Focusing...' : 'Ready to start'}
@@ -191,9 +319,9 @@ export const PipWidget: React.FC<PipWidgetProps> = ({
             fontSize: '13px',
             border: 'none',
             cursor: 'pointer',
-            backgroundColor: isMatteBlack ? '#ffffff' : '#f43f5e',
-            color: isMatteBlack ? '#000000' : '#ffffff',
-            boxShadow: isMatteBlack ? '0 4px 14px rgba(255, 255, 255, 0.25)' : '0 4px 14px rgba(244, 63, 94, 0.35)',
+            backgroundColor: c.mainBtnBg,
+            color: c.mainBtnColor,
+            boxShadow: c.mainBtnShadow,
             transition: 'transform 0.15s ease',
           }}
         >
@@ -221,9 +349,9 @@ export const PipWidget: React.FC<PipWidgetProps> = ({
             width: '36px',
             height: '36px',
             borderRadius: '12px',
-            border: isMatteBlack ? '1px solid rgba(255, 255, 255, 0.2)' : isDark ? '1px solid rgba(244, 63, 142, 0.3)' : '1px solid rgba(251, 113, 133, 0.4)',
-            backgroundColor: isMatteBlack ? 'rgba(255,255,255,0.08)' : isDark ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.85)',
-            color: isDark ? '#ffffff' : '#831433',
+            border: '1px solid ' + c.secBtnBorder,
+            backgroundColor: c.secBtnBg,
+            color: c.secBtnColor,
             cursor: 'pointer',
           }}
         >
@@ -241,9 +369,9 @@ export const PipWidget: React.FC<PipWidgetProps> = ({
             width: '36px',
             height: '36px',
             borderRadius: '12px',
-            border: isMatteBlack ? '1px solid rgba(255, 255, 255, 0.2)' : isDark ? '1px solid rgba(244, 63, 142, 0.3)' : '1px solid rgba(251, 113, 133, 0.4)',
-            backgroundColor: isMatteBlack ? 'rgba(255,255,255,0.08)' : isDark ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.85)',
-            color: isDark ? '#ffffff' : '#831433',
+            border: '1px solid ' + c.secBtnBorder,
+            backgroundColor: c.secBtnBg,
+            color: c.secBtnColor,
             cursor: 'pointer',
           }}
         >
