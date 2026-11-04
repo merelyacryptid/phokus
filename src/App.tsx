@@ -537,6 +537,13 @@ export function App() {
     setTasks(newTasks);
   };
 
+  // Clear all tasks
+  const handleClearAllTasks = () => {
+    soundEngine.unlockAudio();
+    setTasks([]);
+    setActiveTaskId(null);
+  };
+
   // Two-way sync: update active task title directly from main page
   const handleUpdateActiveTaskTitle = (newTitle: string) => {
     if (!activeTaskId) return;
@@ -665,6 +672,7 @@ export function App() {
         onAddTask={handleAddTask}
         onToggleTask={handleToggleTask}
         onDeleteTask={handleDeleteTask}
+        onClearAll={handleClearAllTasks}
         onSelectActiveTask={handleSelectActiveTask}
         onReorderTasks={handleReorderTasks}
       />
