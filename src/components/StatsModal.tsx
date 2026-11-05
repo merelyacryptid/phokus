@@ -12,7 +12,7 @@ interface StatsModalProps {
   onOpenAuth: () => void;
 }
 
-export const StatsModal: React.FC<StatsModalProps> = ({
+export const StatsModal: React.FC<StatsModalProps> = React.memo(({
   isOpen,
   stats,
   currentUser,
@@ -185,4 +185,4 @@ export const StatsModal: React.FC<StatsModalProps> = ({
       </div>
     </div>
   );
-};
+});

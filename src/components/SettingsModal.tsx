@@ -12,7 +12,7 @@ interface SettingsModalProps {
   onThemeChange: (newTheme: ThemeMode) => void;
 }
 
-export const SettingsModal: React.FC<SettingsModalProps> = ({
+export const SettingsModal: React.FC<SettingsModalProps> = React.memo(({
   isOpen,
   settings,
   theme,
@@ -385,4 +385,4 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       </div>
     </div>
   );
-};
+});

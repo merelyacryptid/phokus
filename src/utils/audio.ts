@@ -7,14 +7,33 @@ class SoundEngine {
   private ambientGain: GainNode | null = null;
   private ambientInterval: number | null = null;
   private currentAmbientType: 'rain' | 'stream' | 'pink-noise' | 'wind' | 'none' = 'none';
+  private suspendTimer: ReturnType<typeof setTimeout> | null = null;
+
+  private cancelAutoSuspend() {
+    if (this.suspendTimer) {
+      clearTimeout(this.suspendTimer);
+      this.suspendTimer = null;
+    }
+  }
+
+  private scheduleAutoSuspend(delayMs = 4000) {
+    this.cancelAutoSuspend();
+    if (this.currentAmbientType !== 'none') return;
+    this.suspendTimer = setTimeout(() => {
+      if (this.ctx && this.ctx.state === 'running' && this.currentAmbientType === 'none') {
+        this.ctx.suspend().catch(() => {});
+      }
+    }, delayMs);
+  }
 
   private initContext(): AudioContext {
+    this.cancelAutoSuspend();
     if (!this.ctx) {
       const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
       this.ctx = new AudioCtx();
     }
     if (this.ctx.state === 'suspended') {
-      this.ctx.resume();
+      this.ctx.resume().catch(() => {});
     }
     return this.ctx;
   }
@@ -23,7 +42,7 @@ class SoundEngine {
     try {
       const ctx = this.initContext();
       if (ctx.state === 'suspended') {
-        ctx.resume();
+        ctx.resume().catch(() => {});
       }
     } catch {
       // ignore
@@ -114,6 +133,7 @@ class SoundEngine {
         osc.start(now);
         osc.stop(now + 0.45);
       }
+      this.scheduleAutoSuspend(3800);
     } catch (e) {
       console.warn('Audio playback not permitted yet or failed:', e);
     }
@@ -139,6 +159,7 @@ class SoundEngine {
 
       osc.start(now);
       osc.stop(now + 0.03);
+      this.scheduleAutoSuspend(1500);
     } catch {
       // Ignore user interaction policy errors for tick
     }
@@ -230,6 +251,7 @@ class SoundEngine {
       this.ambientInterval = null;
     }
     this.currentAmbientType = 'none';
+    this.scheduleAutoSuspend(1000);
   }
 
   public getActiveAmbient() {

@@ -8,7 +8,7 @@ interface HeaderProps {
   theme: ThemeMode;
 }
 
-export const Header: React.FC<HeaderProps> = ({ theme }) => {
+export const Header: React.FC<HeaderProps> = React.memo(({ theme }) => {
   const [quote, setQuote] = useState<string>("Success comes to those who never stop learning");
   const [isRefreshing, setIsRefreshing] = useState(false);
   const isMatteBlack = theme === 'matte-black';
@@ -70,4 +70,4 @@ export const Header: React.FC<HeaderProps> = ({ theme }) => {
       </div>
     </header>
   );
-};
+});

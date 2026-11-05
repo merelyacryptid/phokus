@@ -27,7 +27,7 @@ interface BottomBarProps {
   onOpenSettings: () => void;
 }
 
-export const BottomBar: React.FC<BottomBarProps> = ({
+export const BottomBar: React.FC<BottomBarProps> = React.memo(({
   theme,
   taskCount,
   stats,
@@ -186,4 +186,4 @@ export const BottomBar: React.FC<BottomBarProps> = ({
       </div>
     </footer>
   );
-};
+});

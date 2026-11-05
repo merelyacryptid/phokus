@@ -9,7 +9,7 @@ interface AmbientSoundModalProps {
   onClose: () => void;
 }
 
-export const AmbientSoundModal: React.FC<AmbientSoundModalProps> = ({
+export const AmbientSoundModal: React.FC<AmbientSoundModalProps> = React.memo(({
   isOpen,
   theme,
   onClose,
@@ -167,4 +167,4 @@ export const AmbientSoundModal: React.FC<AmbientSoundModalProps> = ({
       </div>
     </div>
   );
-};
+});

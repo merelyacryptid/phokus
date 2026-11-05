@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import type { TimerMode, ThemeMode, TimerSettings, Task } from '../types';
 import { 
@@ -73,8 +73,8 @@ export const Timer: React.FC<TimerProps> = ({
   const seconds = timeLeft % 60;
   const formattedTime = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
 
-  // Update canvas for Picture in Picture when time or mode changes
-  useEffect(() => {
+  // Draw canvas frame for Video PiP fallback
+  const drawCanvasFrame = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
@@ -172,7 +172,13 @@ export const Timer: React.FC<TimerProps> = ({
     ctx.fillStyle = p.btnText;
     ctx.font = '700 13px "Plus Jakarta Sans", sans-serif';
     ctx.fillText(isRunning ? '❚❚ PAUSE' : '▶ RESUME', width / 2, height - 25);
-  }, [timeLeft, mode, theme, formattedTime, activeTask, isRunning]);
+  }, [theme, mode, formattedTime, activeTask, isRunning]);
+
+  // Update canvas for Picture in Picture only when PiP is actually active
+  useEffect(() => {
+    if (!isPiPActive && !document.pictureInPictureElement) return;
+    drawCanvasFrame();
+  }, [isPiPActive, drawCanvasFrame, timeLeft]);
 
   // MediaSession integration for Video PiP controls
   useEffect(() => {
@@ -263,6 +269,7 @@ export const Timer: React.FC<TimerProps> = ({
       const canvas = canvasRef.current;
       if (!video || !canvas) return;
 
+      drawCanvasFrame();
       if (!video.srcObject) {
         const stream = canvas.captureStream(30);
         video.srcObject = stream;

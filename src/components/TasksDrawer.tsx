@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import type { Task, ThemeMode } from '../types';
 import { Check, Plus, Trash2, X, ListTodo, Target, ChevronUp, ChevronDown, GripVertical } from 'lucide-react';
 import confetti from 'canvas-confetti';
@@ -17,7 +17,7 @@ interface TasksDrawerProps {
   onReorderTasks: (newTasks: Task[]) => void;
 }
 
-export const TasksDrawer: React.FC<TasksDrawerProps> = ({
+export const TasksDrawer: React.FC<TasksDrawerProps> = React.memo(({
   isOpen,
   tasks,
   activeTaskId,
@@ -36,6 +36,7 @@ export const TasksDrawer: React.FC<TasksDrawerProps> = ({
   const [confirmClear, setConfirmClear] = useState(false);
   const isMatteBlack = theme === 'matte-black';
   const isDark = theme === 'dark-mesh' || isMatteBlack;
+  const completedCount = useMemo(() => tasks.filter(t => t.completed).length, [tasks]);
 
   if (!isOpen) return null;
 
@@ -88,7 +89,7 @@ export const TasksDrawer: React.FC<TasksDrawerProps> = ({
   const handleDragOver = (e: React.DragEvent, index: number) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
-    if (dragOverIndex !== index) {
+    if (draggedIndex !== null && dragOverIndex !== index) {
       setDragOverIndex(index);
     }
   };
@@ -107,8 +108,6 @@ export const TasksDrawer: React.FC<TasksDrawerProps> = ({
     setDraggedIndex(null);
     setDragOverIndex(null);
   };
-
-  const completedCount = tasks.filter(t => t.completed).length;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in">
@@ -400,4 +399,4 @@ export const TasksDrawer: React.FC<TasksDrawerProps> = ({
       </div>
     </div>
   );
-};
+});

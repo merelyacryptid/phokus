@@ -5,7 +5,7 @@ interface AuraBackgroundProps {
   theme: ThemeMode;
 }
 
-export const AuraBackground: React.FC<AuraBackgroundProps> = ({ theme }) => {
+export const AuraBackground: React.FC<AuraBackgroundProps> = React.memo(({ theme }) => {
   const isDark = theme === 'dark-mesh';
   const isLightAura = theme === 'light-aura';
   const isMatteBlack = theme === 'matte-black';
@@ -163,4 +163,4 @@ export const AuraBackground: React.FC<AuraBackgroundProps> = ({ theme }) => {
       />
     </div>
   );
-};
+});

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import type { 
   TimerMode, 
   ThemeMode, 
@@ -604,6 +604,39 @@ export function App() {
     setTheme(nextTheme);
   };
 
+  const uncompletedTaskCount = useMemo(() => tasks.filter(t => !t.completed).length, [tasks]);
+
+  const handleToggleTasks = useCallback(() => {
+    soundEngine.unlockAudio();
+    setIsTasksOpen(prev => !prev);
+  }, []);
+
+  const handleToggleAmbient = useCallback(() => {
+    soundEngine.unlockAudio();
+    setIsAmbientOpen(prev => !prev);
+  }, []);
+
+  const handleOpenStats = useCallback(() => {
+    soundEngine.unlockAudio();
+    setIsStatsOpen(true);
+  }, []);
+
+  const handleOpenAuth = useCallback(() => {
+    soundEngine.unlockAudio();
+    setIsAuthOpen(true);
+  }, []);
+
+  const handleOpenSettings = useCallback(() => {
+    soundEngine.unlockAudio();
+    setIsSettingsOpen(true);
+  }, []);
+
+  const handleCloseTasks = useCallback(() => setIsTasksOpen(false), []);
+  const handleCloseSettings = useCallback(() => setIsSettingsOpen(false), []);
+  const handleCloseStats = useCallback(() => setIsStatsOpen(false), []);
+  const handleCloseAuth = useCallback(() => setIsAuthOpen(false), []);
+  const handleCloseAmbient = useCallback(() => setIsAmbientOpen(false), []);
+
   return (
     <div
       className={`min-h-screen w-full flex flex-col justify-between relative overflow-hidden transition-all duration-700 ${
@@ -639,30 +672,15 @@ export function App() {
       {/* Bottom Bar */}
       <BottomBar
         theme={theme}
-        taskCount={tasks.filter(t => !t.completed).length}
+        taskCount={uncompletedTaskCount}
         stats={stats}
         currentUser={currentUser}
-        onToggleTasks={() => {
-          soundEngine.unlockAudio();
-          setIsTasksOpen(prev => !prev);
-        }}
-        onToggleAmbient={() => {
-          soundEngine.unlockAudio();
-          setIsAmbientOpen(prev => !prev);
-        }}
+        onToggleTasks={handleToggleTasks}
+        onToggleAmbient={handleToggleAmbient}
         onToggleTheme={handleToggleTheme}
-        onOpenStats={() => {
-          soundEngine.unlockAudio();
-          setIsStatsOpen(true);
-        }}
-        onOpenAuth={() => {
-          soundEngine.unlockAudio();
-          setIsAuthOpen(true);
-        }}
-        onOpenSettings={() => {
-          soundEngine.unlockAudio();
-          setIsSettingsOpen(true);
-        }}
+        onOpenStats={handleOpenStats}
+        onOpenAuth={handleOpenAuth}
+        onOpenSettings={handleOpenSettings}
       />
 
       {/* Modals & Drawers */}
@@ -671,7 +689,7 @@ export function App() {
         tasks={tasks}
         activeTaskId={activeTask ? activeTask.id : null}
         theme={theme}
-        onClose={() => setIsTasksOpen(false)}
+        onClose={handleCloseTasks}
         onAddTask={handleAddTask}
         onToggleTask={handleToggleTask}
         onDeleteTask={handleDeleteTask}
@@ -684,7 +702,7 @@ export function App() {
         isOpen={isSettingsOpen}
         settings={settings}
         theme={theme}
-        onClose={() => setIsSettingsOpen(false)}
+        onClose={handleCloseSettings}
         onSaveSettings={handleSaveSettings}
         onThemeChange={setTheme}
       />
@@ -694,15 +712,15 @@ export function App() {
         stats={stats}
         currentUser={currentUser}
         theme={theme}
-        onClose={() => setIsStatsOpen(false)}
-        onOpenAuth={() => setIsAuthOpen(true)}
+        onClose={handleCloseStats}
+        onOpenAuth={handleOpenAuth}
       />
 
       <AuthModal
         isOpen={isAuthOpen}
         currentUser={currentUser}
         theme={theme}
-        onClose={() => setIsAuthOpen(false)}
+        onClose={handleCloseAuth}
         onSignIn={handleSignIn}
         onSignOut={handleSignOut}
       />
@@ -710,7 +728,7 @@ export function App() {
       <AmbientSoundModal
         isOpen={isAmbientOpen}
         theme={theme}
-        onClose={() => setIsAmbientOpen(false)}
+        onClose={handleCloseAmbient}
       />
     </div>
   );

@@ -11,7 +11,7 @@ interface AuthModalProps {
   onSignOut: () => void;
 }
 
-export const AuthModal: React.FC<AuthModalProps> = ({
+export const AuthModal: React.FC<AuthModalProps> = React.memo(({
   isOpen,
   currentUser,
   theme,
@@ -347,4 +347,4 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       </div>
     </div>
   );
-};
+});

@@ -8,7 +8,7 @@ interface BunnyMascotProps {
   onDismiss?: () => void;
 }
 
-export const BunnyMascot: React.FC<BunnyMascotProps> = ({
+export const BunnyMascot: React.FC<BunnyMascotProps> = React.memo(({
   theme
 }) => {
   const isMatteBlack = theme === 'matte-black';
@@ -135,4 +135,4 @@ export const BunnyMascot: React.FC<BunnyMascotProps> = ({
       </div>
     </div>
   );
-};
+});
