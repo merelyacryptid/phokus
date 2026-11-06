@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import type { ThemeMode, UserProfile, UserStats } from '../types';
 import { CarrotIcon } from './CarrotIcon';
 import { 
@@ -9,9 +9,10 @@ import {
   Maximize2, 
   Minimize2, 
   User, 
-  Sun, 
   Moon,
-  Sparkles 
+  Sparkles,
+  MoonStar,
+  Contrast
 } from 'lucide-react';
 
 interface BottomBarProps {
@@ -22,10 +23,48 @@ interface BottomBarProps {
   onToggleTasks: () => void;
   onToggleAmbient: () => void;
   onToggleTheme: () => void;
+  onSelectTheme?: (theme: ThemeMode) => void;
   onOpenStats: () => void;
   onOpenAuth: () => void;
   onOpenSettings: () => void;
 }
+
+interface ThemeOption {
+  id: ThemeMode;
+  name: string;
+  icon: (isSelected: boolean) => React.ReactNode;
+}
+
+const THEME_OPTIONS: ThemeOption[] = [
+  {
+    id: 'bunny-pink',
+    name: 'Strawberry Silk',
+    icon: (isSelected) => (
+      <Moon size={18} className={`stroke-[2.2] transition-colors ${isSelected ? 'text-pink-600' : 'text-pink-400'}`} />
+    ),
+  },
+  {
+    id: 'light-aura',
+    name: 'Light Aura',
+    icon: (isSelected) => (
+      <Sparkles size={18} className={`stroke-[2.2] transition-colors ${isSelected ? 'text-amber-500' : 'text-amber-400'}`} />
+    ),
+  },
+  {
+    id: 'dark-mesh',
+    name: 'Dark Aura',
+    icon: (isSelected) => (
+      <MoonStar size={18} className={`stroke-[2.2] transition-colors ${isSelected ? 'text-purple-400' : 'text-purple-300'}`} />
+    ),
+  },
+  {
+    id: 'matte-black',
+    name: 'Matte Black',
+    icon: (isSelected) => (
+      <Contrast size={18} className={`stroke-[2.2] transition-colors ${isSelected ? 'text-white' : 'text-neutral-400'}`} />
+    ),
+  },
+];
 
 export const BottomBar: React.FC<BottomBarProps> = React.memo(({
   theme,
@@ -35,11 +74,15 @@ export const BottomBar: React.FC<BottomBarProps> = React.memo(({
   onToggleTasks,
   onToggleAmbient,
   onToggleTheme,
+  onSelectTheme,
   onOpenStats,
   onOpenAuth,
   onOpenSettings,
 }) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isThemeMenuOpen, setIsThemeMenuOpen] = useState(false);
+  const themeMenuRef = useRef<HTMLDivElement>(null);
+
   const isMatteBlack = theme === 'matte-black';
   const isDark = theme === 'dark-mesh' || isMatteBlack;
   const btnClass = isMatteBlack ? 'glass-btn-matte' : isDark ? 'glass-btn-dark' : 'glass-btn-pink';
@@ -52,6 +95,30 @@ export const BottomBar: React.FC<BottomBarProps> = React.memo(({
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
   }, []);
 
+  // Close theme menu on outside click or Escape key
+  useEffect(() => {
+    if (!isThemeMenuOpen) return;
+
+    const handleClickOutside = (e: MouseEvent) => {
+      if (themeMenuRef.current && !themeMenuRef.current.contains(e.target as Node)) {
+        setIsThemeMenuOpen(false);
+      }
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setIsThemeMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isThemeMenuOpen]);
+
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
       document.documentElement.requestFullscreen().catch(() => {});
@@ -60,9 +127,20 @@ export const BottomBar: React.FC<BottomBarProps> = React.memo(({
     }
   };
 
+  const handleThemeOptionClick = (themeId: ThemeMode) => {
+    if (onSelectTheme) {
+      onSelectTheme(themeId);
+    } else {
+      onToggleTheme();
+    }
+    setIsThemeMenuOpen(false);
+  };
+
+  const activeThemeOption = THEME_OPTIONS.find(t => t.id === theme) || THEME_OPTIONS[0];
+
   return (
     <footer className="w-full flex items-center justify-between px-6 md:px-12 py-6 select-none z-10 transition-colors duration-500">
-      {/* Bottom Left Controls (Matching Image 1: Tasks drawer & Ambient audio) */}
+      {/* Bottom Left Controls (Tasks drawer & Ambient audio) */}
       <div className="flex items-center space-x-2 sm:space-x-3">
         {/* Tasks Toggle */}
         <button
@@ -90,7 +168,7 @@ export const BottomBar: React.FC<BottomBarProps> = React.memo(({
         </button>
       </div>
 
-      {/* Bottom Right Controls (Matching Image 1: Streak pill, theme, profile, settings, fullscreen) */}
+      {/* Bottom Right Controls (Streak pill, theme menu, profile, settings, fullscreen) */}
       <div className="flex items-center space-x-2 sm:space-x-3">
         {/* Streak & Carrot Graph Stats Pill */}
         <button
@@ -115,32 +193,100 @@ export const BottomBar: React.FC<BottomBarProps> = React.memo(({
           </div>
         </button>
 
-        {/* Theme Switcher Toggle */}
-        <button
-          onClick={onToggleTheme}
-          title={`Theme: ${
-            theme === 'light-aura' 
-              ? 'Light White & Pink Aura' 
-              : theme === 'bunny-pink' 
-                ? 'Strawberry Silk Aura' 
-                : theme === 'dark-mesh'
-                  ? 'Dark Aura'
-                  : 'Matte Black & White'
-          } (Click to cycle)`}
-          className={`p-3 rounded-2xl transition-all duration-200 ${btnClass}`}
-        >
-          {theme === 'matte-black' ? (
-            <div className="w-5 h-5 rounded-full border-2 border-white bg-black flex items-center justify-center">
-              <div className="w-2 h-2 rounded-full bg-white" />
+        {/* Theme Selector Popover */}
+        <div className="relative" ref={themeMenuRef}>
+          {isThemeMenuOpen && (
+            <div
+              role="dialog"
+              aria-label="Theme selector"
+              className={`absolute bottom-[calc(100%+12px)] right-0 sm:right-auto sm:left-1/2 sm:-translate-x-1/2 flex items-center p-1.5 rounded-2xl shadow-2xl backdrop-blur-xl border transition-all duration-200 z-50 whitespace-nowrap animate-fade-in ${
+                isMatteBlack
+                  ? 'bg-[#151518]/95 border-neutral-700 shadow-black/80'
+                  : isDark
+                    ? 'bg-[#1a1324]/95 border-pink-500/30 shadow-black/80'
+                    : 'bg-white/95 border-pink-200 shadow-pink-200/50'
+              }`}
+            >
+              <div className="flex items-center space-x-1">
+                {THEME_OPTIONS.map((t) => {
+                  const isSelected = theme === t.id;
+                  return (
+                    <div key={t.id} className="relative group">
+                      <button
+                        type="button"
+                        onClick={() => handleThemeOptionClick(t.id)}
+                        title={t.name}
+                        className={`p-2.5 rounded-xl transition-all duration-150 flex items-center justify-center active:scale-95 ${
+                          isSelected
+                            ? isMatteBlack
+                              ? 'bg-neutral-800 text-white shadow-sm ring-1 ring-white/40'
+                              : isDark
+                                ? 'bg-pink-600/30 text-pink-200 shadow-sm ring-1 ring-pink-400/50'
+                                : 'bg-pink-100 text-pink-700 shadow-sm ring-1 ring-pink-400/50'
+                            : isMatteBlack
+                              ? 'text-neutral-400 hover:text-white hover:bg-neutral-800/60'
+                              : isDark
+                                ? 'text-pink-300/70 hover:text-pink-100 hover:bg-white/10'
+                                : 'text-pink-900/60 hover:text-pink-950 hover:bg-pink-100/60'
+                        }`}
+                      >
+                        {t.icon(isSelected)}
+                      </button>
+
+                      {/* Tooltip on hover showing theme name */}
+                      <div
+                        className={`pointer-events-none absolute bottom-[calc(100%+8px)] left-1/2 -translate-x-1/2 px-2.5 py-1 rounded-lg text-[11px] font-semibold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-all duration-150 transform translate-y-1 group-hover:translate-y-0 shadow-lg z-50 ${
+                          isMatteBlack
+                            ? 'bg-neutral-900 text-white border border-neutral-700 shadow-black'
+                            : isDark
+                              ? 'bg-[#150f1d] text-pink-100 border border-pink-500/30 shadow-black'
+                              : 'bg-pink-950 text-white shadow-pink-950/20'
+                        }`}
+                      >
+                        {t.name}
+                        <div
+                          className={`absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent ${
+                            isMatteBlack
+                              ? 'border-t-neutral-900'
+                              : isDark
+                                ? 'border-t-[#150f1d]'
+                                : 'border-t-pink-950'
+                          }`}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
-          ) : isDark ? (
-            <Sun size={20} className="stroke-[2.2] text-pink-300 drop-shadow-[0_0_6px_rgba(244,63,94,0.5)]" />
-          ) : theme === 'light-aura' ? (
-            <Sparkles size={20} className="stroke-[2.2] text-pink-500" />
-          ) : (
-            <Moon size={20} className="stroke-[2.2] text-pink-700" />
           )}
-        </button>
+
+          {/* Theme Trigger Button */}
+          <button
+            onClick={() => setIsThemeMenuOpen(prev => !prev)}
+            title={`Current Theme: ${activeThemeOption.name} (Click to change)`}
+            aria-expanded={isThemeMenuOpen}
+            className={`p-3 rounded-2xl transition-all duration-200 ${btnClass} ${
+              isThemeMenuOpen
+                ? isMatteBlack
+                  ? 'ring-2 ring-white/50 bg-neutral-800'
+                  : isDark
+                    ? 'ring-2 ring-pink-500/60 bg-pink-600/20'
+                    : 'ring-2 ring-pink-400/60 bg-pink-100'
+                : ''
+            }`}
+          >
+            {theme === 'matte-black' ? (
+              <Contrast size={20} className="stroke-[2.2] text-white" />
+            ) : isDark ? (
+              <MoonStar size={20} className="stroke-[2.2] text-pink-300 drop-shadow-[0_0_6px_rgba(244,63,94,0.5)]" />
+            ) : theme === 'light-aura' ? (
+              <Sparkles size={20} className="stroke-[2.2] text-pink-500" />
+            ) : (
+              <Moon size={20} className="stroke-[2.2] text-pink-700" />
+            )}
+          </button>
+        </div>
 
         {/* User Account / Profile */}
         <button

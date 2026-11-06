@@ -12,7 +12,9 @@ import {
   Cloud, 
   AlertCircle,
   Eye,
-  EyeOff
+  EyeOff,
+  Pencil,
+  Check
 } from 'lucide-react';
 import {
   isFirebaseConfigured,
@@ -20,6 +22,7 @@ import {
   signInWithEmail,
   signInWithGoogle,
   signOutUser,
+  updateUserNickname,
   formatAuthError
 } from '../utils/firebase';
 
@@ -51,6 +54,9 @@ export const AuthModal: React.FC<AuthModalProps> = React.memo(({
   const [showPassword, setShowPassword] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isEditingNickname, setIsEditingNickname] = useState(false);
+  const [editNickname, setEditNickname] = useState('');
+  const [isSavingNickname, setIsSavingNickname] = useState(false);
 
   const isMatteBlack = theme === 'matte-black';
   const isDark = theme === 'dark-mesh' || isMatteBlack;
@@ -225,6 +231,63 @@ export const AuthModal: React.FC<AuthModalProps> = React.memo(({
     onClose();
   };
 
+  const handleStartEditNickname = () => {
+    if (currentUser) {
+      setEditNickname(currentUser.name);
+      setIsEditingNickname(true);
+      setErrorMessage('');
+    }
+  };
+
+  const handleSaveNickname = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!currentUser) return;
+    const trimmed = editNickname.trim();
+    if (!trimmed) {
+      setErrorMessage('Nickname cannot be empty.');
+      return;
+    }
+    if (trimmed === currentUser.name) {
+      setIsEditingNickname(false);
+      return;
+    }
+
+    setIsSavingNickname(true);
+    setErrorMessage('');
+    try {
+      // 1. Update in Firebase if authenticated
+      await updateUserNickname(trimmed);
+
+      // 2. Build updated user profile
+      const updatedProfile: UserProfile = {
+        ...currentUser,
+        name: trimmed
+      };
+
+      // 3. Update localStorage accounts
+      const savedAccountsStr = localStorage.getItem('phokus_accounts') || '[]';
+      try {
+        const accounts: StoredAccount[] = JSON.parse(savedAccountsStr);
+        const idx = accounts.findIndex(a => a.id === updatedProfile.id || a.email.toLowerCase() === updatedProfile.email.toLowerCase());
+        if (idx >= 0) {
+          accounts[idx] = { ...accounts[idx], name: trimmed };
+          localStorage.setItem('phokus_accounts', JSON.stringify(accounts));
+        }
+      } catch {
+        // ignore
+      }
+
+      // 4. Update in parent state & active user localStorage
+      onSignIn(updatedProfile);
+      setIsEditingNickname(false);
+    } catch (err) {
+      console.error('Failed to update nickname:', err);
+      setErrorMessage(formatAuthError(err));
+    } finally {
+      setIsSavingNickname(false);
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
       <div className="absolute inset-0" onClick={onClose} />
@@ -289,18 +352,85 @@ export const AuthModal: React.FC<AuthModalProps> = React.memo(({
                   : 'bg-pink-50 border border-pink-100'
             }`}>
               <div className="flex items-center space-x-3">
-                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-lg ${
+                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-lg shrink-0 ${
                   isMatteBlack
                     ? 'bg-neutral-800 text-white border border-neutral-700'
                     : isDark
                       ? 'bg-pink-600/25 text-pink-300 border border-pink-400/40 shadow-[0_0_10px_rgba(244,63,94,0.3)]'
                       : 'bg-pink-200 text-pink-800'
                 }`}>
-                  {currentUser.name.charAt(0).toUpperCase()}
+                  {(editNickname.trim() ? editNickname : currentUser.name).charAt(0).toUpperCase()}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="font-bold truncate text-pink-100">{currentUser.name}</p>
-                  <p className={`text-xs truncate ${isDark ? 'text-pink-300/60' : 'text-pink-900/60'}`}>{currentUser.email}</p>
+                  {isEditingNickname ? (
+                    <form onSubmit={handleSaveNickname} className="flex items-center space-x-1.5 my-0.5">
+                      <input
+                        type="text"
+                        value={editNickname}
+                        onChange={(e) => setEditNickname(e.target.value)}
+                        placeholder="New nickname"
+                        autoFocus
+                        maxLength={25}
+                        className={`w-full min-w-0 px-2 py-1 text-xs sm:text-sm font-semibold rounded-xl outline-none transition-all ${
+                          isMatteBlack
+                            ? 'bg-neutral-800 text-white border border-neutral-600 focus:border-white'
+                            : isDark
+                              ? 'bg-white/10 text-white border border-pink-500/40 focus:border-pink-400'
+                              : 'bg-white text-pink-950 border border-pink-300 focus:border-pink-500'
+                        }`}
+                      />
+                      <button
+                        type="submit"
+                        disabled={!editNickname.trim() || isSavingNickname}
+                        title="Save nickname"
+                        className={`p-1.5 rounded-xl transition-all active:scale-95 shrink-0 ${
+                          isMatteBlack
+                            ? 'bg-white text-black hover:bg-neutral-200'
+                            : 'bg-pink-600 text-white hover:bg-pink-500 shadow-sm'
+                        }`}
+                      >
+                        {isSavingNickname ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} className="stroke-[2.5]" />}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsEditingNickname(false);
+                          setEditNickname(currentUser.name);
+                        }}
+                        title="Cancel"
+                        className={`p-1.5 rounded-xl transition-all active:scale-95 shrink-0 ${
+                          isMatteBlack
+                            ? 'hover:bg-neutral-800 text-neutral-400 hover:text-white'
+                            : 'hover:bg-pink-200/60 text-pink-700/70 hover:text-pink-950'
+                        }`}
+                      >
+                        <X size={13} />
+                      </button>
+                    </form>
+                  ) : (
+                    <div className="flex items-center space-x-1.5">
+                      <p className={`font-bold truncate text-base ${isMatteBlack ? 'text-white' : isDark ? 'text-pink-100' : 'text-pink-950'}`}>
+                        {currentUser.name}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={handleStartEditNickname}
+                        title="Edit Nickname"
+                        className={`p-1 rounded-lg transition-colors ${
+                          isMatteBlack
+                            ? 'hover:bg-neutral-800 text-neutral-400 hover:text-white'
+                            : isDark
+                              ? 'hover:bg-white/10 text-pink-300/70 hover:text-pink-100'
+                              : 'hover:bg-pink-200/60 text-pink-700/70 hover:text-pink-950'
+                        }`}
+                      >
+                        <Pencil size={13} />
+                      </button>
+                    </div>
+                  )}
+                  <p className={`text-xs truncate ${isMatteBlack ? 'text-neutral-400' : isDark ? 'text-pink-300/60' : 'text-pink-900/60'}`}>
+                    {currentUser.email}
+                  </p>
                 </div>
               </div>
 

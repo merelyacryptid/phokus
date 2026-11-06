@@ -177,6 +177,15 @@ export async function signOutUser(): Promise<void> {
 }
 
 /**
+ * Update user display name / nickname
+ */
+export async function updateUserNickname(newName: string): Promise<void> {
+  if (auth?.currentUser) {
+    await updateProfile(auth.currentUser, { displayName: newName.trim() });
+  }
+}
+
+/**
  * Subscribe to auth state changes
  */
 export function onAuthUserChanged(callback: (user: User | null) => void): () => void {

@@ -645,6 +645,12 @@ export function App() {
     setTheme(nextTheme);
   };
 
+  // Direct theme selection
+  const handleSelectTheme = useCallback((newTheme: ThemeMode) => {
+    soundEngine.unlockAudio();
+    setTheme(newTheme);
+  }, []);
+
   const uncompletedTaskCount = useMemo(() => tasks.filter(t => !t.completed).length, [tasks]);
 
   const handleToggleTasks = useCallback(() => {
@@ -719,6 +725,7 @@ export function App() {
         onToggleTasks={handleToggleTasks}
         onToggleAmbient={handleToggleAmbient}
         onToggleTheme={handleToggleTheme}
+        onSelectTheme={handleSelectTheme}
         onOpenStats={handleOpenStats}
         onOpenAuth={handleOpenAuth}
         onOpenSettings={handleOpenSettings}
