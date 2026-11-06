@@ -3,11 +3,15 @@
 
 class SoundEngine {
   private ctx: AudioContext | null = null;
-  private ambientSource: AudioNode | null = null;
+  private ambientSource: AudioBufferSourceNode | null = null;
+  private ambientFilter: BiquadFilterNode | null = null;
   private ambientGain: GainNode | null = null;
   private ambientInterval: number | null = null;
   private currentAmbientType: 'rain' | 'stream' | 'pink-noise' | 'wind' | 'none' = 'none';
   private suspendTimer: ReturnType<typeof setTimeout> | null = null;
+  private cachedWhiteBuffer: AudioBuffer | null = null;
+  private cachedPinkBuffer: AudioBuffer | null = null;
+  private cachedSampleRate: number = 0;
 
   private cancelAutoSuspend() {
     if (this.suspendTimer) {
@@ -165,6 +169,45 @@ class SoundEngine {
     }
   }
 
+  // Helper to get or generate noise buffer once and reuse it across sessions
+  private getNoiseBuffer(type: 'pink-noise' | 'white-base', ctx: AudioContext): AudioBuffer {
+    if (this.cachedSampleRate !== ctx.sampleRate) {
+      this.cachedWhiteBuffer = null;
+      this.cachedPinkBuffer = null;
+      this.cachedSampleRate = ctx.sampleRate;
+    }
+
+    if (type === 'pink-noise' && this.cachedPinkBuffer) {
+      return this.cachedPinkBuffer;
+    }
+    if (type === 'white-base' && this.cachedWhiteBuffer) {
+      return this.cachedWhiteBuffer;
+    }
+
+    const bufferSize = ctx.sampleRate * 2; // 2 seconds looped buffer
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+
+    let lastOut = 0.0;
+    for (let i = 0; i < bufferSize; i++) {
+      const white = Math.random() * 2 - 1;
+      if (type === 'pink-noise') {
+        lastOut = (lastOut * 0.95) + (white * 0.05);
+        data[i] = lastOut * 3;
+      } else {
+        data[i] = white;
+      }
+    }
+
+    if (type === 'pink-noise') {
+      this.cachedPinkBuffer = buffer;
+    } else {
+      this.cachedWhiteBuffer = buffer;
+    }
+
+    return buffer;
+  }
+
   // Ambient sound generation
   public startAmbient(type: 'rain' | 'stream' | 'pink-noise' | 'wind', volume: number = 0.5) {
     this.stopAmbient();
@@ -172,23 +215,7 @@ class SoundEngine {
 
     try {
       const ctx = this.initContext();
-      const bufferSize = ctx.sampleRate * 2;
-      const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-      const data = buffer.getChannelData(0);
-
-      // Generate brown/pink noise baseline
-      let lastOut = 0.0;
-      for (let i = 0; i < bufferSize; i++) {
-        const white = Math.random() * 2 - 1;
-        if (type === 'pink-noise') {
-          // Pink noise filter approximation
-          lastOut = (lastOut * 0.95) + (white * 0.05);
-          data[i] = lastOut * 3;
-        } else {
-          // White noise base for filtering
-          data[i] = white;
-        }
-      }
+      const buffer = this.getNoiseBuffer(type === 'pink-noise' ? 'pink-noise' : 'white-base', ctx);
 
       const noise = ctx.createBufferSource();
       noise.buffer = buffer;
@@ -220,6 +247,7 @@ class SoundEngine {
       noise.start();
 
       this.ambientSource = noise;
+      this.ambientFilter = filter;
       this.ambientGain = gain;
     } catch (e) {
       console.warn('Ambient sound startup error:', e);
@@ -235,15 +263,27 @@ class SoundEngine {
   public stopAmbient() {
     if (this.ambientSource) {
       try {
-        (this.ambientSource as AudioBufferSourceNode).stop();
+        this.ambientSource.stop();
         this.ambientSource.disconnect();
       } catch {
         // ignore
       }
       this.ambientSource = null;
     }
+    if (this.ambientFilter) {
+      try {
+        this.ambientFilter.disconnect();
+      } catch {
+        // ignore
+      }
+      this.ambientFilter = null;
+    }
     if (this.ambientGain) {
-      this.ambientGain.disconnect();
+      try {
+        this.ambientGain.disconnect();
+      } catch {
+        // ignore
+      }
       this.ambientGain = null;
     }
     if (this.ambientInterval) {

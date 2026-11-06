@@ -14,12 +14,13 @@ import {
 } from 'lucide-react';
 import { BunnyMascot } from './BunnyMascot';
 import { PipWidget } from './PipWidget';
+import { soundEngine } from '../utils/audio';
 import confetti from 'canvas-confetti';
 
 interface TimerProps {
   mode: TimerMode;
-  timeLeft: number;
   isRunning: boolean;
+  resetCount?: number;
   activeTask: Task | null;
   cycleCount: number;
   settings: TimerSettings;
@@ -28,15 +29,16 @@ interface TimerProps {
   onTogglePlay: () => void;
   onSkip: () => void;
   onReset: () => void;
+  onSessionComplete: () => void;
   onCompleteActiveTask: (taskId?: string) => void;
   onUpdateActiveTaskTitle: (newTitle: string) => void;
   onCreateActiveTask: (title: string) => void;
 }
 
-export const Timer: React.FC<TimerProps> = ({
+export const Timer: React.FC<TimerProps> = React.memo(({
   mode,
-  timeLeft,
   isRunning,
+  resetCount,
   activeTask,
   cycleCount,
   settings,
@@ -45,6 +47,7 @@ export const Timer: React.FC<TimerProps> = ({
   onTogglePlay,
   onSkip,
   onReset,
+  onSessionComplete,
   onCompleteActiveTask,
   onUpdateActiveTaskTitle,
   onCreateActiveTask,
@@ -62,6 +65,89 @@ export const Timer: React.FC<TimerProps> = ({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPiPActive, setIsPiPActive] = useState(false);
+
+  // Total seconds calculation based on mode and settings
+  const totalSeconds = (
+    mode === 'focus' 
+      ? settings.focusMinutes 
+      : mode === 'shortBreak' 
+        ? settings.shortBreakMinutes 
+        : settings.longBreakMinutes
+  ) * 60;
+
+  // Local accurate timer state (isolates high-frequency ticks to Timer component)
+  const [timeLeft, setTimeLeft] = useState<number>(totalSeconds);
+  const timerEndRef = useRef<number | null>(null);
+  const lastTickSecond = useRef<number>(timeLeft);
+  const timeLeftRef = useRef<number>(timeLeft);
+  const isRunningRef = useRef<boolean>(isRunning);
+
+  useEffect(() => {
+    timeLeftRef.current = timeLeft;
+  }, [timeLeft]);
+
+  useEffect(() => {
+    isRunningRef.current = isRunning;
+  }, [isRunning]);
+
+  // Sync timeLeft when mode, settings, or reset changes
+  useEffect(() => {
+    // oxlint-disable-next-line react/set-state-in-effect
+    setTimeLeft(totalSeconds);
+    if (isRunningRef.current) {
+      timerEndRef.current = Date.now() + totalSeconds * 1000;
+    } else {
+      timerEndRef.current = null;
+    }
+  }, [mode, totalSeconds, resetCount]);
+
+  // High-accuracy timer tick interval
+  useEffect(() => {
+    if (!isRunning) {
+      timerEndRef.current = null;
+      return;
+    }
+
+    if (!timerEndRef.current) {
+      timerEndRef.current = Date.now() + timeLeftRef.current * 1000;
+    }
+
+    const interval = setInterval(() => {
+      const remainingMs = (timerEndRef.current || 0) - Date.now();
+      const remainingSec = Math.max(0, Math.ceil(remainingMs / 1000));
+
+      if (settings.tickSound && remainingSec !== lastTickSecond.current) {
+        soundEngine.playTick();
+        lastTickSecond.current = remainingSec;
+      }
+
+      if (remainingSec <= 0) {
+        clearInterval(interval);
+        setTimeLeft(0);
+        timerEndRef.current = null;
+        onSessionComplete();
+      } else {
+        setTimeLeft(remainingSec);
+      }
+    }, 250);
+
+    return () => clearInterval(interval);
+  }, [isRunning, settings.tickSound, onSessionComplete]);
+
+  // Update document title with remaining time directly from Timer (isolates re-renders)
+  useEffect(() => {
+    const min = Math.floor(timeLeft / 60);
+    const sec = timeLeft % 60;
+    const formatted = `${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
+    const modeLabel = mode === 'focus' ? 'Focus' : mode === 'shortBreak' ? 'Short Break' : 'Long Break';
+    document.title = `${formatted} — ${modeLabel} | Phokus`;
+  }, [timeLeft, mode]);
+
+  const handleResetClick = () => {
+    setTimeLeft(totalSeconds);
+    timerEndRef.current = null;
+    onReset();
+  };
 
   const startEditing = () => {
     setEditText(activeTask ? activeTask.title : '');
@@ -338,13 +424,6 @@ export const Timer: React.FC<TimerProps> = ({
   };
 
   // Calculate percentage for subtle progress accent
-  const totalSeconds = (
-    mode === 'focus' 
-      ? settings.focusMinutes 
-      : mode === 'shortBreak' 
-        ? settings.shortBreakMinutes 
-        : settings.longBreakMinutes
-  ) * 60;
   const progressPercent = Math.max(0, Math.min(100, ((totalSeconds - timeLeft) / totalSeconds) * 100));
 
   return (
@@ -372,7 +451,7 @@ export const Timer: React.FC<TimerProps> = ({
             theme={theme}
             onTogglePlay={onTogglePlay}
             onSkip={onSkip}
-            onReset={onReset}
+            onReset={handleResetClick}
             onCompleteActiveTask={onCompleteActiveTask}
           />,
           pipDocWindow.document.body
@@ -600,7 +679,7 @@ export const Timer: React.FC<TimerProps> = ({
 
         {/* Reset Button */}
         <button
-          onClick={onReset}
+          onClick={handleResetClick}
           title="Reset timer (R)"
           className={`p-3.5 sm:p-4 rounded-2xl transition-all duration-200 ${btnClass}`}
         >
@@ -624,4 +703,4 @@ export const Timer: React.FC<TimerProps> = ({
       </div>
     </div>
   );
-};
+});

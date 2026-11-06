@@ -38,7 +38,7 @@ export const AuraBackground: React.FC<AuraBackgroundProps> = React.memo(({ theme
           <div className="absolute inset-0 flex items-center justify-center">
             {/* Main radiant fuchsia/pink vertical flow */}
             <div 
-              className="aura-orb absolute w-[520px] sm:w-[680px] h-[120vh] rounded-[45%] opacity-80 blur-[45px] sm:blur-[60px] transform -rotate-[22deg] animate-aura-dark-main"
+              className="aura-orb absolute w-[520px] sm:w-[680px] h-[120vh] rounded-[45%] opacity-80 blur-[32px] sm:blur-[40px] transform -rotate-[22deg] animate-aura-dark-main"
               style={{
                 background: 'linear-gradient(135deg, rgba(236,72,153,0.92) 0%, rgba(219,39,119,0.85) 35%, rgba(168,85,247,0.75) 70%, rgba(79,70,229,0.45) 100%)',
               }}
@@ -46,7 +46,7 @@ export const AuraBackground: React.FC<AuraBackgroundProps> = React.memo(({ theme
 
             {/* Glowing inner core of electric rose-pink */}
             <div 
-              className="aura-orb absolute w-[360px] sm:w-[480px] h-[95vh] rounded-[48%] opacity-85 blur-[35px] sm:blur-[45px] transform -rotate-[15deg] animate-aura-dark-core"
+              className="aura-orb absolute w-[360px] sm:w-[480px] h-[95vh] rounded-[48%] opacity-85 blur-[28px] sm:blur-[34px] transform -rotate-[15deg] animate-aura-dark-core"
               style={{
                 background: 'linear-gradient(180deg, rgba(251,113,133,0.9) 0%, rgba(244,63,94,0.95) 45%, rgba(217,70,239,0.8) 85%, transparent 100%)',
               }}
@@ -54,7 +54,7 @@ export const AuraBackground: React.FC<AuraBackgroundProps> = React.memo(({ theme
 
             {/* Deep violet-orchid secondary veil curving along the side */}
             <div 
-              className="aura-orb absolute -right-16 top-1/4 w-[500px] h-[90vh] rounded-[52%] opacity-65 blur-[48px] animate-aura-dark-side"
+              className="aura-orb absolute -right-16 top-1/4 w-[500px] h-[90vh] rounded-[52%] opacity-65 blur-[32px] sm:blur-[40px] animate-aura-dark-side"
               style={{
                 background: 'radial-gradient(circle, rgba(147,51,234,0.7) 0%, rgba(88,28,135,0.5) 50%, transparent 80%)',
               }}
@@ -62,7 +62,7 @@ export const AuraBackground: React.FC<AuraBackgroundProps> = React.memo(({ theme
 
             {/* Bottom-left grounding deep magenta aura */}
             <div 
-              className="aura-orb absolute -left-24 -bottom-20 w-[600px] h-[70vh] rounded-[50%] opacity-70 blur-[52px] animate-aura-dark-glow"
+              className="aura-orb absolute -left-24 -bottom-20 w-[600px] h-[70vh] rounded-[50%] opacity-70 blur-[34px] sm:blur-[42px] animate-aura-dark-glow"
               style={{
                 background: 'radial-gradient(circle, rgba(190,24,93,0.65) 0%, rgba(131,24,67,0.4) 60%, transparent 85%)',
               }}
@@ -79,7 +79,7 @@ export const AuraBackground: React.FC<AuraBackgroundProps> = React.memo(({ theme
           <div className="absolute inset-0 flex items-center justify-center">
             {/* Top-Left Soft Blush Mist */}
             <div 
-              className="aura-orb absolute -top-28 -left-20 w-[720px] h-[90vh] rounded-[50%] opacity-65 blur-[45px] sm:blur-[55px] transform rotate-[18deg] animate-aura-light-pink"
+              className="aura-orb absolute -top-28 -left-20 w-[720px] h-[90vh] rounded-[50%] opacity-65 blur-[30px] sm:blur-[38px] transform rotate-[18deg] animate-aura-light-pink"
               style={{
                 background: 'radial-gradient(circle, rgba(254,205,211,0.85) 0%, rgba(251,113,133,0.3) 45%, rgba(255,245,248,0.15) 75%, transparent 100%)',
               }}
@@ -87,7 +87,7 @@ export const AuraBackground: React.FC<AuraBackgroundProps> = React.memo(({ theme
 
             {/* Center-Right Cotton Candy Pink Aura Wave */}
             <div 
-              className="aura-orb absolute top-1/6 right-1/4 w-[640px] h-[85vh] rounded-[48%] opacity-60 blur-[45px] sm:blur-[55px] transform -rotate-[22deg] animate-aura-light-rose"
+              className="aura-orb absolute top-1/6 right-1/4 w-[640px] h-[85vh] rounded-[48%] opacity-60 blur-[30px] sm:blur-[38px] transform -rotate-[22deg] animate-aura-light-rose"
               style={{
                 background: 'linear-gradient(135deg, rgba(244,114,182,0.45) 0%, rgba(249,168,212,0.6) 45%, rgba(255,228,235,0.4) 80%, transparent 100%)',
               }}
@@ -95,7 +95,7 @@ export const AuraBackground: React.FC<AuraBackgroundProps> = React.memo(({ theme
 
             {/* Bottom-Center Whispering Petal Glow */}
             <div 
-              className="aura-orb absolute -bottom-24 left-1/4 w-[800px] h-[75vh] rounded-[54%] opacity-55 blur-[50px] sm:blur-[60px] animate-aura-light-cream"
+              className="aura-orb absolute -bottom-24 left-1/4 w-[800px] h-[75vh] rounded-[54%] opacity-55 blur-[32px] sm:blur-[40px] animate-aura-light-cream"
               style={{
                 background: 'radial-gradient(circle, rgba(251,207,232,0.7) 0%, rgba(253,242,248,0.5) 55%, transparent 100%)',
               }}
@@ -103,7 +103,7 @@ export const AuraBackground: React.FC<AuraBackgroundProps> = React.memo(({ theme
 
             {/* Pure White Luminous Core for high contrast text readability */}
             <div 
-              className="aura-orb absolute w-[520px] h-[70vh] rounded-full opacity-80 blur-[40px]"
+              className="aura-orb absolute w-[520px] h-[70vh] rounded-full opacity-80 blur-[28px]"
               style={{
                 background: 'radial-gradient(circle, #ffffff 0%, rgba(255,255,255,0.85) 55%, transparent 100%)',
               }}
@@ -120,7 +120,7 @@ export const AuraBackground: React.FC<AuraBackgroundProps> = React.memo(({ theme
           <div className="absolute inset-0 flex items-center justify-center">
             {/* Wave 1: Soft Strawberry Blossom Pink */}
             <div 
-              className="aura-orb absolute -top-32 -left-32 w-[750px] h-[95vh] rounded-[45%_55%_65%_35%] opacity-75 blur-[45px] sm:blur-[55px] transform rotate-[35deg] animate-aura-light-pink"
+              className="aura-orb absolute -top-32 -left-32 w-[750px] h-[95vh] rounded-[45%_55%_65%_35%] opacity-75 blur-[30px] sm:blur-[38px] transform rotate-[35deg] animate-aura-light-pink"
               style={{
                 background: 'linear-gradient(135deg, #f472b6 0%, #fb7185 45%, #fda4af 85%, transparent 100%)',
               }}
@@ -128,7 +128,7 @@ export const AuraBackground: React.FC<AuraBackgroundProps> = React.memo(({ theme
 
             {/* Wave 2: Sinuous Buttercream Vanilla Ribbons */}
             <div 
-              className="aura-orb absolute top-1/4 left-1/3 w-[620px] h-[85vh] rounded-[60%_40%_45%_55%] opacity-85 blur-[40px] sm:blur-[50px] transform -rotate-[28deg] animate-aura-light-cream"
+              className="aura-orb absolute top-1/4 left-1/3 w-[620px] h-[85vh] rounded-[60%_40%_45%_55%] opacity-85 blur-[28px] sm:blur-[36px] transform -rotate-[28deg] animate-aura-light-cream"
               style={{
                 background: 'linear-gradient(120deg, #fef08a 0%, #fed7aa 50%, #fbcfe8 100%)',
               }}
@@ -136,7 +136,7 @@ export const AuraBackground: React.FC<AuraBackgroundProps> = React.memo(({ theme
 
             {/* Wave 3: Dusty Rose Lower Swirl */}
             <div 
-              className="aura-orb absolute -bottom-28 right-0 w-[800px] h-[85vh] rounded-[48%_52%_40%_60%] opacity-75 blur-[45px] sm:blur-[55px] transform rotate-[18deg] animate-aura-light-rose"
+              className="aura-orb absolute -bottom-28 right-0 w-[800px] h-[85vh] rounded-[48%_52%_40%_60%] opacity-75 blur-[30px] sm:blur-[38px] transform rotate-[18deg] animate-aura-light-rose"
               style={{
                 background: 'linear-gradient(145deg, #f43f5e 0%, #ec4899 40%, #fed7aa 80%, transparent 100%)',
               }}
@@ -144,7 +144,7 @@ export const AuraBackground: React.FC<AuraBackgroundProps> = React.memo(({ theme
 
             {/* Wave 4: Pale Cream Highlights */}
             <div 
-              className="aura-orb absolute top-10 right-1/4 w-[450px] h-[60vh] rounded-[50%] opacity-90 blur-[35px] transform -rotate-[15deg] animate-aura-light-highlight"
+              className="aura-orb absolute top-10 right-1/4 w-[450px] h-[60vh] rounded-[50%] opacity-90 blur-[26px] transform -rotate-[15deg] animate-aura-light-highlight"
               style={{
                 background: 'radial-gradient(circle, #fffbeb 0%, #fef3c7 60%, transparent 100%)',
               }}

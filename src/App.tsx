@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import type { 
   TimerMode, 
   ThemeMode, 
@@ -186,9 +186,9 @@ export function App() {
 
   // Timer state
   const [mode, setMode] = useState<TimerMode>('focus');
-  const [timeLeft, setTimeLeft] = useState<number>(settings.focusMinutes * 60);
   const [isRunning, setIsRunning] = useState<boolean>(false);
   const [cycleCount, setCycleCount] = useState<number>(1);
+  const [resetCount, setResetCount] = useState<number>(0);
 
   // Modals state
   const [isTasksOpen, setIsTasksOpen] = useState(false);
@@ -198,9 +198,14 @@ export function App() {
   const [isAmbientOpen, setIsAmbientOpen] = useState(false);
   const [isBoredOpen, setIsBoredOpen] = useState(false);
 
-  // Accurate timer reference
-  const timerEndRef = useRef<number | null>(null);
-  const lastTickSecond = useRef<number>(timeLeft);
+  // Pause all animations when tab is backgrounded
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      document.documentElement.classList.toggle('tab-hidden', document.hidden);
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, []);
 
   // Sync theme changes with DOM
   useEffect(() => {
@@ -292,20 +297,7 @@ export function App() {
     soundEngine.unlockAudio();
     setMode(newMode);
     setIsRunning(autoStart);
-    const duration = (
-      newMode === 'focus' 
-        ? settings.focusMinutes 
-        : newMode === 'shortBreak' 
-          ? settings.shortBreakMinutes 
-          : settings.longBreakMinutes
-    ) * 60;
-    setTimeLeft(duration);
-    if (autoStart) {
-      timerEndRef.current = Date.now() + duration * 1000;
-    } else {
-      timerEndRef.current = null;
-    }
-  }, [settings]);
+  }, []);
 
   // Handle timer completion - PLAYS SOUND FOR BOTH FOCUS AND BREAK COMPLETION
   const handleSessionComplete = useCallback(() => {
@@ -378,61 +370,14 @@ export function App() {
     }
   }, [mode, settings, cycleCount, activeTask, switchMode, updateStats]);
 
-  // Timer Tick Interval
-  useEffect(() => {
-    if (!isRunning) {
-      timerEndRef.current = null;
-      return;
-    }
-
-    if (!timerEndRef.current) {
-      timerEndRef.current = Date.now() + timeLeft * 1000;
-    }
-
-    const interval = setInterval(() => {
-      const remainingMs = (timerEndRef.current || 0) - Date.now();
-      const remainingSec = Math.max(0, Math.ceil(remainingMs / 1000));
-
-      if (settings.tickSound && remainingSec !== lastTickSecond.current) {
-        soundEngine.playTick();
-        lastTickSecond.current = remainingSec;
-      }
-
-      if (remainingSec <= 0) {
-        clearInterval(interval);
-        setTimeLeft(0);
-        handleSessionComplete();
-      } else {
-        setTimeLeft(remainingSec);
-      }
-    }, 250);
-
-    return () => clearInterval(interval);
-  }, [isRunning, timeLeft, settings.tickSound, handleSessionComplete]);
-
-  // Update document title with remaining time
-  useEffect(() => {
-    const minutes = Math.floor(timeLeft / 60);
-    const seconds = timeLeft % 60;
-    const formatted = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-    const modeLabel = mode === 'focus' ? 'Focus' : mode === 'shortBreak' ? 'Short Break' : 'Long Break';
-    document.title = `${formatted} — ${modeLabel} | Phokus`;
-  }, [timeLeft, mode]);
-
   // Timer Action Handlers
-  const handleTogglePlay = () => {
+  const handleTogglePlay = useCallback(() => {
     soundEngine.unlockAudio();
     requestNotifyPermission();
-    if (!isRunning) {
-      timerEndRef.current = Date.now() + timeLeft * 1000;
-      setIsRunning(true);
-    } else {
-      setIsRunning(false);
-      timerEndRef.current = null;
-    }
-  };
+    setIsRunning(prev => !prev);
+  }, []);
 
-  const handleSkip = () => {
+  const handleSkip = useCallback(() => {
     soundEngine.unlockAudio();
     if (mode === 'focus') {
       const nextCycle = cycleCount + 1;
@@ -446,21 +391,13 @@ export function App() {
     } else {
       switchMode('focus', false);
     }
-  };
+  }, [mode, cycleCount, settings.longBreakInterval, switchMode]);
 
-  const handleReset = () => {
+  const handleReset = useCallback(() => {
     soundEngine.unlockAudio();
     setIsRunning(false);
-    timerEndRef.current = null;
-    const duration = (
-      mode === 'focus' 
-        ? settings.focusMinutes 
-        : mode === 'shortBreak' 
-          ? settings.shortBreakMinutes 
-          : settings.longBreakMinutes
-    ) * 60;
-    setTimeLeft(duration);
-  };
+    setResetCount(c => c + 1);
+  }, []);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -483,16 +420,17 @@ export function App() {
         setIsStatsOpen(false);
         setIsAuthOpen(false);
         setIsAmbientOpen(false);
+        setIsBoredOpen(false);
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  });
+  }, [handleTogglePlay, handleReset, handleSkip]);
 
   // Task actions:
   // 1. Every newly added task is appended to the bottom (below previously added tasks)
-  const handleAddTask = (title: string) => {
+  const handleAddTask = useCallback((title: string) => {
     soundEngine.unlockAudio();
     const newTask: Task = {
       id: 'task_' + Date.now(),
@@ -501,114 +439,122 @@ export function App() {
       createdAt: Date.now(),
       pomodoroCount: 0
     };
-    setTasks(prev => [...prev, newTask]); // Appends below previous tasks!
-    if (!activeTaskId) {
-      setActiveTaskId(newTask.id);
-    }
-  };
+    setTasks(prev => [...prev, newTask]);
+    setActiveTaskId(prev => prev || newTask.id);
+  }, []);
 
   // 2. When a task is marked complete, the task below it appears as current doing task
-  const handleToggleTask = (taskId: string) => {
+  const handleToggleTask = useCallback((taskId: string) => {
     soundEngine.unlockAudio();
-    const taskIndex = tasks.findIndex(t => t.id === taskId);
-    if (taskIndex === -1) return;
+    setTasks(prevTasks => {
+      const taskIndex = prevTasks.findIndex(t => t.id === taskId);
+      if (taskIndex === -1) return prevTasks;
 
-    const currentTask = tasks[taskIndex];
-    const willBeCompleted = !currentTask.completed;
+      const currentTask = prevTasks[taskIndex];
+      const willBeCompleted = !currentTask.completed;
 
-    if (willBeCompleted) {
-      updateStats(s => ({ ...s, completedTasksCount: s.completedTasksCount + 1 }));
+      if (willBeCompleted) {
+        updateStats(s => ({ ...s, completedTasksCount: s.completedTasksCount + 1 }));
 
-      // If the task being completed is the currently active task
-      const currentActiveId = activeTask?.id || activeTaskId;
-      if (currentActiveId === taskId) {
-        // Look for the next uncompleted task below it
-        let nextTask: Task | undefined;
-        for (let i = taskIndex + 1; i < tasks.length; i++) {
-          if (!tasks[i].completed && tasks[i].id !== taskId) {
-            nextTask = tasks[i];
-            break;
-          }
-        }
-        // If none below it, check from top
-        if (!nextTask) {
-          for (let i = 0; i < taskIndex; i++) {
-            if (!tasks[i].completed && tasks[i].id !== taskId) {
-              nextTask = tasks[i];
-              break;
+        // If the task being completed is the currently active task
+        setActiveTaskId(currentActiveId => {
+          if (currentActiveId === taskId) {
+            let nextTask: Task | undefined;
+            for (let i = taskIndex + 1; i < prevTasks.length; i++) {
+              if (!prevTasks[i].completed && prevTasks[i].id !== taskId) {
+                nextTask = prevTasks[i];
+                break;
+              }
             }
+            if (!nextTask) {
+              for (let i = 0; i < taskIndex; i++) {
+                if (!prevTasks[i].completed && prevTasks[i].id !== taskId) {
+                  nextTask = prevTasks[i];
+                  break;
+                }
+              }
+            }
+            return nextTask ? nextTask.id : null;
           }
-        }
-        setActiveTaskId(nextTask ? nextTask.id : null);
+          return currentActiveId;
+        });
+      } else {
+        setActiveTaskId(taskId);
       }
-    } else {
-      // If uncompleting, set it as active
-      setActiveTaskId(taskId);
-    }
 
-    setTasks(prev => prev.map(t => t.id === taskId ? { ...t, completed: willBeCompleted } : t));
-  };
+      return prevTasks.map(t => t.id === taskId ? { ...t, completed: willBeCompleted } : t);
+    });
+  }, [updateStats]);
 
   // Delete task
-  const handleDeleteTask = (taskId: string) => {
+  const handleDeleteTask = useCallback((taskId: string) => {
     soundEngine.unlockAudio();
     setTasks(prev => {
       const remaining = prev.filter(t => t.id !== taskId);
-      if (activeTaskId === taskId) {
-        const nextAvailable = remaining.find(t => !t.completed);
-        setActiveTaskId(nextAvailable ? nextAvailable.id : null);
-      }
+      setActiveTaskId(activeId => {
+        if (activeId === taskId) {
+          const nextAvailable = remaining.find(t => !t.completed);
+          return nextAvailable ? nextAvailable.id : null;
+        }
+        return activeId;
+      });
       return remaining;
     });
-  };
+  }, []);
 
   // Select active task from drawer
-  const handleSelectActiveTask = (taskId: string) => {
+  const handleSelectActiveTask = useCallback((taskId: string) => {
     soundEngine.unlockAudio();
     setActiveTaskId(taskId);
     setIsTasksOpen(false);
-  };
+  }, []);
 
   // Reorder tasks
-  const handleReorderTasks = (newTasks: Task[]) => {
+  const handleReorderTasks = useCallback((newTasks: Task[]) => {
     setTasks(newTasks);
-  };
+  }, []);
 
   // Clear all tasks
-  const handleClearAllTasks = () => {
+  const handleClearAllTasks = useCallback(() => {
     soundEngine.unlockAudio();
     setTasks([]);
     setActiveTaskId(null);
-  };
+  }, []);
 
   // Two-way sync: update active task title directly from main page
-  const handleUpdateActiveTaskTitle = (newTitle: string) => {
-    const targetId = activeTask?.id || activeTaskId;
-    if (!targetId) return;
-    setTasks(prev => prev.map(t => t.id === targetId ? { ...t, title: newTitle } : t));
-  };
+  const handleUpdateActiveTaskTitle = useCallback((newTitle: string) => {
+    setActiveTaskId(targetId => {
+      if (targetId) {
+        setTasks(prev => prev.map(t => t.id === targetId ? { ...t, title: newTitle } : t));
+      }
+      return targetId;
+    });
+  }, []);
 
   // Mark active task complete directly from main page checkbox
-  const handleCompleteActiveTask = (taskId?: string) => {
-    const targetId = taskId || activeTask?.id || activeTaskId;
-    if (targetId) {
-      handleToggleTask(targetId);
-    }
-  };
+  const handleCompleteActiveTask = useCallback((taskId?: string) => {
+    setActiveTaskId(activeId => {
+      const targetId = taskId || activeId;
+      if (targetId) {
+        handleToggleTask(targetId);
+      }
+      return activeId;
+    });
+  }, [handleToggleTask]);
 
   // Create active task directly from main page input
-  const handleCreateActiveTask = (title: string) => {
+  const handleCreateActiveTask = useCallback((title: string) => {
     handleAddTask(title);
-  };
+  }, [handleAddTask]);
 
   // Auth actions
-  const handleSignIn = (user: UserProfile) => {
+  const handleSignIn = useCallback((user: UserProfile) => {
     setCurrentUser(user);
     setStats(user.stats);
     localStorage.setItem('phokus_active_user', JSON.stringify(user));
-  };
+  }, []);
 
-  const handleSignOut = async () => {
+  const handleSignOut = useCallback(async () => {
     try {
       await signOutUser();
     } catch {
@@ -616,36 +562,26 @@ export function App() {
     }
     setCurrentUser(null);
     localStorage.removeItem('phokus_active_user');
-  };
+  }, []);
 
   // Settings save handler
-  const handleSaveSettings = (newSettings: TimerSettings) => {
+  const handleSaveSettings = useCallback((newSettings: TimerSettings) => {
     setSettings(newSettings);
-    if (!isRunning) {
-      const duration = (
-        mode === 'focus' 
-          ? newSettings.focusMinutes 
-          : mode === 'shortBreak' 
-            ? newSettings.shortBreakMinutes 
-            : newSettings.longBreakMinutes
-      ) * 60;
-      setTimeLeft(duration);
-    }
-  };
+  }, []);
 
   // Toggle Theme (cycles through Light Aura -> Strawberry Silk -> Dark Aura -> Matte Black)
-  const handleToggleTheme = () => {
+  const handleToggleTheme = useCallback(() => {
     soundEngine.unlockAudio();
-    const nextTheme: ThemeMode = 
-      theme === 'light-aura' 
+    setTheme(prev => 
+      prev === 'light-aura' 
         ? 'bunny-pink' 
-        : theme === 'bunny-pink' 
+        : prev === 'bunny-pink' 
           ? 'dark-mesh' 
-          : theme === 'dark-mesh'
+          : prev === 'dark-mesh'
             ? 'matte-black'
-            : 'light-aura';
-    setTheme(nextTheme);
-  };
+            : 'light-aura'
+    );
+  }, []);
 
   // Direct theme selection
   const handleSelectTheme = useCallback((newTheme: ThemeMode) => {
@@ -708,8 +644,8 @@ export function App() {
       <main className="flex-1 flex flex-col items-center justify-center px-4 w-full">
         <Timer
           mode={mode}
-          timeLeft={timeLeft}
           isRunning={isRunning}
+          resetCount={resetCount}
           activeTask={activeTask}
           cycleCount={cycleCount}
           settings={settings}
@@ -718,6 +654,7 @@ export function App() {
           onTogglePlay={handleTogglePlay}
           onSkip={handleSkip}
           onReset={handleReset}
+          onSessionComplete={handleSessionComplete}
           onCompleteActiveTask={handleCompleteActiveTask}
           onUpdateActiveTaskTitle={handleUpdateActiveTaskTitle}
           onCreateActiveTask={handleCreateActiveTask}

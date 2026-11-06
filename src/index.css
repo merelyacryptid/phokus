@@ -16,16 +16,13 @@
   }
 }
 
-/* Custom background mesh gradients */
-/* Dark-Blackish Background with Pink Accents */
+/* Custom background mesh gradients (hardware-composited, no animated background-position) */
 .bg-mesh-dark {
   background: radial-gradient(at 15% 15%, rgba(225, 29, 72, 0.16) 0px, transparent 55%),
               radial-gradient(at 85% 12%, rgba(244, 63, 142, 0.14) 0px, transparent 50%),
               radial-gradient(at 20% 85%, rgba(190, 24, 93, 0.12) 0px, transparent 55%),
               radial-gradient(at 85% 88%, rgba(251, 113, 133, 0.12) 0px, transparent 50%),
               #08080a;
-  background-size: 140% 140%;
-  animation: meshGlow 25s ease-in-out infinite alternate;
 }
 
 /* White and Pink Bunny Mode */
@@ -36,39 +33,37 @@
               radial-gradient(at 85% 85%, rgb(253, 164, 184) 0px, transparent 45%),
               radial-gradient(at 50% 45%, rgb(255, 255, 255) 0px, transparent 65%),
               #fff0f4;
-  background-size: 140% 140%;
-  animation: meshGlow 22s ease-in-out infinite alternate;
 }
 
-/* Glassmorphism styling */
+/* Glassmorphism styling with light blur radius for high mobile & GPU fill performance */
 .glass-panel-dark {
-  background: rgba(13, 13, 16, 0.85);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: rgba(13, 13, 16, 0.90);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   border: 1px solid rgba(244, 63, 142, 0.22);
   box-shadow: 0 16px 40px -10px rgba(0, 0, 0, 0.7);
 }
 
 .glass-panel-pink {
-  background: rgba(255, 255, 255, 0.72);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   border: 1px solid rgba(244, 114, 143, 0.2);
   box-shadow: 0 10px 30px -10px rgba(244, 63, 104, 0.12);
 }
 
 .glass-btn-dark {
-  background: rgba(255, 255, 255, 0.04);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   border: 1px solid rgba(244, 63, 142, 0.24);
   color: #ffffff;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
 }
 .glass-btn-dark:hover {
-  background: rgba(244, 63, 142, 0.18);
+  background: rgba(244, 63, 142, 0.2);
   border-color: rgba(244, 63, 142, 0.55);
-  box-shadow: 0 0 18px rgba(244, 63, 142, 0.35);
+  box-shadow: 0 0 12px rgba(244, 63, 142, 0.3);
   transform: translateY(-1px);
 }
 .glass-btn-dark:active {
@@ -77,18 +72,18 @@
 
 /* Matte Black & White Glass Button */
 .glass-btn-matte {
-  background: rgba(24, 24, 27, 0.85);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: rgba(24, 24, 27, 0.9);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   border: 1px solid rgba(255, 255, 255, 0.18);
   color: #ffffff;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
 }
 .glass-btn-matte:hover {
-  background: rgba(39, 39, 42, 0.95);
+  background: rgba(39, 39, 42, 0.98);
   border-color: rgba(255, 255, 255, 0.45);
-  box-shadow: 0 0 18px rgba(255, 255, 255, 0.18);
+  box-shadow: 0 0 14px rgba(255, 255, 255, 0.18);
   transform: translateY(-1px);
 }
 .glass-btn-matte:active {
@@ -96,12 +91,12 @@
 }
 
 .glass-btn-pink {
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   border: 1px solid rgba(251, 113, 143, 0.25);
   color: #831433;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
   box-shadow: 0 4px 12px rgba(244, 63, 104, 0.08);
 }
 .glass-btn-pink:hover {
@@ -113,6 +108,7 @@
 .glass-btn-pink:active {
   transform: translateY(1px);
 }
+
 
 /* Custom scrollbars */
 ::-webkit-scrollbar {
@@ -169,5 +165,11 @@
     animation: none !important;
     will-change: auto !important;
   }
+}
+
+/* Pause all aura and UI animations when tab is hidden or backgrounded (0% GPU/CPU idle) */
+.tab-hidden .aura-orb,
+.tab-hidden * {
+  animation-play-state: paused !important;
 }
 
