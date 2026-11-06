@@ -185,3 +185,4 @@ export function onAuthUserChanged(callback: (user: User | null) => void): () => 
   }
   return onAuthStateChanged(auth, callback);
 }
+
