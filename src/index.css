@@ -149,3 +149,25 @@
   transform: translateZ(0);
 }
 
+/* Hardware-Accelerated Compositor Promotion */
+.hw-accelerated {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  will-change: transform, opacity;
+}
+
+/* Prefers Reduced Motion & Battery-Saver Optimization */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .aura-orb {
+    animation: none !important;
+    will-change: auto !important;
+  }
+}
+

@@ -106,13 +106,68 @@ function buildContributionWeeks(dailyActivity: Record<string, number> = {}) {
   };
 }
 
-export const CarrotContributionGraph: React.FC<CarrotContributionGraphProps> = ({
+export const CarrotContributionGraph: React.FC<CarrotContributionGraphProps> = React.memo(({
   dailyActivity,
   theme,
 }) => {
   const isMatteBlack = theme === 'matte-black';
   const isDark = theme === 'dark-mesh' || isMatteBlack;
   const [hoveredCell, setHoveredCell] = useState<DayCell | null>(null);
+
+  // Purely tonal progression (from lightest shade Level 1 to darkest/deepest Level 4)
+  const getCellClasses = (level: 0 | 1 | 2 | 3 | 4) => {
+    if (isMatteBlack) {
+      switch (level) {
+        case 1:
+          return 'bg-white/10 border border-white/15'; // Faintest
+        case 2:
+          return 'bg-white/25 border border-white/35'; // Medium light
+        case 3:
+          return 'bg-white/50 border border-white/60 shadow-[0_0_6px_rgba(255,255,255,0.25)]'; // Darker/crisp
+        case 4:
+          return 'bg-white/85 border border-white shadow-[0_0_10px_rgba(255,255,255,0.6)]'; // Pure solid white
+        default:
+          return 'bg-white/[0.03] border border-white/[0.06] hover:border-white/25';
+      }
+    }
+
+    if (isDark) {
+      switch (level) {
+        case 1:
+          // Lightest: soft, translucent peach-orange
+          return 'bg-orange-500/15 border border-orange-400/25';
+        case 2:
+          // Medium light: warm golden amber
+          return 'bg-orange-500/30 border border-orange-400/50';
+        case 3:
+          // Medium dark: rich deep orange
+          return 'bg-orange-600/55 border border-orange-400/75 shadow-[0_0_6px_rgba(249,115,22,0.35)]';
+        case 4:
+          // Darkest / Highest harvest: intense bold burnt-orange
+          return 'bg-orange-600/85 border border-orange-300 shadow-[0_0_10px_rgba(249,115,22,0.65)]';
+        default:
+          return 'bg-white/[0.04] border border-white/[0.06] hover:border-pink-400/40';
+      }
+    }
+
+    // Light themes (bunny-pink & light-aura)
+    switch (level) {
+      case 1:
+        // Lightest: pale delicate peach
+        return 'bg-orange-100/70 border border-orange-200/90';
+      case 2:
+        // Medium light: warm golden orange
+        return 'bg-orange-200/90 border border-orange-300';
+      case 3:
+        // Medium dark: rich vibrant orange
+        return 'bg-orange-400/85 border border-orange-500 shadow-[0_0_6px_rgba(251,146,60,0.35)]';
+      case 4:
+        // Darkest: deep saturated roasted orange
+        return 'bg-orange-600/90 border border-orange-700 shadow-[0_0_10px_rgba(234,88,12,0.45)]';
+      default:
+        return 'bg-pink-100/40 border border-pink-200/60 hover:border-pink-300';
+    }
+  };
 
   // Generate 14 weeks of GitHub-style contribution data
   const { weeks, totalCarrots, totalHoursInRange } = useMemo(() => {
@@ -215,16 +270,8 @@ export const CarrotContributionGraph: React.FC<CarrotContributionGraphProps> = (
                           cell.isFuture
                             ? 'opacity-20 pointer-events-none bg-white/[0.02]'
                             : hasCarrot
-                              ? cell.level === 4
-                                ? 'bg-orange-500/35 border border-orange-400/80 shadow-[0_0_8px_rgba(249,115,22,0.45)]'
-                                : cell.level === 3
-                                  ? 'bg-orange-500/25 border border-orange-400/60'
-                                  : cell.level === 2
-                                    ? 'bg-orange-500/18 border border-orange-400/40'
-                                    : 'bg-orange-500/10 border border-orange-400/25'
-                              : isDark
-                                ? 'bg-white/[0.04] border border-white/[0.06] hover:border-pink-400/40'
-                                : 'bg-pink-100/40 border border-pink-200/60 hover:border-pink-300'
+                              ? getCellClasses(cell.level)
+                              : getCellClasses(0)
                         } ${
                           cell.isToday
                             ? isMatteBlack
@@ -235,8 +282,9 @@ export const CarrotContributionGraph: React.FC<CarrotContributionGraphProps> = (
                       >
                         {hasCarrot && (
                           <CarrotIcon
-                            size={14}
+                            size={13}
                             level={cell.level || 1}
+                            theme={theme}
                             className="transform transition-transform hover:scale-125"
                           />
                         )}
@@ -253,34 +301,49 @@ export const CarrotContributionGraph: React.FC<CarrotContributionGraphProps> = (
       {/* Legend & Details Footer */}
       <div className="flex items-center justify-between pt-3 mt-3 border-t border-pink-500/15 text-[11px]">
         <div className="flex items-center space-x-1.5 text-xs text-orange-400 font-medium">
-          <CarrotIcon size={14} level={3} />
+          <CarrotIcon size={13} level={3} theme={theme} />
           <span>Each carrot = a day of deep focus</span>
         </div>
 
-        {/* Legend */}
+        {/* Legend: Strictly lighter to darker, all same size */}
         <div className="flex items-center space-x-1.5 text-[10px] opacity-75">
           <span>Less</span>
           {/* Level 0: Empty */}
           <div
-            className={`w-3.5 h-3.5 rounded-[3px] ${
-              isDark ? 'bg-white/[0.04] border border-white/10' : 'bg-pink-100/50 border border-pink-200'
-            }`}
+            title="0 hrs"
+            className={`w-3.5 h-3.5 rounded-[3px] flex items-center justify-center ${getCellClasses(0)}`}
           />
-          {/* Level 1 */}
-          <div className="w-3.5 h-3.5 rounded-[3px] bg-orange-500/15 border border-orange-400/30 flex items-center justify-center">
-            <div className="w-1.5 h-1.5 rounded-full bg-orange-400" />
+          {/* Level 1: Lightest */}
+          <div
+            title="< 1 hr (Lightest)"
+            className={`w-3.5 h-3.5 rounded-[3px] flex items-center justify-center ${getCellClasses(1)}`}
+          >
+            <CarrotIcon size={10} level={1} theme={theme} />
           </div>
-          {/* Level 2 */}
-          <div className="w-3.5 h-3.5 rounded-[3px] bg-orange-500/25 border border-orange-400/50 flex items-center justify-center">
-            <CarrotIcon size={10} level={2} />
+          {/* Level 2: Medium light */}
+          <div
+            title="1 - 2 hrs (Medium light)"
+            className={`w-3.5 h-3.5 rounded-[3px] flex items-center justify-center ${getCellClasses(2)}`}
+          >
+            <CarrotIcon size={10} level={2} theme={theme} />
           </div>
-          {/* Level 3 & 4 */}
-          <div className="w-3.5 h-3.5 rounded-[3px] bg-orange-500/35 border border-orange-400/80 flex items-center justify-center shadow-[0_0_4px_rgba(249,115,22,0.5)]">
-            <CarrotIcon size={11} level={4} />
+          {/* Level 3: Medium dark */}
+          <div
+            title="2 - 3.5 hrs (Darker)"
+            className={`w-3.5 h-3.5 rounded-[3px] flex items-center justify-center ${getCellClasses(3)}`}
+          >
+            <CarrotIcon size={10} level={3} theme={theme} />
+          </div>
+          {/* Level 4: Darkest */}
+          <div
+            title="3.5+ hrs (Darkest)"
+            className={`w-3.5 h-3.5 rounded-[3px] flex items-center justify-center ${getCellClasses(4)}`}
+          >
+            <CarrotIcon size={10} level={4} theme={theme} />
           </div>
           <span>More</span>
         </div>
       </div>
     </div>
   );
-};
+});

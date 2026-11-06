@@ -348,7 +348,7 @@ export const Timer: React.FC<TimerProps> = ({
   const progressPercent = Math.max(0, Math.min(100, ((totalSeconds - timeLeft) / totalSeconds) * 100));
 
   return (
-    <div className="flex flex-col items-center justify-center my-auto select-none z-10 transition-all duration-300">
+    <div className="flex flex-col items-center justify-center my-auto select-none z-10 transition-all duration-300 hw-accelerated">
       {/* Hidden elements for Video PiP fallback */}
       <canvas ref={canvasRef} className="hidden" />
       <video 
