@@ -17,6 +17,12 @@ import { AuthModal } from './components/AuthModal';
 import { AmbientSoundModal } from './components/AmbientSoundModal';
 import { AuraBackground } from './components/AuraBackground';
 import { soundEngine } from './utils/audio';
+import { 
+  isFirebaseConfigured, 
+  onAuthUserChanged, 
+  mapFirebaseUserToProfile, 
+  signOutUser 
+} from './utils/firebase';
 
 const DEFAULT_SETTINGS: TimerSettings = {
   focusMinutes: 40,
@@ -213,6 +219,36 @@ export function App() {
   useEffect(() => {
     localStorage.setItem('phokus_tasks', JSON.stringify(tasks));
   }, [tasks]);
+
+  // Listen to Firebase auth state changes to persist session across reloads
+  useEffect(() => {
+    if (!isFirebaseConfigured) return;
+
+    const unsubscribe = onAuthUserChanged((firebaseUser) => {
+      if (firebaseUser) {
+        const profile = mapFirebaseUserToProfile(firebaseUser);
+        setCurrentUser(profile);
+        setStats(profile.stats);
+        localStorage.setItem('phokus_active_user', JSON.stringify(profile));
+      } else {
+        const saved = localStorage.getItem('phokus_active_user');
+        if (saved) {
+          try {
+            const parsed = JSON.parse(saved);
+            // If active user was a Firebase user (not local_ or demo_), clear session
+            if (parsed.id && !parsed.id.startsWith('demo_') && !parsed.id.startsWith('local_')) {
+              setCurrentUser(null);
+              localStorage.removeItem('phokus_active_user');
+            }
+          } catch {
+            // ignore
+          }
+        }
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   // Sync stats with user or local storage
   const updateStats = useCallback((updater: (prev: UserStats) => UserStats) => {
@@ -570,7 +606,12 @@ export function App() {
     localStorage.setItem('phokus_active_user', JSON.stringify(user));
   };
 
-  const handleSignOut = () => {
+  const handleSignOut = async () => {
+    try {
+      await signOutUser();
+    } catch {
+      // ignore
+    }
     setCurrentUser(null);
     localStorage.removeItem('phokus_active_user');
   };
