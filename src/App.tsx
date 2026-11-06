@@ -15,6 +15,7 @@ import { SettingsModal } from './components/SettingsModal';
 import { StatsModal } from './components/StatsModal';
 import { AuthModal } from './components/AuthModal';
 import { AmbientSoundModal } from './components/AmbientSoundModal';
+import { BoredModal } from './components/BoredModal';
 import { AuraBackground } from './components/AuraBackground';
 import { soundEngine } from './utils/audio';
 import { 
@@ -195,6 +196,7 @@ export function App() {
   const [isStatsOpen, setIsStatsOpen] = useState(false);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isAmbientOpen, setIsAmbientOpen] = useState(false);
+  const [isBoredOpen, setIsBoredOpen] = useState(false);
 
   // Accurate timer reference
   const timerEndRef = useRef<number | null>(null);
@@ -663,6 +665,11 @@ export function App() {
     setIsAmbientOpen(prev => !prev);
   }, []);
 
+  const handleOpenBored = useCallback(() => {
+    soundEngine.unlockAudio();
+    setIsBoredOpen(true);
+  }, []);
+
   const handleOpenStats = useCallback(() => {
     soundEngine.unlockAudio();
     setIsStatsOpen(true);
@@ -683,6 +690,7 @@ export function App() {
   const handleCloseStats = useCallback(() => setIsStatsOpen(false), []);
   const handleCloseAuth = useCallback(() => setIsAuthOpen(false), []);
   const handleCloseAmbient = useCallback(() => setIsAmbientOpen(false), []);
+  const handleCloseBored = useCallback(() => setIsBoredOpen(false), []);
 
   return (
     <div
@@ -724,6 +732,7 @@ export function App() {
         currentUser={currentUser}
         onToggleTasks={handleToggleTasks}
         onToggleAmbient={handleToggleAmbient}
+        onOpenBored={handleOpenBored}
         onToggleTheme={handleToggleTheme}
         onSelectTheme={handleSelectTheme}
         onOpenStats={handleOpenStats}
@@ -777,6 +786,12 @@ export function App() {
         isOpen={isAmbientOpen}
         theme={theme}
         onClose={handleCloseAmbient}
+      />
+
+      <BoredModal
+        isOpen={isBoredOpen}
+        theme={theme}
+        onClose={handleCloseBored}
       />
     </div>
   );

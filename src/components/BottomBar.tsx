@@ -12,7 +12,8 @@ import {
   Moon,
   Sparkles,
   MoonStar,
-  Contrast
+  Contrast,
+  Gamepad2
 } from 'lucide-react';
 
 interface BottomBarProps {
@@ -22,6 +23,7 @@ interface BottomBarProps {
   currentUser: UserProfile | null;
   onToggleTasks: () => void;
   onToggleAmbient: () => void;
+  onOpenBored: () => void;
   onToggleTheme: () => void;
   onSelectTheme?: (theme: ThemeMode) => void;
   onOpenStats: () => void;
@@ -73,6 +75,7 @@ export const BottomBar: React.FC<BottomBarProps> = React.memo(({
   currentUser,
   onToggleTasks,
   onToggleAmbient,
+  onOpenBored,
   onToggleTheme,
   onSelectTheme,
   onOpenStats,
@@ -166,6 +169,16 @@ export const BottomBar: React.FC<BottomBarProps> = React.memo(({
         >
           <Headphones size={20} className="stroke-[2.2]" />
         </button>
+
+        {/* Bored? Games & Quizzes */}
+        <button
+          onClick={onOpenBored}
+          title="Bored? Play mini-games & fun quizzes"
+          className={`flex items-center space-x-1.5 px-3 sm:px-3.5 py-2.5 rounded-2xl font-bold text-xs sm:text-sm transition-all duration-200 cursor-pointer active:scale-95 ${btnClass}`}
+        >
+          <Gamepad2 size={18} className="stroke-[2.2] shrink-0" />
+          <span className="font-semibold text-xs">bored?</span>
+        </button>
       </div>
 
       {/* Bottom Right Controls (Streak pill, theme menu, profile, settings, fullscreen) */}
@@ -199,7 +212,7 @@ export const BottomBar: React.FC<BottomBarProps> = React.memo(({
             <div
               role="dialog"
               aria-label="Theme selector"
-              className={`absolute bottom-[calc(100%+12px)] right-0 sm:right-auto sm:left-1/2 sm:-translate-x-1/2 flex items-center p-1.5 rounded-2xl shadow-2xl backdrop-blur-xl border transition-all duration-200 z-50 whitespace-nowrap animate-fade-in ${
+              className={`absolute bottom-[calc(100%+12px)] left-1/2 -translate-x-1/2 flex items-center p-1.5 rounded-2xl shadow-2xl backdrop-blur-xl border transition-all duration-200 z-50 whitespace-nowrap animate-fade-in ${
                 isMatteBlack
                   ? 'bg-[#151518]/95 border-neutral-700 shadow-black/80'
                   : isDark
