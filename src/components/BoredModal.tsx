@@ -41,6 +41,15 @@ const BUZZFEED_QUIZZES = [
 
 const GAMES: GameItem[] = [
   {
+    id: 'monkeytype',
+    title: 'Monkeytype',
+    category: 'arcade',
+    categoryLabel: 'Typing Test',
+    description: 'Customizable, aesthetic typing speed test to test and train your WPM and accuracy.',
+    url: 'https://monkeytype.com',
+    highlight: true,
+  },
+  {
     id: 'wordle',
     title: 'Wordle',
     category: 'word',
