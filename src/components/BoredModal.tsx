@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import type { ThemeMode } from '../types';
-import { 
-  Gamepad2, 
-  X, 
-  ExternalLink, 
-  Sparkles, 
-  Zap, 
+import {
+  Gamepad2,
+  X,
+  ExternalLink,
+  Sparkles,
+  Zap,
   RotateCcw,
   Search
 } from 'lucide-react';
@@ -19,7 +19,7 @@ interface BoredModalProps {
 interface GameItem {
   id: string;
   title: string;
-  category: 'word' | 'arcade' | 'puzzle' | 'quiz';
+  category: 'word' | 'arcade' | 'puzzle' | 'quiz' | 'typing' | 'chat';
   categoryLabel: string;
   description: string;
   url: string;
@@ -43,7 +43,7 @@ const GAMES: GameItem[] = [
   {
     id: 'monkeytype',
     title: 'Monkeytype',
-    category: 'arcade',
+    category: 'typing',
     categoryLabel: 'Typing Test',
     description: 'Customizable, aesthetic typing speed test to test and train your WPM and accuracy.',
     url: 'https://monkeytype.com',
@@ -72,8 +72,8 @@ const GAMES: GameItem[] = [
     title: 'Krillion',
     category: 'word',
     categoryLabel: 'Context Puzzle',
-    description: 'Find the secret word by measuring the semantic context distance of your guesses.',
-    url: 'https://krillion.fun',
+    description: 'Answer each prompt with an uncommon or niche response. The nicher your answer, the deeper you dive.',
+    url: 'https://krillion.io/',
     highlight: true,
   },
   {
@@ -92,6 +92,23 @@ const GAMES: GameItem[] = [
     categoryLabel: 'Absurdist Puzzle',
     description: 'Pick a password that satisfies increasingly chaotic, brilliant rules by Neal Agarwal.',
     url: 'https://neal.fun/password-game/',
+  },
+  {
+    id: 'ducktype',
+    title: 'DuckType',
+    category: 'typing',
+    categoryLabel: 'Typing Test',
+    description: 'quality typing practice, purpose-built for real code',
+    url: 'https://ducktype-ten.vercel.app/',
+    highlight: true,
+  },
+  {
+    id: 'human-or-not',
+    title: 'Human Or Not',
+    category: 'chat',
+    categoryLabel: 'Turing Test',
+    description: 'A social turing game where you decide if the other person is a bot or human.',
+    url: 'https://humanornot.so/',
   },
   {
     id: 'infinite-craft',
@@ -188,7 +205,7 @@ export const BoredModal: React.FC<BoredModalProps> = React.memo(({
   const filteredGames = GAMES.filter((game) => {
     const matchesCategory = selectedCategory === 'all' || game.category === selectedCategory;
     const matchesSearch = game.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          game.description.toLowerCase().includes(searchQuery.toLowerCase());
+      game.description.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesCategory && matchesSearch;
   });
 
@@ -197,25 +214,23 @@ export const BoredModal: React.FC<BoredModalProps> = React.memo(({
       <div className="absolute inset-0" onClick={onClose} />
 
       <div
-        className={`relative w-full max-w-2xl max-h-[85vh] flex flex-col rounded-3xl p-6 shadow-2xl transition-all duration-300 ${
-          isMatteBlack
-            ? 'bg-[#0f0f12] border border-neutral-700/80 text-white shadow-2xl shadow-black/95'
-            : isDark
-              ? 'bg-[#150f1d]/95 border border-pink-500/25 text-white shadow-2xl shadow-pink-950/60'
-              : 'bg-white/95 border border-pink-200 text-pink-950 shadow-2xl shadow-pink-200/50'
-        }`}
+        className={`relative w-full max-w-2xl max-h-[85vh] flex flex-col rounded-3xl p-6 shadow-2xl transition-all duration-300 ${isMatteBlack
+          ? 'bg-[#0f0f12] border border-neutral-700/80 text-white shadow-2xl shadow-black/95'
+          : isDark
+            ? 'bg-[#150f1d]/95 border border-pink-500/25 text-white shadow-2xl shadow-pink-950/60'
+            : 'bg-white/95 border border-pink-200 text-pink-950 shadow-2xl shadow-pink-200/50'
+          }`}
       >
         {/* Header */}
         <div className="flex items-center justify-between pb-4 border-b border-pink-500/20 mb-4 shrink-0">
           <div className="flex items-center space-x-3">
             <div
-              className={`p-2.5 rounded-2xl flex items-center justify-center ${
-                isMatteBlack
-                  ? 'bg-neutral-800 text-white border border-neutral-700'
-                  : isDark
-                    ? 'bg-pink-600/20 text-pink-400 border border-pink-500/35 shadow-[0_0_12px_rgba(244,63,94,0.25)]'
-                    : 'bg-pink-100 text-pink-600 border border-pink-200'
-              }`}
+              className={`p-2.5 rounded-2xl flex items-center justify-center ${isMatteBlack
+                ? 'bg-neutral-800 text-white border border-neutral-700'
+                : isDark
+                  ? 'bg-pink-600/20 text-pink-400 border border-pink-500/35 shadow-[0_0_12px_rgba(244,63,94,0.25)]'
+                  : 'bg-pink-100 text-pink-600 border border-pink-200'
+                }`}
             >
               <Gamepad2 size={22} className="stroke-[2.2]" />
             </div>
@@ -228,13 +243,12 @@ export const BoredModal: React.FC<BoredModalProps> = React.memo(({
           </div>
           <button
             onClick={onClose}
-            className={`p-2 rounded-xl transition-colors ${
-              isMatteBlack
-                ? 'hover:bg-neutral-800 text-neutral-400 hover:text-white'
-                : isDark
-                  ? 'hover:bg-white/10 text-pink-200/70 hover:text-pink-100'
-                  : 'hover:bg-pink-100 text-pink-800'
-            }`}
+            className={`p-2 rounded-xl transition-colors ${isMatteBlack
+              ? 'hover:bg-neutral-800 text-neutral-400 hover:text-white'
+              : isDark
+                ? 'hover:bg-white/10 text-pink-200/70 hover:text-pink-100'
+                : 'hover:bg-pink-100 text-pink-800'
+              }`}
           >
             <X size={18} />
           </button>
@@ -242,42 +256,39 @@ export const BoredModal: React.FC<BoredModalProps> = React.memo(({
 
         {/* Tab Switcher & Quiz Button */}
         <div className="flex flex-wrap items-center justify-between gap-2 mb-4 shrink-0">
-          <div className={`p-1 rounded-2xl flex items-center space-x-1 ${
-            isMatteBlack ? 'bg-neutral-900 border border-neutral-800' : isDark ? 'bg-white/5 border border-pink-500/15' : 'bg-pink-50 border border-pink-100'
-          }`}>
+          <div className={`p-1 rounded-2xl flex items-center space-x-1 ${isMatteBlack ? 'bg-neutral-900 border border-neutral-800' : isDark ? 'bg-white/5 border border-pink-500/15' : 'bg-pink-50 border border-pink-100'
+            }`}>
             <button
               onClick={() => setActiveTab('games')}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                activeTab === 'games'
-                  ? isMatteBlack
-                    ? 'bg-neutral-800 text-white shadow-sm'
-                    : isDark
-                      ? 'bg-pink-600/30 text-pink-200 shadow-sm border border-pink-500/30'
-                      : 'bg-white text-pink-700 shadow-sm border border-pink-200'
-                  : isMatteBlack
-                    ? 'text-neutral-400 hover:text-white'
-                    : isDark
-                      ? 'text-pink-300/60 hover:text-pink-200'
-                      : 'text-pink-900/60 hover:text-pink-950'
-              }`}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${activeTab === 'games'
+                ? isMatteBlack
+                  ? 'bg-neutral-800 text-white shadow-sm'
+                  : isDark
+                    ? 'bg-pink-600/30 text-pink-200 shadow-sm border border-pink-500/30'
+                    : 'bg-white text-pink-700 shadow-sm border border-pink-200'
+                : isMatteBlack
+                  ? 'text-neutral-400 hover:text-white'
+                  : isDark
+                    ? 'text-pink-300/60 hover:text-pink-200'
+                    : 'text-pink-900/60 hover:text-pink-950'
+                }`}
             >
               All Mini-Games
             </button>
             <button
               onClick={() => setActiveTab('reaction')}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 ${
-                activeTab === 'reaction'
-                  ? isMatteBlack
-                    ? 'bg-neutral-800 text-white shadow-sm'
-                    : isDark
-                      ? 'bg-pink-600/30 text-pink-200 shadow-sm border border-pink-500/30'
-                      : 'bg-white text-pink-700 shadow-sm border border-pink-200'
-                  : isMatteBlack
-                    ? 'text-neutral-400 hover:text-white'
-                    : isDark
-                      ? 'text-pink-300/60 hover:text-pink-200'
-                      : 'text-pink-900/60 hover:text-pink-950'
-              }`}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 ${activeTab === 'reaction'
+                ? isMatteBlack
+                  ? 'bg-neutral-800 text-white shadow-sm'
+                  : isDark
+                    ? 'bg-pink-600/30 text-pink-200 shadow-sm border border-pink-500/30'
+                    : 'bg-white text-pink-700 shadow-sm border border-pink-200'
+                : isMatteBlack
+                  ? 'text-neutral-400 hover:text-white'
+                  : isDark
+                    ? 'text-pink-300/60 hover:text-pink-200'
+                    : 'text-pink-900/60 hover:text-pink-950'
+                }`}
             >
               <Zap size={13} className="text-amber-400" />
               <span>Speed Test</span>
@@ -288,11 +299,10 @@ export const BoredModal: React.FC<BoredModalProps> = React.memo(({
           <button
             onClick={handleRandomQuiz}
             title="Opens a random BuzzFeed personality or trivia quiz"
-            className={`px-3.5 py-2 rounded-2xl text-xs font-bold flex items-center space-x-2 transition-all active:scale-95 shadow-sm ${
-              isMatteBlack
-                ? 'bg-white text-black hover:bg-neutral-200'
-                : 'bg-gradient-to-r from-pink-600 to-rose-500 hover:from-pink-500 hover:to-rose-400 text-white shadow-[0_0_12px_rgba(244,63,94,0.35)]'
-            }`}
+            className={`px-3.5 py-2 rounded-2xl text-xs font-bold flex items-center space-x-2 transition-all active:scale-95 shadow-sm ${isMatteBlack
+              ? 'bg-white text-black hover:bg-neutral-200'
+              : 'bg-gradient-to-r from-pink-600 to-rose-500 hover:from-pink-500 hover:to-rose-400 text-white shadow-[0_0_12px_rgba(244,63,94,0.35)]'
+              }`}
           >
             <Sparkles size={14} className="stroke-[2.5]" />
             <span>Take a Random Quiz</span>
@@ -312,13 +322,12 @@ export const BoredModal: React.FC<BoredModalProps> = React.memo(({
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search games (Wordle, Level Devil, 2048...)"
-                  className={`w-full pl-8 pr-3 py-1.5 rounded-xl text-xs outline-none transition-all ${
-                    isMatteBlack
-                      ? 'bg-neutral-900 text-white placeholder-neutral-500 border border-neutral-700 focus:border-white'
-                      : isDark
-                        ? 'bg-white/[0.06] text-pink-100 placeholder-pink-300/30 border border-pink-500/25 focus:border-pink-500'
-                        : 'bg-pink-50 text-pink-950 placeholder-pink-900/40 border border-pink-200 focus:border-pink-500'
-                  }`}
+                  className={`w-full pl-8 pr-3 py-1.5 rounded-xl text-xs outline-none transition-all ${isMatteBlack
+                    ? 'bg-neutral-900 text-white placeholder-neutral-500 border border-neutral-700 focus:border-white'
+                    : isDark
+                      ? 'bg-white/[0.06] text-pink-100 placeholder-pink-300/30 border border-pink-500/25 focus:border-pink-500'
+                      : 'bg-pink-50 text-pink-950 placeholder-pink-900/40 border border-pink-200 focus:border-pink-500'
+                    }`}
                 />
               </div>
 
@@ -327,19 +336,18 @@ export const BoredModal: React.FC<BoredModalProps> = React.memo(({
                   <button
                     key={cat}
                     onClick={() => setSelectedCategory(cat)}
-                    className={`px-2.5 py-1 rounded-xl text-[11px] font-semibold capitalize transition-all ${
-                      selectedCategory === cat
-                        ? isMatteBlack
-                          ? 'bg-neutral-800 text-white'
-                          : isDark
-                            ? 'bg-pink-600/30 text-pink-200 border border-pink-500/30'
-                            : 'bg-pink-200 text-pink-800'
-                        : isMatteBlack
-                          ? 'text-neutral-400 hover:text-white'
-                          : isDark
-                            ? 'text-pink-300/60 hover:text-pink-200'
-                            : 'text-pink-900/60 hover:text-pink-950'
-                    }`}
+                    className={`px-2.5 py-1 rounded-xl text-[11px] font-semibold capitalize transition-all ${selectedCategory === cat
+                      ? isMatteBlack
+                        ? 'bg-neutral-800 text-white'
+                        : isDark
+                          ? 'bg-pink-600/30 text-pink-200 border border-pink-500/30'
+                          : 'bg-pink-200 text-pink-800'
+                      : isMatteBlack
+                        ? 'text-neutral-400 hover:text-white'
+                        : isDark
+                          ? 'text-pink-300/60 hover:text-pink-200'
+                          : 'text-pink-900/60 hover:text-pink-950'
+                      }`}
                   >
                     {cat}
                   </button>
@@ -356,13 +364,12 @@ export const BoredModal: React.FC<BoredModalProps> = React.memo(({
                     href={game.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={`group p-3.5 rounded-2xl border transition-all duration-200 flex flex-col justify-between hover:scale-[1.01] active:scale-[0.99] ${
-                      isMatteBlack
-                        ? 'bg-neutral-900/70 hover:bg-neutral-900 border-neutral-800 hover:border-neutral-600 text-white'
-                        : isDark
-                          ? 'bg-white/[0.03] hover:bg-white/[0.07] border-pink-500/20 hover:border-pink-500/40 text-pink-100'
-                          : 'bg-pink-50/70 hover:bg-pink-100/70 border-pink-200/80 hover:border-pink-300 text-pink-950'
-                    }`}
+                    className={`group p-3.5 rounded-2xl border transition-all duration-200 flex flex-col justify-between hover:scale-[1.01] active:scale-[0.99] ${isMatteBlack
+                      ? 'bg-neutral-900/70 hover:bg-neutral-900 border-neutral-800 hover:border-neutral-600 text-white'
+                      : isDark
+                        ? 'bg-white/[0.03] hover:bg-white/[0.07] border-pink-500/20 hover:border-pink-500/40 text-pink-100'
+                        : 'bg-pink-50/70 hover:bg-pink-100/70 border-pink-200/80 hover:border-pink-300 text-pink-950'
+                      }`}
                   >
                     <div>
                       <div className="flex items-center justify-between mb-1.5">
@@ -371,19 +378,17 @@ export const BoredModal: React.FC<BoredModalProps> = React.memo(({
                             {game.title}
                           </span>
                         </div>
-                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-lg uppercase tracking-wider ${
-                          isMatteBlack
-                            ? 'bg-neutral-800 text-neutral-300'
-                            : isDark
-                              ? 'bg-pink-600/20 text-pink-300'
-                              : 'bg-pink-200 text-pink-800'
-                        }`}>
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-lg uppercase tracking-wider ${isMatteBlack
+                          ? 'bg-neutral-800 text-neutral-300'
+                          : isDark
+                            ? 'bg-pink-600/20 text-pink-300'
+                            : 'bg-pink-200 text-pink-800'
+                          }`}>
                           {game.categoryLabel}
                         </span>
                       </div>
-                      <p className={`text-xs line-clamp-2 leading-relaxed ${
-                        isMatteBlack ? 'text-neutral-400' : isDark ? 'text-pink-200/70' : 'text-pink-900/70'
-                      }`}>
+                      <p className={`text-xs line-clamp-2 leading-relaxed ${isMatteBlack ? 'text-neutral-400' : isDark ? 'text-pink-200/70' : 'text-pink-900/70'
+                        }`}>
                         {game.description}
                       </p>
                     </div>
@@ -404,9 +409,8 @@ export const BoredModal: React.FC<BoredModalProps> = React.memo(({
           <div className="flex-1 flex flex-col items-center justify-center text-center p-4">
             {reactionState === 'idle' && (
               <div className="space-y-4 max-w-sm">
-                <div className={`w-16 h-16 mx-auto rounded-3xl flex items-center justify-center ${
-                  isMatteBlack ? 'bg-neutral-800 text-white' : isDark ? 'bg-pink-600/20 text-pink-300' : 'bg-pink-100 text-pink-600'
-                }`}>
+                <div className={`w-16 h-16 mx-auto rounded-3xl flex items-center justify-center ${isMatteBlack ? 'bg-neutral-800 text-white' : isDark ? 'bg-pink-600/20 text-pink-300' : 'bg-pink-100 text-pink-600'
+                  }`}>
                   <Zap size={28} className="stroke-[2.2]" />
                 </div>
                 <div>
@@ -420,9 +424,8 @@ export const BoredModal: React.FC<BoredModalProps> = React.memo(({
                 </div>
                 <button
                   onClick={handleStartReaction}
-                  className={`px-6 py-2.5 rounded-2xl font-bold text-sm transition-all active:scale-95 shadow-md ${
-                    isMatteBlack ? 'bg-white text-black hover:bg-neutral-200' : 'bg-pink-600 hover:bg-pink-500 text-white'
-                  }`}
+                  className={`px-6 py-2.5 rounded-2xl font-bold text-sm transition-all active:scale-95 shadow-md ${isMatteBlack ? 'bg-white text-black hover:bg-neutral-200' : 'bg-pink-600 hover:bg-pink-500 text-white'
+                    }`}
                 >
                   Start Challenge
                 </button>
@@ -454,18 +457,17 @@ export const BoredModal: React.FC<BoredModalProps> = React.memo(({
                   <p className="text-xs font-semibold uppercase tracking-widest text-emerald-400">Your Reaction Time</p>
                   <p className="text-4xl font-black mt-1 tracking-tight text-white">{reactionScore} ms</p>
                   <p className={`text-xs mt-2 ${isMatteBlack ? 'text-neutral-400' : isDark ? 'text-pink-300/70' : 'text-pink-900/70'}`}>
-                    {reactionScore && reactionScore < 220 
-                      ? '⚡ Godlike reflexes! Faster than 95% of players.' 
-                      : reactionScore && reactionScore < 280 
-                        ? '🔥 Great reflexes! Sharp and alert.' 
+                    {reactionScore && reactionScore < 220
+                      ? '⚡ Godlike reflexes! Faster than 95% of players.'
+                      : reactionScore && reactionScore < 280
+                        ? '🔥 Great reflexes! Sharp and alert.'
                         : '🐇 Relaxed pace. Take a deep breath and try again!'}
                   </p>
                 </div>
                 <button
                   onClick={handleStartReaction}
-                  className={`px-5 py-2 rounded-2xl font-bold text-xs flex items-center space-x-1.5 mx-auto transition-all active:scale-95 ${
-                    isMatteBlack ? 'bg-white text-black' : 'bg-pink-600 hover:bg-pink-500 text-white'
-                  }`}
+                  className={`px-5 py-2 rounded-2xl font-bold text-xs flex items-center space-x-1.5 mx-auto transition-all active:scale-95 ${isMatteBlack ? 'bg-white text-black' : 'bg-pink-600 hover:bg-pink-500 text-white'
+                    }`}
                 >
                   <RotateCcw size={14} />
                   <span>Try Again</span>

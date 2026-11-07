@@ -182,22 +182,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = React.memo(({
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
-              {/* 1. Very Light White & Pink Aura */}
-              <button
-                type="button"
-                onClick={() => onThemeChange('light-aura')}
-                className={`p-2.5 rounded-2xl flex flex-col items-center justify-center space-y-1.5 transition-all ${
-                  theme === 'light-aura'
-                    ? 'ring-2 ring-pink-500 bg-pink-100/90 text-pink-950 shadow-[0_0_12px_rgba(244,63,94,0.25)]'
-                    : isDark ? 'bg-white/[0.04] hover:bg-white/10 text-pink-200/70' : 'bg-pink-50/50 hover:bg-pink-50 text-pink-900/70'
-                }`}
-              >
-                <div className="w-5 h-5 rounded-full bg-gradient-to-tr from-white via-pink-100 to-pink-300 border border-pink-300 shadow-sm" />
-                <span className="text-[11px] font-bold text-center leading-tight">Light Aura</span>
-                <span className="text-[9px] opacity-70 text-center leading-none">White & Pink</span>
-              </button>
-
-              {/* 2. Strawberry Silk Warm Pink */}
+              {/* 1. Strawberry Silk Warm Pink (Default) */}
               <button
                 type="button"
                 onClick={() => onThemeChange('bunny-pink')}
@@ -210,6 +195,21 @@ export const SettingsModal: React.FC<SettingsModalProps> = React.memo(({
                 <div className="w-5 h-5 rounded-full bg-gradient-to-tr from-amber-100 via-pink-200 to-pink-400 border border-pink-300 shadow-sm" />
                 <span className="text-[11px] font-bold text-center leading-tight">Strawberry Silk</span>
                 <span className="text-[9px] opacity-70 text-center leading-none">Cream & Pink</span>
+              </button>
+
+              {/* 2. Very Light White & Pink Aura */}
+              <button
+                type="button"
+                onClick={() => onThemeChange('light-aura')}
+                className={`p-2.5 rounded-2xl flex flex-col items-center justify-center space-y-1.5 transition-all ${
+                  theme === 'light-aura'
+                    ? 'ring-2 ring-pink-500 bg-pink-100/90 text-pink-950 shadow-[0_0_12px_rgba(244,63,94,0.25)]'
+                    : isDark ? 'bg-white/[0.04] hover:bg-white/10 text-pink-200/70' : 'bg-pink-50/50 hover:bg-pink-50 text-pink-900/70'
+                }`}
+              >
+                <div className="w-5 h-5 rounded-full bg-gradient-to-tr from-white via-pink-100 to-pink-300 border border-pink-300 shadow-sm" />
+                <span className="text-[11px] font-bold text-center leading-tight">Light Aura</span>
+                <span className="text-[9px] opacity-70 text-center leading-none">White & Pink</span>
               </button>
 
               {/* 3. Pink & Dark Style */}

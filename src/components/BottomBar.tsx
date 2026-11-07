@@ -9,7 +9,7 @@ import {
   Maximize2, 
   Minimize2, 
   User, 
-  Moon,
+  Sun,
   Sparkles,
   MoonStar,
   Contrast,
@@ -42,7 +42,7 @@ const THEME_OPTIONS: ThemeOption[] = [
     id: 'bunny-pink',
     name: 'Strawberry Silk',
     icon: (isSelected) => (
-      <Moon size={18} className={`stroke-[2.2] transition-colors ${isSelected ? 'text-pink-600' : 'text-pink-400'}`} />
+      <Sun size={18} className={`stroke-[2.2] transition-colors ${isSelected ? 'text-pink-600' : 'text-pink-400'}`} />
     ),
   },
   {
@@ -298,7 +298,7 @@ export const BottomBar: React.FC<BottomBarProps> = React.memo(({
             ) : theme === 'light-aura' ? (
               <Sparkles size={20} className="stroke-[2.2] text-pink-500" />
             ) : (
-              <Moon size={20} className="stroke-[2.2] text-pink-700" />
+              <Sun size={20} className="stroke-[2.2] text-pink-700" />
             )}
           </button>
         </div>

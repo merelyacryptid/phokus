@@ -98,10 +98,14 @@ function calculateStreakStats(baseStats: UserStats): UserStats {
 }
 
 export function App() {
-  // Theme state: 'bunny-pink' is default
+  // Theme state: 'bunny-pink' (Strawberry Silk) is default
   const [theme, setTheme] = useState<ThemeMode>(() => {
     const saved = localStorage.getItem('phokus_theme');
-    return (saved as ThemeMode) || 'bunny-pink';
+    const validThemes: ThemeMode[] = ['bunny-pink', 'light-aura', 'dark-mesh', 'matte-black'];
+    if (saved && validThemes.includes(saved as ThemeMode)) {
+      return saved as ThemeMode;
+    }
+    return 'bunny-pink';
   });
 
   // Settings state: default 40 / 10 / 20 mins
@@ -569,17 +573,17 @@ export function App() {
     setSettings(newSettings);
   }, []);
 
-  // Toggle Theme (cycles through Light Aura -> Strawberry Silk -> Dark Aura -> Matte Black)
+  // Toggle Theme (cycles through Strawberry Silk -> Light Aura -> Dark Aura -> Matte Black)
   const handleToggleTheme = useCallback(() => {
     soundEngine.unlockAudio();
     setTheme(prev => 
-      prev === 'light-aura' 
-        ? 'bunny-pink' 
-        : prev === 'bunny-pink' 
+      prev === 'bunny-pink' 
+        ? 'light-aura' 
+        : prev === 'light-aura' 
           ? 'dark-mesh' 
           : prev === 'dark-mesh'
             ? 'matte-black'
-            : 'light-aura'
+            : 'bunny-pink'
     );
   }, []);
 
