@@ -332,7 +332,7 @@ export const BoredModal: React.FC<BoredModalProps> = React.memo(({
               </div>
 
               <div className="flex items-center space-x-1 shrink-0 overflow-x-auto">
-                {['all', 'word', 'arcade', 'puzzle'].map((cat) => (
+                {['all', 'word', 'arcade', 'puzzle', 'typing', 'chat'].map((cat) => (
                   <button
                     key={cat}
                     onClick={() => setSelectedCategory(cat)}
