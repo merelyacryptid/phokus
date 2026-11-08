@@ -87,7 +87,14 @@ export const Timer: React.FC<TimerProps> = React.memo(({
   const lastTickSecond = useRef<number>(timeLeft);
   const timeLeftRef = useRef<number>(timeLeft);
   const isRunningRef = useRef<boolean>(isRunning);
-  const prevActiveTaskIdRef = useRef<string | null>(activeTask ? activeTask.id : null);
+  const prevModeRef = useRef<TimerMode>(mode);
+  const prevResetCountRef = useRef<number>(resetCount || 0);
+  const prevActiveTaskRef = useRef<Task | null>(activeTask);
+  const prevSettingsDurationsRef = useRef({
+    focus: settings.focusMinutes,
+    short: settings.shortBreakMinutes,
+    long: settings.longBreakMinutes,
+  });
   const hasWarnedRef = useRef<boolean>(false);
 
   const modeRef = useRef<TimerMode>(mode);
@@ -114,27 +121,63 @@ export const Timer: React.FC<TimerProps> = React.memo(({
     isRunningRef.current = isRunning;
   }, [isRunning]);
 
-  const currentActiveTaskId = activeTask ? activeTask.id : null;
-
   // Sync timeLeft when mode, settings, reset, or active task changes
   useEffect(() => {
-    const activeTaskChanged = prevActiveTaskIdRef.current !== currentActiveTaskId;
-    prevActiveTaskIdRef.current = currentActiveTaskId;
+    const modeChanged = prevModeRef.current !== mode;
+    prevModeRef.current = mode;
 
-    // If active task changed while on a break, do not interrupt or reset the running break timer
-    if (activeTaskChanged && mode !== 'focus') {
-      return;
+    const resetChanged = prevResetCountRef.current !== resetCount;
+    prevResetCountRef.current = resetCount || 0;
+
+    const prevTask = prevActiveTaskRef.current;
+    const activeTaskChanged = prevTask?.id !== activeTask?.id;
+    const taskEstimateEdited = prevTask?.id === activeTask?.id && prevTask?.estimatedMinutes !== activeTask?.estimatedMinutes;
+    prevActiveTaskRef.current = activeTask;
+
+    const prevDurations = prevSettingsDurationsRef.current;
+    const settingsChanged = 
+      prevDurations.focus !== settings.focusMinutes ||
+      prevDurations.short !== settings.shortBreakMinutes ||
+      prevDurations.long !== settings.longBreakMinutes;
+    prevSettingsDurationsRef.current = {
+      focus: settings.focusMinutes,
+      short: settings.shortBreakMinutes,
+      long: settings.longBreakMinutes,
+    };
+
+    let shouldResetTimer = false;
+
+    if (modeChanged || resetChanged) {
+      shouldResetTimer = true;
+    } else if (settingsChanged && !isRunningRef.current) {
+      shouldResetTimer = true;
+    } else if (activeTaskChanged && mode === 'focus') {
+      const prevHadEstimate = Boolean(prevTask && prevTask.estimatedMinutes && prevTask.estimatedMinutes > 0);
+      const completedBeforeEstimate = prevHadEstimate && timeLeftRef.current > 0;
+
+      if (completedBeforeEstimate) {
+        // User completed an estimated task before the estimate expired
+        shouldResetTimer = true;
+      } else if (!isRunningRef.current && activeTask && activeTask.estimatedMinutes && activeTask.estimatedMinutes > 0) {
+        // Idle timer selecting a task with a custom estimate
+        shouldResetTimer = true;
+      }
+      // Otherwise: regular task completed or switched while running/idle -> do NOT reset, continue running!
+    } else if (taskEstimateEdited && mode === 'focus' && !isRunningRef.current) {
+      shouldResetTimer = true;
     }
 
-    // oxlint-disable-next-line react/set-state-in-effect
-    setTimeLeft(totalSeconds);
-    hasWarnedRef.current = false;
-    if (isRunningRef.current) {
-      timerEndRef.current = Date.now() + totalSeconds * 1000;
-    } else {
-      timerEndRef.current = null;
+    if (shouldResetTimer) {
+      // oxlint-disable-next-line react/set-state-in-effect
+      setTimeLeft(totalSeconds);
+      hasWarnedRef.current = false;
+      if (isRunningRef.current) {
+        timerEndRef.current = Date.now() + totalSeconds * 1000;
+      } else {
+        timerEndRef.current = null;
+      }
     }
-  }, [mode, totalSeconds, resetCount, currentActiveTaskId]);
+  }, [mode, totalSeconds, resetCount, activeTask, settings.focusMinutes, settings.shortBreakMinutes, settings.longBreakMinutes]);
 
   // High-accuracy timer tick interval
   useEffect(() => {
