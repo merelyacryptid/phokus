@@ -88,6 +88,23 @@ export const Timer: React.FC<TimerProps> = React.memo(({
   const timeLeftRef = useRef<number>(timeLeft);
   const isRunningRef = useRef<boolean>(isRunning);
   const prevActiveTaskIdRef = useRef<string | null>(activeTask ? activeTask.id : null);
+  const hasWarnedRef = useRef<boolean>(false);
+
+  const modeRef = useRef<TimerMode>(mode);
+  const totalSecondsRef = useRef<number>(totalSeconds);
+  const settingsRef = useRef<TimerSettings>(settings);
+
+  useEffect(() => {
+    modeRef.current = mode;
+  }, [mode]);
+
+  useEffect(() => {
+    totalSecondsRef.current = totalSeconds;
+  }, [totalSeconds]);
+
+  useEffect(() => {
+    settingsRef.current = settings;
+  }, [settings]);
 
   useEffect(() => {
     timeLeftRef.current = timeLeft;
@@ -111,6 +128,7 @@ export const Timer: React.FC<TimerProps> = React.memo(({
 
     // oxlint-disable-next-line react/set-state-in-effect
     setTimeLeft(totalSeconds);
+    hasWarnedRef.current = false;
     if (isRunningRef.current) {
       timerEndRef.current = Date.now() + totalSeconds * 1000;
     } else {
@@ -138,10 +156,27 @@ export const Timer: React.FC<TimerProps> = React.memo(({
         lastTickSecond.current = remainingSec;
       }
 
+      // Check 5m (focus) and 2m (break) warning bell
+      const currentMode = modeRef.current;
+      const currentTotal = totalSecondsRef.current;
+      const currentSettings = settingsRef.current;
+      const shouldPlayWarning = currentSettings.soundAlerts && currentSettings.warningBell !== false;
+
+      if (shouldPlayWarning && !hasWarnedRef.current) {
+        const isFocusWarning = currentMode === 'focus' && currentTotal > 300 && remainingSec <= 300 && remainingSec > 0;
+        const isBreakWarning = (currentMode === 'shortBreak' || currentMode === 'longBreak') && currentTotal > 120 && remainingSec <= 120 && remainingSec > 0;
+
+        if (isFocusWarning || isBreakWarning) {
+          hasWarnedRef.current = true;
+          soundEngine.playSmallBell(currentSettings.soundVolume);
+        }
+      }
+
       if (remainingSec <= 0) {
         clearInterval(interval);
         setTimeLeft(0);
         timerEndRef.current = null;
+        hasWarnedRef.current = false;
         onSessionComplete();
       } else {
         setTimeLeft(remainingSec);
@@ -163,6 +198,7 @@ export const Timer: React.FC<TimerProps> = React.memo(({
   const handleResetClick = () => {
     setTimeLeft(totalSeconds);
     timerEndRef.current = null;
+    hasWarnedRef.current = false;
     onReset();
   };
 

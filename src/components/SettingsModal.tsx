@@ -33,6 +33,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = React.memo(({
     soundEngine.playAlert(formData.soundType, formData.soundVolume);
   };
 
+  const handleTestSmallBell = () => {
+    soundEngine.unlockAudio();
+    soundEngine.playSmallBell(formData.soundVolume);
+  };
+
   const handleResetDefaults = () => {
     setFormData({
       focusMinutes: 40,
@@ -45,6 +50,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = React.memo(({
       soundVolume: 0.7,
       soundType: 'crystal',
       tickSound: false,
+      warningBell: true,
       showBunnyMascot: true,
     });
     setFocusInput('40');
@@ -333,6 +339,33 @@ export const SettingsModal: React.FC<SettingsModalProps> = React.memo(({
                   onChange={(e) => setFormData({ ...formData, tickSound: e.target.checked })}
                   className="w-4 h-4 accent-pink-500 rounded cursor-pointer"
                 />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="flex flex-col pr-2">
+                  <span className={isDark ? 'text-pink-200/80' : 'text-pink-900/80'}>5m & 2m warning bell</span>
+                  <span className={`text-[10px] ${isDark ? 'text-pink-300/60' : 'text-pink-900/60'}`}>
+                    Gentle bell when 5m left in focus, 2m in break
+                  </span>
+                </div>
+                <div className="flex items-center space-x-2 shrink-0">
+                  <button
+                    type="button"
+                    onClick={handleTestSmallBell}
+                    title="Test warning bell sound"
+                    className={`p-1.5 rounded-lg transition-colors ${
+                      isDark ? 'bg-pink-600/20 hover:bg-pink-600/30 text-pink-300' : 'bg-pink-100 hover:bg-pink-200 text-pink-700'
+                    }`}
+                  >
+                    <Play size={12} className="ml-0.5" />
+                  </button>
+                  <input
+                    type="checkbox"
+                    checked={formData.warningBell !== false}
+                    onChange={(e) => setFormData({ ...formData, warningBell: e.target.checked })}
+                    className="w-4 h-4 accent-pink-500 rounded cursor-pointer"
+                  />
+                </div>
               </div>
             </div>
           </div>

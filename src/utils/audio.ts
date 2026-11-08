@@ -143,6 +143,52 @@ class SoundEngine {
     }
   }
 
+  // Play subtle warning bell (5m left in focus, 2m left in break)
+  public playSmallBell(volume: number = 0.7) {
+    try {
+      const ctx = this.initContext();
+      const now = ctx.currentTime;
+      const masterGain = ctx.createGain();
+      const effectiveVol = Math.max(0, Math.min(volume, 1));
+      masterGain.gain.setValueAtTime(effectiveVol, now);
+      masterGain.connect(ctx.destination);
+
+      // Acoustic synthesis of a delicate silver bell / mindfulness ting
+      const fundamental = 1567.98; // G6
+      const harmonics = [
+        { ratio: 1.0, gain: 0.35, decay: 1.3 },   // Warm bell fundamental
+        { ratio: 1.5, gain: 0.12, decay: 0.8 },   // Perfect fifth overtone
+        { ratio: 2.76, gain: 0.08, decay: 0.4 },  // Metallic ring mode
+        { ratio: 4.18, gain: 0.03, decay: 0.2 },  // Crisp strike ping
+      ];
+
+      harmonics.forEach(({ ratio, gain, decay }) => {
+        const osc = ctx.createOscillator();
+        const g = ctx.createGain();
+        const freq = fundamental * ratio;
+
+        osc.type = 'sine';
+        // Subtle micro-pitch drop on initial contact mimics physical bell strike
+        osc.frequency.setValueAtTime(freq * 1.012, now);
+        osc.frequency.exponentialRampToValueAtTime(freq, now + 0.025);
+
+        g.gain.setValueAtTime(0, now);
+        g.gain.linearRampToValueAtTime(gain, now + 0.003);
+        g.gain.exponentialRampToValueAtTime(0.0001, now + decay);
+
+        osc.connect(g);
+        g.connect(masterGain);
+
+        osc.start(now);
+        osc.stop(now + decay + 0.05);
+      });
+
+      this.scheduleAutoSuspend(2000);
+    } catch (e) {
+      console.warn('Small bell playback error:', e);
+    }
+  }
+
   // Play subtle tick sound
   public playTick(volume: number = 0.2) {
     try {

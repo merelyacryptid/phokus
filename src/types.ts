@@ -13,6 +13,7 @@ export interface TimerSettings {
   soundVolume: number; // 0 to 1
   soundType: 'crystal' | 'bell' | 'marimba' | 'softBeep';
   tickSound: boolean;
+  warningBell?: boolean;
   showBunnyMascot: boolean;
 }
 
