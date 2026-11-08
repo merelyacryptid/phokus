@@ -12,6 +12,120 @@ export function formatLocalDate(d: Date): string {
 }
 
 /**
+ * Calculates the exact streak of consecutive active days from dailyActivity and history.
+ * An active day is any calendar day with focus minutes > 0.
+ * If today has focus activity, streak includes today.
+ * If today has not been focused yet, the streak earned through yesterday remains active.
+ * If yesterday ALSO had no focus activity, the streak is 0.
+ */
+export function calculateActualStreak(
+  dailyActivity: Record<string, number> = {},
+  history: SessionHistoryItem[] = []
+): { streak: number; lastActiveDate: string; isTodayCompleted: boolean } {
+  const now = new Date();
+  const todayDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const todayStr = formatLocalDate(todayDate);
+
+  const hasActivity = (d: Date): boolean => {
+    const localKey = formatLocalDate(d);
+    const utcKey = d.toISOString().split('T')[0];
+
+    const localMin = dailyActivity[localKey] || 0;
+    const utcMin = localKey !== utcKey ? (dailyActivity[utcKey] || 0) : 0;
+    if (localMin > 0 || utcMin > 0) return true;
+
+    return history.some(item => {
+      if (item.mode !== 'focus' || !item.durationMinutes || item.durationMinutes <= 0) return false;
+      const itemDate = new Date(item.date);
+      const itemLocal = formatLocalDate(itemDate);
+      const itemUtc = itemDate.toISOString().split('T')[0];
+      return itemLocal === localKey || itemUtc === utcKey;
+    });
+  };
+
+  const isTodayCompleted = hasActivity(todayDate);
+  let streak = 0;
+  let lastActiveDate = '';
+
+  if (isTodayCompleted) {
+    streak = 1;
+    lastActiveDate = todayStr;
+    const checkDate = new Date(todayDate);
+    while (true) {
+      checkDate.setDate(checkDate.getDate() - 1);
+      if (hasActivity(checkDate)) {
+        streak++;
+      } else {
+        break;
+      }
+    }
+  } else {
+    const yesterdayDate = new Date(todayDate);
+    yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+
+    if (hasActivity(yesterdayDate)) {
+      streak = 1;
+      lastActiveDate = formatLocalDate(yesterdayDate);
+      const checkDate = new Date(yesterdayDate);
+      while (true) {
+        checkDate.setDate(checkDate.getDate() - 1);
+        if (hasActivity(checkDate)) {
+          streak++;
+        } else {
+          break;
+        }
+      }
+    } else {
+      streak = 0;
+      const allActiveDates = Object.keys(dailyActivity)
+        .filter(k => (dailyActivity[k] || 0) > 0)
+        .sort((x, y) => y.localeCompare(x));
+      lastActiveDate = allActiveDates[0] || todayStr;
+    }
+  }
+
+  return { streak, lastActiveDate, isTodayCompleted };
+}
+
+/**
+ * Synchronizes the user's streak with their actual focus activity.
+ * If the user's streak was manually set higher (e.g. recovered from localhost),
+ * that higher streak is preserved as long as the streak hasn't been broken.
+ */
+export function syncStreakWithActivity(stats: UserStats): UserStats {
+  const { streak: computedStreak, isTodayCompleted } = calculateActualStreak(
+    stats.dailyActivity || {},
+    stats.history || []
+  );
+
+  const now = new Date();
+  const todayStr = formatLocalDate(now);
+  const yesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
+  const yesterdayStr = formatLocalDate(yesterday);
+
+  // Check if current streak is still alive (lastActiveDate is today or yesterday, or completed today)
+  const lastActive = stats.lastActiveDate;
+  const isStreakAlive = lastActive === todayStr || lastActive === yesterdayStr || isTodayCompleted;
+
+  let finalStreak = computedStreak;
+
+  // If the user has a manually saved higher streak and it is still alive, preserve it
+  if ((stats.streakDays || 0) > computedStreak) {
+    if (isStreakAlive) {
+      finalStreak = stats.streakDays;
+    } else {
+      finalStreak = computedStreak;
+    }
+  }
+
+  return {
+    ...stats,
+    streakDays: Math.max(0, finalStreak),
+    lastActiveDate: isTodayCompleted ? todayStr : (stats.lastActiveDate || todayStr),
+  };
+}
+
+/**
  * Safely merge two UserStats objects without losing any data.
  * - Merges dailyActivity by taking the max minutes recorded for any date.
  * - Deduplicates session history items.
@@ -24,15 +138,15 @@ export function mergeUserStats(a?: UserStats | null, b?: UserStats | null): User
     completedShortBreaks: 0,
     completedLongBreaks: 0,
     completedTasksCount: 0,
-    streakDays: 1,
+    streakDays: 0,
     lastActiveDate: formatLocalDate(new Date()),
     dailyActivity: {},
     history: [],
   };
 
   if (!a && !b) return defaultStats;
-  if (!a) return b ? { ...defaultStats, ...b } : defaultStats;
-  if (!b) return a ? { ...defaultStats, ...a } : defaultStats;
+  if (!a) return b ? syncStreakWithActivity({ ...defaultStats, ...b }) : defaultStats;
+  if (!b) return a ? syncStreakWithActivity({ ...defaultStats, ...a }) : defaultStats;
 
   // Merge daily activity records (max of each day)
   const dailyActivity: Record<string, number> = { ...(a.dailyActivity || {}) };
@@ -77,22 +191,25 @@ export function mergeUserStats(a?: UserStats | null, b?: UserStats | null): User
     mergedHistory.filter(h => h.mode === 'focus').length
   );
 
-  const streakDays = Math.max(a.streakDays || 1, b.streakDays || 1);
+  const actualStreakInfo = calculateActualStreak(dailyActivity, mergedHistory);
+  const maxManualStreak = Math.max(a.streakDays || 0, b.streakDays || 0);
+  const streakDays = Math.max(actualStreakInfo.streak, maxManualStreak);
+
   const lastActiveDate = (a.lastActiveDate && a.lastActiveDate > (b.lastActiveDate || ''))
     ? a.lastActiveDate
     : (b.lastActiveDate || a.lastActiveDate || formatLocalDate(new Date()));
 
-  return {
-    totalFocusMinutes,
-    completedFocusSessions,
-    completedShortBreaks: Math.max(a.completedShortBreaks || 0, b.completedShortBreaks || 0),
-    completedLongBreaks: Math.max(a.completedLongBreaks || 0, b.completedLongBreaks || 0),
-    completedTasksCount: Math.max(a.completedTasksCount || 0, b.completedTasksCount || 0),
-    streakDays,
-    lastActiveDate,
-    dailyActivity,
-    history: mergedHistory,
-  };
+    return syncStreakWithActivity({
+      totalFocusMinutes,
+      completedFocusSessions,
+      completedShortBreaks: Math.max(a.completedShortBreaks || 0, b.completedShortBreaks || 0),
+      completedLongBreaks: Math.max(a.completedLongBreaks || 0, b.completedLongBreaks || 0),
+      completedTasksCount: Math.max(a.completedTasksCount || 0, b.completedTasksCount || 0),
+      streakDays,
+      lastActiveDate,
+      dailyActivity,
+      history: mergedHistory,
+  });
 }
 
 /**
@@ -105,7 +222,7 @@ export function recoverAllAvailableStats(currentStats?: UserStats): UserStats {
     completedShortBreaks: 0,
     completedLongBreaks: 0,
     completedTasksCount: 0,
-    streakDays: 1,
+    streakDays: 0,
     lastActiveDate: formatLocalDate(new Date()),
     dailyActivity: {},
     history: [],
@@ -162,7 +279,7 @@ export function recoverAllAvailableStats(currentStats?: UserStats): UserStats {
     }
   }
 
-  return result;
+  return syncStreakWithActivity(result);
 }
 
 /**
@@ -177,4 +294,3 @@ export function persistStatsBackup(stats: UserStats): void {
     // ignore
   }
 }
-

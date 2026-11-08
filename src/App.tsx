@@ -1,11 +1,11 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import type { 
-  TimerMode, 
-  ThemeMode, 
-  TimerSettings, 
-  Task, 
-  UserStats, 
-  UserProfile 
+import type {
+  TimerMode,
+  ThemeMode,
+  TimerSettings,
+  Task,
+  UserStats,
+  UserProfile
 } from './types';
 import { Header } from './components/Header';
 import { Timer } from './components/Timer';
@@ -19,17 +19,19 @@ import { BoredModal } from './components/BoredModal';
 import { MiffyTour } from './components/MiffyTour';
 import { AuraBackground } from './components/AuraBackground';
 import { soundEngine } from './utils/audio';
-import { 
-  isFirebaseConfigured, 
-  onAuthUserChanged, 
-  mapFirebaseUserToProfile, 
-  signOutUser 
+import {
+  isFirebaseConfigured,
+  onAuthUserChanged,
+  mapFirebaseUserToProfile,
+  signOutUser
 } from './utils/firebase';
-import { 
-  formatLocalDate, 
-  mergeUserStats, 
-  recoverAllAvailableStats, 
-  persistStatsBackup 
+import {
+  formatLocalDate,
+  mergeUserStats,
+  recoverAllAvailableStats,
+  persistStatsBackup,
+  calculateActualStreak,
+  syncStreakWithActivity
 } from './utils/stats';
 
 const DEFAULT_SETTINGS: TimerSettings = {
@@ -94,23 +96,6 @@ const INITIAL_STATS: UserStats = {
   ]
 };
 
-function calculateStreakStats(baseStats: UserStats): UserStats {
-  const today = formatLocalDate(new Date());
-  const utcToday = new Date().toISOString().split('T')[0];
-  if (baseStats.lastActiveDate === today || baseStats.lastActiveDate === utcToday) return baseStats;
-
-  const lastDate = new Date(baseStats.lastActiveDate);
-  const currDate = new Date();
-  const diffDays = Math.round((currDate.getTime() - lastDate.getTime()) / (1000 * 3600 * 24));
-
-  if (diffDays === 1) {
-    return { ...baseStats, streakDays: baseStats.streakDays + 1, lastActiveDate: today };
-  } else if (diffDays > 1) {
-    return { ...baseStats, streakDays: 1, lastActiveDate: today };
-  }
-  return baseStats;
-}
-
 export function App() {
   // Theme state: 'bunny-pink' (Strawberry Silk) is default
   const [theme, setTheme] = useState<ThemeMode>(() => {
@@ -150,22 +135,26 @@ export function App() {
   });
 
   const [stats, setStats] = useState<UserStats>(() => {
-    let loaded = INITIAL_STATS;
+    let loaded: UserStats | null = null;
     if (currentUser?.stats) {
-      loaded = mergeUserStats(INITIAL_STATS, currentUser.stats);
+      loaded = currentUser.stats;
     } else {
       const saved = localStorage.getItem('phokus_guest_stats');
       if (saved) {
         try {
-          const parsed = JSON.parse(saved);
-          loaded = mergeUserStats(INITIAL_STATS, parsed);
+          loaded = JSON.parse(saved);
         } catch {
-          loaded = INITIAL_STATS;
+          loaded = null;
         }
       }
     }
-    const recovered = recoverAllAvailableStats(loaded);
-    return calculateStreakStats(recovered);
+
+    const recovered = recoverAllAvailableStats(loaded || undefined);
+    // If no existing activity or history exists anywhere, provide tutorial INITIAL_STATS
+    if (recovered.totalFocusMinutes === 0 && Object.keys(recovered.dailyActivity).length === 0 && !currentUser) {
+      return syncStreakWithActivity(INITIAL_STATS);
+    }
+    return syncStreakWithActivity(recovered);
   });
 
   // Tasks state
@@ -190,8 +179,8 @@ export function App() {
   });
 
   // Get active task object
-  const activeTask = tasks.find(t => t.id === activeTaskId && !t.completed) 
-    || tasks.find(t => !t.completed) 
+  const activeTask = tasks.find(t => t.id === activeTaskId && !t.completed)
+    || tasks.find(t => !t.completed)
     || null;
 
   // Sync active task id to local storage
@@ -339,8 +328,8 @@ export function App() {
     // Browser Notification
     if ('Notification' in window && Notification.permission === 'granted') {
       const title = mode === 'focus' ? 'Focus Session Completed!' : 'Break Completed!';
-      const body = mode === 'focus' 
-        ? 'Great job! Time to relax your mind with a gentle break.' 
+      const body = mode === 'focus'
+        ? 'Great job! Time to relax your mind with a gentle break.'
         : 'Feeling refreshed? Ready for your next focus session.';
       try {
         new Notification(title, { body, silent: true });
@@ -351,10 +340,10 @@ export function App() {
 
     const now = new Date();
     const today = formatLocalDate(now);
-    const durationMinutes = mode === 'focus' 
+    const durationMinutes = mode === 'focus'
       ? ((activeTask && activeTask.estimatedMinutes && activeTask.estimatedMinutes > 0) ? activeTask.estimatedMinutes : settings.focusMinutes)
-      : mode === 'shortBreak' 
-        ? settings.shortBreakMinutes 
+      : mode === 'shortBreak'
+        ? settings.shortBreakMinutes
         : settings.longBreakMinutes;
 
     // Record stats
@@ -364,23 +353,40 @@ export function App() {
         daily[today] = (daily[today] || 0) + durationMinutes;
       }
 
+      const newHistory = [
+        {
+          id: 'h_' + Date.now(),
+          date: now.toISOString(),
+          mode,
+          durationMinutes,
+          taskTitle: activeTask ? activeTask.title : undefined
+        },
+        ...prev.history
+      ];
+
+      // Calculate streak dynamically from actual daily activity
+      let streakDays = prev.streakDays;
+      if (mode === 'focus') {
+        const { streak: computedStreak } = calculateActualStreak(daily, newHistory);
+        if ((prev.streakDays || 0) > computedStreak) {
+          if (prev.lastActiveDate !== today) {
+            streakDays = (prev.streakDays || 0) + 1;
+          }
+        } else {
+          streakDays = computedStreak;
+        }
+      }
+
       return {
         ...prev,
         totalFocusMinutes: prev.totalFocusMinutes + (mode === 'focus' ? durationMinutes : 0),
         completedFocusSessions: prev.completedFocusSessions + (mode === 'focus' ? 1 : 0),
         completedShortBreaks: prev.completedShortBreaks + (mode === 'shortBreak' ? 1 : 0),
         completedLongBreaks: prev.completedLongBreaks + (mode === 'longBreak' ? 1 : 0),
+        streakDays,
+        lastActiveDate: mode === 'focus' ? today : prev.lastActiveDate,
         dailyActivity: daily,
-        history: [
-          {
-            id: 'h_' + Date.now(),
-            date: new Date().toISOString(),
-            mode: mode,
-            durationMinutes: durationMinutes,
-            taskTitle: activeTask ? activeTask.title : undefined
-          },
-          ...prev.history
-        ]
+        history: newHistory
       };
     });
 
@@ -601,14 +607,23 @@ export function App() {
     setSettings(newSettings);
   }, []);
 
+  // Update streak directly (allows user to correct or set actual streak)
+  const handleUpdateStreak = useCallback((newStreak: number) => {
+    updateStats(prev => ({
+      ...prev,
+      streakDays: Math.max(0, newStreak),
+      lastActiveDate: formatLocalDate(new Date()),
+    }));
+  }, [updateStats]);
+
   // Toggle Theme (cycles through Strawberry Silk -> Light Aura -> Dark Aura -> Matte Black)
   const handleToggleTheme = useCallback(() => {
     soundEngine.unlockAudio();
-    setTheme(prev => 
-      prev === 'bunny-pink' 
-        ? 'light-aura' 
-        : prev === 'light-aura' 
-          ? 'dark-mesh' 
+    setTheme(prev =>
+      prev === 'bunny-pink'
+        ? 'light-aura'
+        : prev === 'light-aura'
+          ? 'dark-mesh'
           : prev === 'dark-mesh'
             ? 'matte-black'
             : 'bunny-pink'
@@ -668,9 +683,8 @@ export function App() {
 
   return (
     <div
-      className={`min-h-screen w-full flex flex-col justify-between relative overflow-hidden transition-all duration-700 ${
-        theme === 'dark-mesh' || theme === 'matte-black' ? 'text-white' : 'text-pink-950'
-      }`}
+      className={`min-h-screen w-full flex flex-col justify-between relative overflow-hidden transition-all duration-700 ${theme === 'dark-mesh' || theme === 'matte-black' ? 'text-white' : 'text-pink-950'
+        }`}
     >
       {/* Dynamic Smooth Aura Gradient with Film Grain (Matching Images 1 & 2) */}
       <AuraBackground theme={theme} />
@@ -748,6 +762,7 @@ export function App() {
         theme={theme}
         onClose={handleCloseStats}
         onOpenAuth={handleOpenAuth}
+        onUpdateStreak={handleUpdateStreak}
       />
 
       <AuthModal
