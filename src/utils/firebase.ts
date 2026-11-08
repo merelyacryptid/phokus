@@ -48,6 +48,8 @@ if (isFirebaseConfigured) {
   }
 }
 
+import { mergeUserStats, formatLocalDate, recoverAllAvailableStats } from './stats';
+
 export { auth, googleProvider };
 
 /**
@@ -57,7 +59,7 @@ export function mapFirebaseUserToProfile(user: User, existingStats?: UserStats):
   const rawName = user.displayName || user.email?.split('@')[0] || 'Focus Enthusiast';
   const name = rawName.charAt(0).toUpperCase() + rawName.slice(1);
 
-  // Check if we have locally cached stats for this user
+  // Check if we have locally cached stats for this user across all possible storages
   let stats: UserStats = existingStats || {
     totalFocusMinutes: 0,
     completedFocusSessions: 0,
@@ -65,17 +67,32 @@ export function mapFirebaseUserToProfile(user: User, existingStats?: UserStats):
     completedLongBreaks: 0,
     completedTasksCount: 0,
     streakDays: 1,
-    lastActiveDate: new Date().toISOString().split('T')[0],
+    lastActiveDate: formatLocalDate(new Date()),
     dailyActivity: {},
     history: []
   };
 
   try {
+    // 1. Check phokus_active_user
+    const savedActiveStr = localStorage.getItem('phokus_active_user');
+    if (savedActiveStr) {
+      const activeUser = JSON.parse(savedActiveStr);
+      if (activeUser?.stats) {
+        stats = mergeUserStats(stats, activeUser.stats);
+      }
+    }
+
+    // 2. Check phokus_accounts
     const savedAccountsStr = localStorage.getItem('phokus_accounts') || '[]';
     const accounts: UserProfile[] = JSON.parse(savedAccountsStr);
     const found = accounts.find(a => a.id === user.uid || (user.email && a.email.toLowerCase() === user.email.toLowerCase()));
     if (found?.stats) {
-      stats = found.stats;
+      stats = mergeUserStats(stats, found.stats);
+    }
+
+    // 3. Fallback to any recovered stats if current stats are empty
+    if (stats.totalFocusMinutes === 0 && Object.keys(stats.dailyActivity).length === 0) {
+      stats = recoverAllAvailableStats(stats);
     }
   } catch {
     // Ignore parse error

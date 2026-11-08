@@ -25,6 +25,12 @@ import {
   mapFirebaseUserToProfile, 
   signOutUser 
 } from './utils/firebase';
+import { 
+  formatLocalDate, 
+  mergeUserStats, 
+  recoverAllAvailableStats, 
+  persistStatsBackup 
+} from './utils/stats';
 
 const DEFAULT_SETTINGS: TimerSettings = {
   focusMinutes: 40,
@@ -49,7 +55,11 @@ const DEFAULT_TASKS: Task[] = [
 ];
 
 const nowMs = Date.now();
-const getDayStr = (offsetDays: number) => new Date(nowMs - offsetDays * 86400000).toISOString().split('T')[0];
+const getDayStr = (offsetDays: number) => {
+  const d = new Date();
+  d.setDate(d.getDate() - offsetDays);
+  return formatLocalDate(d);
+};
 
 const INITIAL_STATS: UserStats = {
   totalFocusMinutes: 240,
@@ -85,11 +95,12 @@ const INITIAL_STATS: UserStats = {
 };
 
 function calculateStreakStats(baseStats: UserStats): UserStats {
-  const today = new Date().toISOString().split('T')[0];
-  if (baseStats.lastActiveDate === today) return baseStats;
+  const today = formatLocalDate(new Date());
+  const utcToday = new Date().toISOString().split('T')[0];
+  if (baseStats.lastActiveDate === today || baseStats.lastActiveDate === utcToday) return baseStats;
 
   const lastDate = new Date(baseStats.lastActiveDate);
-  const currDate = new Date(today);
+  const currDate = new Date();
   const diffDays = Math.round((currDate.getTime() - lastDate.getTime()) / (1000 * 3600 * 24));
 
   if (diffDays === 1) {
@@ -141,19 +152,20 @@ export function App() {
   const [stats, setStats] = useState<UserStats>(() => {
     let loaded = INITIAL_STATS;
     if (currentUser?.stats) {
-      loaded = { ...INITIAL_STATS, ...currentUser.stats, dailyActivity: currentUser.stats.dailyActivity || INITIAL_STATS.dailyActivity };
+      loaded = mergeUserStats(INITIAL_STATS, currentUser.stats);
     } else {
       const saved = localStorage.getItem('phokus_guest_stats');
       if (saved) {
         try {
           const parsed = JSON.parse(saved);
-          loaded = { ...INITIAL_STATS, ...parsed, dailyActivity: parsed.dailyActivity || INITIAL_STATS.dailyActivity };
+          loaded = mergeUserStats(INITIAL_STATS, parsed);
         } catch {
           loaded = INITIAL_STATS;
         }
       }
     }
-    return calculateStreakStats(loaded);
+    const recovered = recoverAllAvailableStats(loaded);
+    return calculateStreakStats(recovered);
   });
 
   // Tasks state
@@ -243,8 +255,13 @@ export function App() {
       if (firebaseUser) {
         const profile = mapFirebaseUserToProfile(firebaseUser);
         setCurrentUser(profile);
-        setStats(profile.stats);
-        localStorage.setItem('phokus_active_user', JSON.stringify(profile));
+        setStats(prev => {
+          const merged = mergeUserStats(prev, profile.stats);
+          const updatedProfile = { ...profile, stats: merged };
+          persistStatsBackup(merged);
+          localStorage.setItem('phokus_active_user', JSON.stringify(updatedProfile));
+          return merged;
+        });
       } else {
         const saved = localStorage.getItem('phokus_active_user');
         if (saved) {
@@ -269,6 +286,8 @@ export function App() {
   const updateStats = useCallback((updater: (prev: UserStats) => UserStats) => {
     setStats((prev) => {
       const updated = updater(prev);
+      persistStatsBackup(updated);
+
       if (currentUser) {
         const updatedUser = { ...currentUser, stats: updated };
         setCurrentUser(updatedUser);
@@ -278,11 +297,13 @@ export function App() {
         const accountsStr = localStorage.getItem('phokus_accounts') || '[]';
         try {
           const accounts: UserProfile[] = JSON.parse(accountsStr);
-          const idx = accounts.findIndex(a => a.id === updatedUser.id);
+          const idx = accounts.findIndex(a => a.id === updatedUser.id || (updatedUser.email && a.email.toLowerCase() === updatedUser.email.toLowerCase()));
           if (idx >= 0) {
             accounts[idx] = updatedUser;
-            localStorage.setItem('phokus_accounts', JSON.stringify(accounts));
+          } else {
+            accounts.push(updatedUser);
           }
+          localStorage.setItem('phokus_accounts', JSON.stringify(accounts));
         } catch {
           // ignore
         }
@@ -328,7 +349,8 @@ export function App() {
       }
     }
 
-    const today = new Date().toISOString().split('T')[0];
+    const now = new Date();
+    const today = formatLocalDate(now);
     const durationMinutes = mode === 'focus' 
       ? ((activeTask && activeTask.estimatedMinutes && activeTask.estimatedMinutes > 0) ? activeTask.estimatedMinutes : settings.focusMinutes)
       : mode === 'shortBreak' 
@@ -554,9 +576,14 @@ export function App() {
 
   // Auth actions
   const handleSignIn = useCallback((user: UserProfile) => {
-    setCurrentUser(user);
-    setStats(user.stats);
-    localStorage.setItem('phokus_active_user', JSON.stringify(user));
+    setStats((prev) => {
+      const merged = mergeUserStats(prev, user.stats);
+      const updatedUser = { ...user, stats: merged };
+      setCurrentUser(updatedUser);
+      persistStatsBackup(merged);
+      localStorage.setItem('phokus_active_user', JSON.stringify(updatedUser));
+      return merged;
+    });
   }, []);
 
   const handleSignOut = useCallback(async () => {
