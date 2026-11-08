@@ -21,6 +21,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = React.memo(({
   onThemeChange,
 }) => {
   const [formData, setFormData] = useState<TimerSettings>({ ...settings });
+  const [focusInput, setFocusInput] = useState<string>(String(settings.focusMinutes));
+  const [shortBreakInput, setShortBreakInput] = useState<string>(String(settings.shortBreakMinutes));
+  const [longBreakInput, setLongBreakInput] = useState<string>(String(settings.longBreakMinutes));
   const isMatteBlack = theme === 'matte-black';
   const isDark = theme === 'dark-mesh' || isMatteBlack;
 
@@ -44,10 +47,22 @@ export const SettingsModal: React.FC<SettingsModalProps> = React.memo(({
       tickSound: false,
       showBunnyMascot: true,
     });
+    setFocusInput('40');
+    setShortBreakInput('10');
+    setLongBreakInput('20');
   };
 
   const handleSave = () => {
-    onSaveSettings(formData);
+    const focusVal = Math.max(1, Math.min(180, parseInt(focusInput, 10) || settings.focusMinutes || 40));
+    const shortBreakVal = Math.max(1, Math.min(60, parseInt(shortBreakInput, 10) || settings.shortBreakMinutes || 10));
+    const longBreakVal = Math.max(1, Math.min(90, parseInt(longBreakInput, 10) || settings.longBreakMinutes || 20));
+
+    onSaveSettings({
+      ...formData,
+      focusMinutes: focusVal,
+      shortBreakMinutes: shortBreakVal,
+      longBreakMinutes: longBreakVal,
+    });
     onClose();
   };
 
@@ -112,11 +127,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = React.memo(({
                   Focus
                 </label>
                 <input
-                  type="number"
-                  min="1"
-                  max="120"
-                  value={formData.focusMinutes}
-                  onChange={(e) => setFormData({ ...formData, focusMinutes: Math.max(1, parseInt(e.target.value) || 1) })}
+                  type="text"
+                  inputMode="numeric"
+                  value={focusInput}
+                  onChange={(e) => setFocusInput(e.target.value.replace(/[^0-9]/g, ''))}
+                  placeholder="40"
                   className={`w-full text-center text-lg font-bold bg-transparent outline-none ${
                     isDark ? 'text-pink-100' : 'text-pink-950'
                   }`}
@@ -128,11 +143,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = React.memo(({
                   Short Break
                 </label>
                 <input
-                  type="number"
-                  min="1"
-                  max="60"
-                  value={formData.shortBreakMinutes}
-                  onChange={(e) => setFormData({ ...formData, shortBreakMinutes: Math.max(1, parseInt(e.target.value) || 1) })}
+                  type="text"
+                  inputMode="numeric"
+                  value={shortBreakInput}
+                  onChange={(e) => setShortBreakInput(e.target.value.replace(/[^0-9]/g, ''))}
+                  placeholder="10"
                   className={`w-full text-center text-lg font-bold bg-transparent outline-none ${
                     isDark ? 'text-pink-100' : 'text-pink-950'
                   }`}
@@ -144,11 +159,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = React.memo(({
                   Long Break
                 </label>
                 <input
-                  type="number"
-                  min="1"
-                  max="90"
-                  value={formData.longBreakMinutes}
-                  onChange={(e) => setFormData({ ...formData, longBreakMinutes: Math.max(1, parseInt(e.target.value) || 1) })}
+                  type="text"
+                  inputMode="numeric"
+                  value={longBreakInput}
+                  onChange={(e) => setLongBreakInput(e.target.value.replace(/[^0-9]/g, ''))}
+                  placeholder="20"
                   className={`w-full text-center text-lg font-bold bg-transparent outline-none ${
                     isDark ? 'text-pink-100' : 'text-pink-950'
                   }`}

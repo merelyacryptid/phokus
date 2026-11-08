@@ -88,19 +88,17 @@ export const AmbientSoundModal: React.FC<AmbientSoundModalProps> = React.memo(({
       <div className="absolute inset-0" onClick={onClose} />
 
       <div
-        className={`relative w-full max-w-md max-h-[88vh] flex flex-col rounded-3xl p-5 sm:p-6 shadow-2xl transition-all duration-300 ${
-          isDark
+        className={`relative w-full max-w-md max-h-[88vh] flex flex-col rounded-3xl p-5 sm:p-6 shadow-2xl transition-all duration-300 ${isDark
             ? 'bg-[#140a12]/95 border border-pink-500/25 text-white shadow-2xl shadow-pink-950/60'
             : 'bg-white/95 border border-pink-200 text-pink-950 shadow-pink-200/50'
-        }`}
+          }`}
       >
         {/* Header */}
         <div className="flex items-center justify-between pb-3 border-b border-pink-500/20 mb-3 shrink-0">
           <div className="flex items-center space-x-2.5">
             <div
-              className={`p-2 rounded-xl ${
-                isDark ? 'bg-pink-600/20 text-pink-400 border border-pink-500/30' : 'bg-pink-100 text-pink-600'
-              }`}
+              className={`p-2 rounded-xl ${isDark ? 'bg-pink-600/20 text-pink-400 border border-pink-500/30' : 'bg-pink-100 text-pink-600'
+                }`}
             >
               <Headphones size={20} />
             </div>
@@ -113,9 +111,8 @@ export const AmbientSoundModal: React.FC<AmbientSoundModalProps> = React.memo(({
           </div>
           <button
             onClick={onClose}
-            className={`p-1.5 rounded-lg transition-colors ${
-              isDark ? 'hover:bg-white/10 text-pink-200/70 hover:text-pink-100' : 'hover:bg-pink-100 text-pink-800'
-            }`}
+            className={`p-1.5 rounded-lg transition-colors ${isDark ? 'hover:bg-white/10 text-pink-200/70 hover:text-pink-100' : 'hover:bg-pink-100 text-pink-800'
+              }`}
           >
             <X size={18} />
           </button>
@@ -125,9 +122,8 @@ export const AmbientSoundModal: React.FC<AmbientSoundModalProps> = React.memo(({
         <div className="smooth-scroll-container flex-1 overflow-y-auto space-y-4 pr-1 -mr-1">
           {/* Ambient Sounds Options */}
           <div>
-            <h4 className={`text-[11px] font-bold uppercase tracking-wider mb-2 ${
-              isDark ? 'text-pink-300/70' : 'text-pink-900/70'
-            }`}>
+            <h4 className={`text-[11px] font-bold uppercase tracking-wider mb-2 ${isDark ? 'text-pink-300/70' : 'text-pink-900/70'
+              }`}>
               Ambient Nature Sounds
             </h4>
 
@@ -140,15 +136,14 @@ export const AmbientSoundModal: React.FC<AmbientSoundModalProps> = React.memo(({
                   <button
                     key={opt.id}
                     onClick={() => handleSelectSound(opt.id)}
-                    className={`w-full flex items-center justify-between p-2.5 sm:p-3 rounded-2xl transition-all ${
-                      isPlaying
+                    className={`w-full flex items-center justify-between p-2.5 sm:p-3 rounded-2xl transition-all ${isPlaying
                         ? isDark
                           ? 'bg-pink-600/25 border border-pink-500/50 text-white shadow-[0_0_12px_rgba(244,63,94,0.3)]'
                           : 'bg-pink-200/90 border border-pink-400 text-pink-950 shadow-sm'
                         : isDark
                           ? 'bg-white/[0.04] hover:bg-pink-950/30 border border-pink-500/15 text-pink-100'
                           : 'bg-pink-50/70 hover:bg-pink-100/60 border border-pink-100 text-pink-900'
-                    }`}
+                      }`}
                   >
                     <div className="flex items-center space-x-3">
                       <div className={`p-2 rounded-xl ${isPlaying ? 'bg-pink-600 text-white shadow-[0_0_8px_rgba(244,63,94,0.5)]' : isDark ? 'bg-white/10 text-pink-300' : 'bg-white/80 text-pink-600'}`}>
@@ -197,9 +192,8 @@ export const AmbientSoundModal: React.FC<AmbientSoundModalProps> = React.memo(({
 
                 <button
                   onClick={handleStop}
-                  className={`w-full py-2 rounded-xl text-xs font-semibold flex items-center justify-center space-x-1.5 transition-colors ${
-                    isDark ? 'bg-white/10 hover:bg-white/15 text-pink-200' : 'bg-pink-100 hover:bg-pink-200 text-pink-950'
-                  }`}
+                  className={`w-full py-2 rounded-xl text-xs font-semibold flex items-center justify-center space-x-1.5 transition-colors ${isDark ? 'bg-white/10 hover:bg-white/15 text-pink-200' : 'bg-pink-100 hover:bg-pink-200 text-pink-950'
+                    }`}
                 >
                   <Square size={13} />
                   <span>Stop Ambient Sound</span>
@@ -212,9 +206,8 @@ export const AmbientSoundModal: React.FC<AmbientSoundModalProps> = React.memo(({
           <div className="pt-3 border-t border-pink-500/20">
             <div className="flex items-center space-x-2 mb-2.5">
               <Music size={15} className={isDark ? 'text-pink-400' : 'text-pink-600'} />
-              <h4 className={`text-xs font-bold uppercase tracking-wider ${
-                isDark ? 'text-pink-300' : 'text-pink-900'
-              }`}>
+              <h4 className={`text-xs font-bold uppercase tracking-wider ${isDark ? 'text-pink-300' : 'text-pink-900'
+                }`}>
                 sarah's study music recs:
               </h4>
             </div>
@@ -226,39 +219,35 @@ export const AmbientSoundModal: React.FC<AmbientSoundModalProps> = React.memo(({
                   href={item.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className={`group flex items-center justify-between p-2.5 rounded-2xl transition-all duration-150 border ${
-                    isMatteBlack
+                  className={`group flex items-center justify-between p-2.5 rounded-2xl transition-all duration-150 border ${isMatteBlack
                       ? 'bg-neutral-900/70 hover:bg-neutral-800/90 border-neutral-800 hover:border-neutral-700 text-neutral-200'
                       : isDark
                         ? 'bg-white/[0.04] hover:bg-pink-950/40 border-pink-500/15 hover:border-pink-500/35 text-pink-100'
                         : 'bg-pink-50/70 hover:bg-pink-100/70 border-pink-100 hover:border-pink-300 text-pink-950'
-                  }`}
+                    }`}
                 >
                   <div className="flex items-center space-x-2.5 min-w-0 pr-2">
-                    <div className={`p-1.5 rounded-xl shrink-0 transition-colors ${
-                      isMatteBlack
+                    <div className={`p-1.5 rounded-xl shrink-0 transition-colors ${isMatteBlack
                         ? 'bg-white/10 text-white group-hover:bg-white group-hover:text-black'
                         : isDark
                           ? 'bg-pink-600/20 text-pink-300 group-hover:bg-pink-600 group-hover:text-white'
                           : 'bg-pink-100 text-pink-600 group-hover:bg-pink-600 group-hover:text-white'
-                    }`}>
+                      }`}>
                       <Play size={13} className="fill-current stroke-[2] ml-0.5" />
                     </div>
                     <div className="min-w-0">
                       <p className="text-xs sm:text-sm font-semibold truncate group-hover:underline decoration-pink-400">
                         {item.title}
                       </p>
-                      <p className={`text-[11px] truncate ${
-                        isDark ? 'text-pink-300/50' : 'text-pink-900/50'
-                      }`}>
+                      <p className={`text-[11px] truncate ${isDark ? 'text-pink-300/50' : 'text-pink-900/50'
+                        }`}>
                         {item.desc}
                       </p>
                     </div>
                   </div>
 
-                  <ExternalLink size={13} className={`shrink-0 opacity-40 group-hover:opacity-100 transition-opacity ${
-                    isDark ? 'text-pink-300' : 'text-pink-700'
-                  }`} />
+                  <ExternalLink size={13} className={`shrink-0 opacity-40 group-hover:opacity-100 transition-opacity ${isDark ? 'text-pink-300' : 'text-pink-700'
+                    }`} />
                 </a>
               ))}
             </div>
