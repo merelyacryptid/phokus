@@ -4,7 +4,6 @@ import {
   Gamepad2,
   X,
   ExternalLink,
-  Sparkles,
   Zap,
   RotateCcw,
   Search
@@ -304,7 +303,6 @@ export const BoredModal: React.FC<BoredModalProps> = React.memo(({
               : 'bg-gradient-to-r from-pink-600 to-rose-500 hover:from-pink-500 hover:to-rose-400 text-white shadow-[0_0_12px_rgba(244,63,94,0.35)]'
               }`}
           >
-            <Sparkles size={14} className="stroke-[2.5]" />
             <span>Take a Random Quiz</span>
             <ExternalLink size={12} className="opacity-80" />
           </button>

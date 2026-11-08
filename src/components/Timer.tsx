@@ -235,7 +235,7 @@ export const Timer: React.FC<TimerProps> = React.memo(({
     const sec = timeLeft % 60;
     const formatted = `${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
     const modeLabel = mode === 'focus' ? 'Focus' : mode === 'shortBreak' ? 'Short Break' : 'Long Break';
-    document.title = `${formatted} — ${modeLabel} | Phokus`;
+    document.title = `${formatted} ${modeLabel} | Phokus`;
   }, [timeLeft, mode]);
 
   const handleResetClick = () => {
@@ -427,7 +427,7 @@ export const Timer: React.FC<TimerProps> = React.memo(({
           }
         });
 
-        pipWindow.document.title = 'Phokus — Mini Timer';
+        pipWindow.document.title = 'Phokus | Mini Timer';
         pipWindow.document.body.style.margin = '0';
         pipWindow.document.body.style.padding = '0';
         pipWindow.document.body.style.overflow = 'hidden';
