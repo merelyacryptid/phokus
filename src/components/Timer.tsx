@@ -10,7 +10,8 @@ import {
   Check, 
   Pencil, 
   Star,
-  Plus
+  Plus,
+  Clock
 } from 'lucide-react';
 import { BunnyMascot } from './BunnyMascot';
 import { PipWidget } from './PipWidget';
@@ -66,10 +67,15 @@ export const Timer: React.FC<TimerProps> = React.memo(({
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPiPActive, setIsPiPActive] = useState(false);
 
+  // Focus duration: Use task's custom estimatedMinutes if present, otherwise default to settings.focusMinutes
+  const focusMinutes = (activeTask && activeTask.estimatedMinutes && activeTask.estimatedMinutes > 0)
+    ? activeTask.estimatedMinutes
+    : settings.focusMinutes;
+
   // Total seconds calculation based on mode and settings
   const totalSeconds = (
     mode === 'focus' 
-      ? settings.focusMinutes 
+      ? focusMinutes 
       : mode === 'shortBreak' 
         ? settings.shortBreakMinutes 
         : settings.longBreakMinutes
@@ -81,6 +87,7 @@ export const Timer: React.FC<TimerProps> = React.memo(({
   const lastTickSecond = useRef<number>(timeLeft);
   const timeLeftRef = useRef<number>(timeLeft);
   const isRunningRef = useRef<boolean>(isRunning);
+  const prevActiveTaskIdRef = useRef<string | null>(activeTask ? activeTask.id : null);
 
   useEffect(() => {
     timeLeftRef.current = timeLeft;
@@ -90,8 +97,18 @@ export const Timer: React.FC<TimerProps> = React.memo(({
     isRunningRef.current = isRunning;
   }, [isRunning]);
 
-  // Sync timeLeft when mode, settings, or reset changes
+  const currentActiveTaskId = activeTask ? activeTask.id : null;
+
+  // Sync timeLeft when mode, settings, reset, or active task changes
   useEffect(() => {
+    const activeTaskChanged = prevActiveTaskIdRef.current !== currentActiveTaskId;
+    prevActiveTaskIdRef.current = currentActiveTaskId;
+
+    // If active task changed while on a break, do not interrupt or reset the running break timer
+    if (activeTaskChanged && mode !== 'focus') {
+      return;
+    }
+
     // oxlint-disable-next-line react/set-state-in-effect
     setTimeLeft(totalSeconds);
     if (isRunningRef.current) {
@@ -99,7 +116,7 @@ export const Timer: React.FC<TimerProps> = React.memo(({
     } else {
       timerEndRef.current = null;
     }
-  }, [mode, totalSeconds, resetCount]);
+  }, [mode, totalSeconds, resetCount, currentActiveTaskId]);
 
   // High-accuracy timer tick interval
   useEffect(() => {
@@ -473,7 +490,10 @@ export const Timer: React.FC<TimerProps> = React.memo(({
       )}
 
       {/* Main Page Active Task Row with Checkbox & Inline Editing */}
-      <div className="mb-4 flex items-center justify-center max-w-md w-full px-4 min-h-[44px]">
+      <div
+        data-tour="task-setup"
+        className="mb-4 flex items-center justify-center max-w-md w-full px-4 min-h-[44px]"
+      >
         {isEditingTask ? (
           <div className="w-full flex items-center justify-center space-x-2">
             <input
@@ -548,6 +568,21 @@ export const Timer: React.FC<TimerProps> = React.memo(({
                   >
                     {activeTask.title}
                   </span>
+                  {activeTask.estimatedMinutes && (
+                    <span
+                      title={`Estimated focus duration: ${activeTask.estimatedMinutes} minutes`}
+                      className={`inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-xs font-semibold shrink-0 ${
+                        isMatteBlack
+                          ? 'bg-neutral-800 text-neutral-300 border border-neutral-700'
+                          : isDark
+                            ? 'bg-pink-500/20 text-pink-200 border border-pink-500/35'
+                            : 'bg-pink-100 text-pink-700 border border-pink-300'
+                      }`}
+                    >
+                      <Clock size={11} className="stroke-[2.2]" />
+                      <span>{activeTask.estimatedMinutes}m</span>
+                    </span>
+                  )}
                   {!isCompleting && (
                     <Pencil size={14} className={`opacity-0 group-hover:opacity-80 transition-opacity ${isMatteBlack ? 'text-neutral-400' : 'text-pink-400'} shrink-0`} />
                   )}
@@ -575,7 +610,10 @@ export const Timer: React.FC<TimerProps> = React.memo(({
       </div>
 
       {/* Mode Tabs: FOCUS, SHORT BREAK, LONG BREAK */}
-      <div className="flex items-center space-x-4 sm:space-x-8 mb-3">
+      <div
+        data-tour="timer-setup"
+        className="flex items-center space-x-4 sm:space-x-8 mb-3"
+      >
         {(['focus', 'shortBreak', 'longBreak'] as TimerMode[]).map((m) => {
           const isActive = mode === m;
           const label = m === 'focus' ? 'FOCUS' : m === 'shortBreak' ? 'SHORT BREAK' : 'LONG BREAK';
@@ -696,6 +734,7 @@ export const Timer: React.FC<TimerProps> = React.memo(({
 
         {/* Picture-in-Picture Button */}
         <button
+          data-tour="pip-button"
           onClick={togglePictureInPicture}
           title="Picture-in-Picture Floating Timer (with Pause & Resume)"
           className={`p-3.5 sm:p-4 rounded-2xl transition-all duration-200 ${

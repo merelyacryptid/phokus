@@ -22,6 +22,7 @@ export interface Task {
   completed: boolean;
   createdAt: number;
   pomodoroCount: number;
+  estimatedMinutes?: number;
 }
 
 export interface SessionHistoryItem {

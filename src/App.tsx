@@ -16,6 +16,7 @@ import { StatsModal } from './components/StatsModal';
 import { AuthModal } from './components/AuthModal';
 import { AmbientSoundModal } from './components/AmbientSoundModal';
 import { BoredModal } from './components/BoredModal';
+import { MiffyTour } from './components/MiffyTour';
 import { AuraBackground } from './components/AuraBackground';
 import { soundEngine } from './utils/audio';
 import { 
@@ -201,6 +202,7 @@ export function App() {
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isAmbientOpen, setIsAmbientOpen] = useState(false);
   const [isBoredOpen, setIsBoredOpen] = useState(false);
+  const [isGuideOpen, setIsGuideOpen] = useState(false);
 
   // Pause all animations when tab is backgrounded
   useEffect(() => {
@@ -326,7 +328,7 @@ export function App() {
 
     const today = new Date().toISOString().split('T')[0];
     const durationMinutes = mode === 'focus' 
-      ? settings.focusMinutes 
+      ? ((activeTask && activeTask.estimatedMinutes && activeTask.estimatedMinutes > 0) ? activeTask.estimatedMinutes : settings.focusMinutes)
       : mode === 'shortBreak' 
         ? settings.shortBreakMinutes 
         : settings.longBreakMinutes;
@@ -434,14 +436,15 @@ export function App() {
 
   // Task actions:
   // 1. Every newly added task is appended to the bottom (below previously added tasks)
-  const handleAddTask = useCallback((title: string) => {
+  const handleAddTask = useCallback((title: string, estimatedMinutes?: number) => {
     soundEngine.unlockAudio();
     const newTask: Task = {
       id: 'task_' + Date.now(),
       title,
       completed: false,
       createdAt: Date.now(),
-      pomodoroCount: 0
+      pomodoroCount: 0,
+      estimatedMinutes: (estimatedMinutes && estimatedMinutes > 0) ? estimatedMinutes : undefined,
     };
     setTasks(prev => [...prev, newTask]);
     setActiveTaskId(prev => prev || newTask.id);
@@ -606,6 +609,11 @@ export function App() {
     setIsBoredOpen(true);
   }, []);
 
+  const handleOpenGuide = useCallback(() => {
+    soundEngine.unlockAudio();
+    setIsGuideOpen(true);
+  }, []);
+
   const handleOpenStats = useCallback(() => {
     soundEngine.unlockAudio();
     setIsStatsOpen(true);
@@ -627,6 +635,7 @@ export function App() {
   const handleCloseAuth = useCallback(() => setIsAuthOpen(false), []);
   const handleCloseAmbient = useCallback(() => setIsAmbientOpen(false), []);
   const handleCloseBored = useCallback(() => setIsBoredOpen(false), []);
+  const handleCloseGuide = useCallback(() => setIsGuideOpen(false), []);
 
   return (
     <div
@@ -670,6 +679,7 @@ export function App() {
         onToggleTasks={handleToggleTasks}
         onToggleAmbient={handleToggleAmbient}
         onOpenBored={handleOpenBored}
+        onOpenGuide={handleOpenGuide}
         onToggleTheme={handleToggleTheme}
         onSelectTheme={handleSelectTheme}
         onOpenStats={handleOpenStats}
@@ -683,6 +693,7 @@ export function App() {
         tasks={tasks}
         activeTaskId={activeTask ? activeTask.id : null}
         theme={theme}
+        defaultFocusMinutes={settings.focusMinutes}
         onClose={handleCloseTasks}
         onAddTask={handleAddTask}
         onToggleTask={handleToggleTask}
@@ -729,6 +740,13 @@ export function App() {
         isOpen={isBoredOpen}
         theme={theme}
         onClose={handleCloseBored}
+      />
+
+      {/* Miffy Interactive Getting Started Walkthrough */}
+      <MiffyTour
+        isOpen={isGuideOpen}
+        onClose={handleCloseGuide}
+        theme={theme}
       />
     </div>
   );

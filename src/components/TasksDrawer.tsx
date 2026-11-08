@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import type { Task, ThemeMode } from '../types';
-import { Check, Plus, Trash2, X, ListTodo, Target, ChevronUp, ChevronDown, GripVertical } from 'lucide-react';
+import { Check, Plus, Trash2, X, ListTodo, Target, ChevronUp, ChevronDown, GripVertical, Clock } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 interface TasksDrawerProps {
@@ -8,8 +8,9 @@ interface TasksDrawerProps {
   tasks: Task[];
   activeTaskId: string | null;
   theme: ThemeMode;
+  defaultFocusMinutes?: number;
   onClose: () => void;
-  onAddTask: (title: string) => void;
+  onAddTask: (title: string, estimatedMinutes?: number) => void;
   onToggleTask: (taskId: string) => void;
   onDeleteTask: (taskId: string) => void;
   onClearAll: () => void;
@@ -22,6 +23,7 @@ export const TasksDrawer: React.FC<TasksDrawerProps> = React.memo(({
   tasks,
   activeTaskId,
   theme,
+  defaultFocusMinutes = 40,
   onClose,
   onAddTask,
   onToggleTask,
@@ -31,6 +33,7 @@ export const TasksDrawer: React.FC<TasksDrawerProps> = React.memo(({
   onReorderTasks,
 }) => {
   const [newTitle, setNewTitle] = useState('');
+  const [estimatedMinutes, setEstimatedMinutes] = useState('');
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const [confirmClear, setConfirmClear] = useState(false);
@@ -53,8 +56,11 @@ export const TasksDrawer: React.FC<TasksDrawerProps> = React.memo(({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTitle.trim()) return;
-    onAddTask(newTitle.trim());
+    const parsedEst = estimatedMinutes.trim() ? parseInt(estimatedMinutes, 10) : undefined;
+    const validEst = (parsedEst && parsedEst > 0 && !isNaN(parsedEst)) ? parsedEst : undefined;
+    onAddTask(newTitle.trim(), validEst);
     setNewTitle('');
+    setEstimatedMinutes('');
   };
 
   const handleToggle = (task: Task) => {
@@ -116,6 +122,7 @@ export const TasksDrawer: React.FC<TasksDrawerProps> = React.memo(({
 
       {/* Main Card with Fixed Height & Solid Opaque Background */}
       <div
+        data-tour="tasks-drawer-card"
         className={`relative w-full max-w-md h-[580px] max-h-[88vh] flex flex-col rounded-3xl p-6 shadow-2xl transition-colors duration-200 ${isMatteBlack
           ? 'bg-[#0f0f12] border border-neutral-700/80 text-white shadow-2xl shadow-black/95'
           : isDark
@@ -264,21 +271,38 @@ export const TasksDrawer: React.FC<TasksDrawerProps> = React.memo(({
 
                     {/* Task Title */}
                     <div className="flex flex-col min-w-0 flex-1">
-                      <span
-                        onClick={() => handleToggle(task)}
-                        className={`text-sm sm:text-base truncate cursor-pointer transition-colors ${task.completed
-                          ? isMatteBlack
-                            ? 'line-through text-neutral-500 font-normal'
+                      <div className="flex items-center space-x-2">
+                        <span
+                          onClick={() => handleToggle(task)}
+                          className={`text-sm sm:text-base truncate cursor-pointer transition-colors ${task.completed
+                            ? isMatteBlack
+                              ? 'line-through text-neutral-500 font-normal'
+                              : isDark
+                                ? 'line-through text-pink-300/50 font-normal'
+                                : 'line-through text-pink-900/50 font-normal'
                             : isDark
-                              ? 'line-through text-pink-300/50 font-normal'
-                              : 'line-through text-pink-900/50 font-normal'
-                          : isDark
-                            ? 'text-white font-semibold'
-                            : 'text-pink-950 font-semibold'
-                          }`}
-                      >
-                        {task.title}
-                      </span>
+                              ? 'text-white font-semibold'
+                              : 'text-pink-950 font-semibold'
+                            }`}
+                        >
+                          {task.title}
+                        </span>
+                        {task.estimatedMinutes && (
+                          <span
+                            title={`Estimated focus time: ${task.estimatedMinutes} minutes`}
+                            className={`inline-flex items-center space-x-1 px-1.5 py-0.5 rounded-md text-[10px] font-semibold shrink-0 ${
+                              isMatteBlack
+                                ? 'bg-neutral-800 text-neutral-300 border border-neutral-700'
+                                : isDark
+                                  ? 'bg-pink-500/15 text-pink-300 border border-pink-500/30'
+                                  : 'bg-pink-100 text-pink-700 border border-pink-200'
+                            }`}
+                          >
+                            <Clock size={10} className="stroke-[2.2]" />
+                            <span>{task.estimatedMinutes}m</span>
+                          </span>
+                        )}
+                      </div>
                       {isCurrentFocus && (
                         <span className={`text-[10px] font-bold uppercase tracking-wider ${isMatteBlack ? 'text-neutral-300' : 'text-pink-400'}`}>
                           Current Focus
@@ -362,13 +386,38 @@ export const TasksDrawer: React.FC<TasksDrawerProps> = React.memo(({
             value={newTitle}
             onChange={(e) => setNewTitle(e.target.value)}
             placeholder="Add a new task... (press Enter)"
-            className={`flex-1 px-4 py-2.5 rounded-2xl text-sm font-medium outline-none transition-colors ${isMatteBlack
+            className={`flex-1 min-w-0 px-4 py-2.5 rounded-2xl text-sm font-medium outline-none transition-colors ${isMatteBlack
               ? 'bg-[#151518] text-white placeholder-neutral-500 border border-neutral-700 focus:border-white focus:ring-1 focus:ring-white/50'
               : isDark
                 ? 'bg-[#1f1b2b] text-white placeholder-pink-300/40 border border-pink-500/30 focus:border-pink-400 focus:ring-1 focus:ring-pink-500/50'
                 : 'bg-pink-50 text-pink-950 placeholder-pink-900/40 border border-pink-200 focus:border-pink-500'
               }`}
           />
+          <div className="relative flex items-center shrink-0">
+            <Clock size={13} className={`absolute left-2.5 pointer-events-none ${
+              isMatteBlack ? 'text-neutral-400' : isDark ? 'text-pink-300/60' : 'text-pink-900/50'
+            }`} />
+            <input
+              type="text"
+              inputMode="numeric"
+              value={estimatedMinutes}
+              onChange={(e) => {
+                const val = e.target.value.replace(/[^0-9]/g, '');
+                if (val.length <= 3) {
+                  setEstimatedMinutes(val);
+                }
+              }}
+              placeholder={`Est: ${defaultFocusMinutes}m`}
+              title={`Estimated time in minutes (optional, default: ${defaultFocusMinutes}m)`}
+              className={`w-24 sm:w-28 pl-7 pr-2.5 py-2.5 rounded-2xl text-xs font-medium outline-none transition-colors ${
+                isMatteBlack
+                  ? 'bg-[#151518] text-white placeholder-neutral-500 border border-neutral-700 focus:border-white focus:ring-1 focus:ring-white/50'
+                  : isDark
+                    ? 'bg-[#1f1b2b] text-white placeholder-pink-300/40 border border-pink-500/30 focus:border-pink-400 focus:ring-1 focus:ring-pink-500/50'
+                    : 'bg-pink-50 text-pink-950 placeholder-pink-900/40 border border-pink-200 focus:border-pink-500'
+              }`}
+            />
+          </div>
           <button
             type="submit"
             disabled={!newTitle.trim()}

@@ -13,7 +13,8 @@ import {
   Sparkles,
   MoonStar,
   Contrast,
-  Gamepad2
+  Gamepad2,
+  HelpCircle
 } from 'lucide-react';
 
 interface BottomBarProps {
@@ -24,6 +25,7 @@ interface BottomBarProps {
   onToggleTasks: () => void;
   onToggleAmbient: () => void;
   onOpenBored: () => void;
+  onOpenGuide: () => void;
   onToggleTheme: () => void;
   onSelectTheme?: (theme: ThemeMode) => void;
   onOpenStats: () => void;
@@ -76,6 +78,7 @@ export const BottomBar: React.FC<BottomBarProps> = React.memo(({
   onToggleTasks,
   onToggleAmbient,
   onOpenBored,
+  onOpenGuide,
   onToggleTheme,
   onSelectTheme,
   onOpenStats,
@@ -147,6 +150,7 @@ export const BottomBar: React.FC<BottomBarProps> = React.memo(({
       <div className="flex items-center space-x-2 sm:space-x-3">
         {/* Tasks Toggle */}
         <button
+          data-tour="tasks-drawer-toggle"
           onClick={onToggleTasks}
           title="Toggle Tasks (To-Do List)"
           className={`relative p-3 rounded-2xl transition-all duration-200 ${btnClass}`}
@@ -179,12 +183,24 @@ export const BottomBar: React.FC<BottomBarProps> = React.memo(({
           <Gamepad2 size={18} className="stroke-[2.2] shrink-0" />
           <span className="font-semibold text-xs">bored?</span>
         </button>
+
+        {/* User Guide / How to Use Walkthrough */}
+        <button
+          onClick={onOpenGuide}
+          title="How to Use (Getting Started Guide)"
+          aria-label="User Guide"
+          className={`flex items-center space-x-1.5 px-3 sm:px-3.5 py-2.5 rounded-2xl font-bold text-xs sm:text-sm transition-all duration-200 cursor-pointer active:scale-95 ${btnClass}`}
+        >
+          <HelpCircle size={18} className="stroke-[2.2] shrink-0" />
+          <span className="font-semibold text-xs hidden sm:inline">guide</span>
+        </button>
       </div>
 
       {/* Bottom Right Controls (Streak pill, theme menu, profile, settings, fullscreen) */}
       <div className="flex items-center space-x-2 sm:space-x-3">
         {/* Streak & Carrot Graph Stats Pill */}
         <button
+          data-tour="stats-toggle"
           onClick={onOpenStats}
           title="Open Focus Statistics & Carrot Graph"
           className={`flex items-center space-x-2 px-3 sm:px-3.5 py-2.5 rounded-2xl font-bold text-xs sm:text-sm transition-all duration-200 cursor-pointer ${
@@ -207,7 +223,7 @@ export const BottomBar: React.FC<BottomBarProps> = React.memo(({
         </button>
 
         {/* Theme Selector Popover */}
-        <div className="relative" ref={themeMenuRef}>
+        <div className="relative" ref={themeMenuRef} data-tour="theme-toggle">
           {isThemeMenuOpen && (
             <div className="absolute bottom-[calc(100%+12px)] left-1/2 -translate-x-1/2 z-50 pointer-events-auto">
               <div
@@ -305,6 +321,7 @@ export const BottomBar: React.FC<BottomBarProps> = React.memo(({
 
         {/* User Account / Profile */}
         <button
+          data-tour="auth-toggle"
           onClick={onOpenAuth}
           title={currentUser ? `Signed in as ${currentUser.name}` : "Sign in to sync focus stats"}
           className={`flex items-center space-x-1.5 px-3 py-2.5 rounded-2xl text-xs font-semibold transition-all duration-200 ${
@@ -325,6 +342,7 @@ export const BottomBar: React.FC<BottomBarProps> = React.memo(({
 
         {/* Settings Toggle */}
         <button
+          data-tour="settings-toggle"
           onClick={onOpenSettings}
           title="Preferences & Timer Durations"
           className={`p-3 rounded-2xl transition-all duration-200 ${btnClass}`}
