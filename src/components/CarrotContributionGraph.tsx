@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import type { ThemeMode } from '../types';
 import { CarrotIcon } from './CarrotIcon';
 import { Calendar } from 'lucide-react';
@@ -99,10 +99,14 @@ function buildContributionWeeks(dailyActivity: Record<string, number> = {}) {
     });
   }
 
+  const todayMinutes = safeDaily[todayStr] || 0;
+  const todayHours = Number((todayMinutes / 60).toFixed(1));
+
   return {
     weeks: weekCols,
     totalCarrots: carrots,
     totalHoursInRange: Number((totalMinutes / 60).toFixed(1)),
+    todayHours,
   };
 }
 
@@ -113,6 +117,14 @@ export const CarrotContributionGraph: React.FC<CarrotContributionGraphProps> = R
   const isMatteBlack = theme === 'matte-black';
   const isDark = theme === 'dark-mesh' || isMatteBlack;
   const [hoveredCell, setHoveredCell] = useState<DayCell | null>(null);
+  const [starTextToggle, setStarTextToggle] = useState(false);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setStarTextToggle(prev => !prev);
+    }, 3200);
+    return () => clearInterval(interval);
+  }, []);
 
   // Purely tonal progression (from lightest shade Level 1 to darkest/deepest Level 4)
   const getCellClasses = (level: 0 | 1 | 2 | 3 | 4) => {
@@ -170,180 +182,236 @@ export const CarrotContributionGraph: React.FC<CarrotContributionGraphProps> = R
   };
 
   // Generate 14 weeks of GitHub-style contribution data
-  const { weeks, totalCarrots, totalHoursInRange } = useMemo(() => {
-    return buildContributionWeeks(dailyActivity);
-  }, [dailyActivity]);
+    const { weeks, totalCarrots, totalHoursInRange, todayHours } = useMemo(() => {
+      return buildContributionWeeks(dailyActivity);
+    }, [dailyActivity]);
 
-  return (
-    <div
-      className={`p-4 rounded-2xl select-none transition-all duration-200 ${
-        isMatteBlack
-          ? 'bg-neutral-900/60 border border-neutral-800'
-          : isDark
-            ? 'bg-white/[0.04] border border-pink-500/15'
-            : 'bg-pink-50/80 border border-pink-100/90'
-      }`}
-    >
-      {/* Header Info */}
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center space-x-2">
-          <Calendar size={15} className={isDark ? 'text-pink-400' : 'text-pink-600'} />
-          <h4 className="text-xs font-bold uppercase tracking-wider">
-            Focus Harvest (Days Focused)
-          </h4>
-        </div>
+    const activeHours = hoveredCell !== null ? hoveredCell.hours : todayHours;
+    const activeLabel = hoveredCell ? hoveredCell.formattedDate : 'Today';
 
-        {/* Live Hover Status or Total Summary */}
-        <div className="text-right">
-          {hoveredCell ? (
-            <div className="flex items-center space-x-1.5 text-xs font-medium">
-              <span className={isDark ? 'text-pink-200' : 'text-pink-900'}>
-                {hoveredCell.formattedDate}:
-              </span>
-              {hoveredCell.isFuture ? (
-                <span className="opacity-50">Future</span>
-              ) : hoveredCell.hours > 0 ? (
-                <span className="font-bold text-orange-400 flex items-center space-x-1">
-                  <span>{hoveredCell.hours} hrs</span>
-                  <CarrotIcon size={13} level={hoveredCell.level || 1} />
+    const currentReaction = useMemo(() => {
+      if (activeHours > 4) {
+        return {
+          image: '/miffy-star.jpg',
+          text: starTextToggle ? "good job here's a gold star" : 'carrot FEAST tonight',
+          alt: 'Miffy celebrating with gold star',
+        };
+      }
+      if (activeHours >= 0.1 && activeHours <= 4) {
+        return {
+          image: '/miffy-growing.jpg',
+          text: 'mmm my carrots are growing',
+          alt: 'Miffy happy with growing carrots',
+        };
+      }
+      return {
+        image: '/miffy-throwing-ears.png',
+        text: 'miffy wants carrots :(',
+        alt: 'Miffy throwing bunny ears',
+      };
+    }, [activeHours, starTextToggle]);
+
+    return (
+      <div
+        className={`p-4 rounded-2xl select-none transition-all duration-200 ${isMatteBlack
+            ? 'bg-neutral-900/60 border border-neutral-800'
+            : isDark
+              ? 'bg-white/[0.04] border border-pink-500/15'
+              : 'bg-pink-50/80 border border-pink-100/90'
+          }`}
+      >
+        {/* Header Info */}
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center space-x-2">
+            <Calendar size={15} className={isDark ? 'text-pink-400' : 'text-pink-600'} />
+            <h4 className="text-xs font-bold uppercase tracking-wider">
+              Focus Harvest (Days Focused)
+            </h4>
+          </div>
+
+          {/* Live Hover Status or Total Summary */}
+          <div className="text-right">
+            {hoveredCell ? (
+              <div className="flex items-center space-x-1.5 text-xs font-medium">
+                <span className={isDark ? 'text-pink-200' : 'text-pink-900'}>
+                  {hoveredCell.formattedDate}:
                 </span>
-              ) : (
-                <span className="opacity-50">0 hrs</span>
-              )}
-            </div>
-          ) : (
-            <div className="flex items-center space-x-2 text-xs">
-              <span className="font-bold text-orange-400 flex items-center space-x-1">
-                <span>{totalCarrots} carrots</span>
-                <CarrotIcon size={13} level={2} />
-              </span>
-              <span className={`text-[11px] ${isDark ? 'text-pink-300/50' : 'text-pink-900/50'}`}>
-                ({totalHoursInRange} hrs total)
-              </span>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* GitHub Style Heatmap Grid Container */}
-      <div className="overflow-x-auto pb-1 scrollbar-thin">
-        <div className="inline-flex flex-col min-w-max">
-          {/* Month Labels Header */}
-          <div className="flex ml-7 mb-1 text-[10px] font-semibold tracking-wide">
-            {weeks.map((w, idx) => (
-              <div
-                key={idx}
-                className="w-5 text-left text-pink-400/70"
-                style={{ marginRight: '3px' }}
-              >
-                {w.monthLabel || ''}
+                {hoveredCell.isFuture ? (
+                  <span className="opacity-50">Future</span>
+                ) : hoveredCell.hours > 0 ? (
+                  <span className="font-bold text-orange-400 flex items-center space-x-1">
+                    <span>{hoveredCell.hours} hrs</span>
+                    <CarrotIcon size={13} level={hoveredCell.level || 1} />
+                  </span>
+                ) : (
+                  <span className="opacity-50">0 hrs</span>
+                )}
               </div>
-            ))}
+            ) : (
+              <div className="flex items-center space-x-2 text-xs">
+                <span className="font-bold text-orange-400 flex items-center space-x-1">
+                  <span>{totalCarrots} carrots</span>
+                  <CarrotIcon size={13} level={2} />
+                </span>
+                <span className={`text-[11px] ${isDark ? 'text-pink-300/50' : 'text-pink-900/50'}`}>
+                  ({totalHoursInRange} hrs total)
+                </span>
+              </div>
+            )}
           </div>
+        </div>
 
-          {/* Grid Rows: 7 days of the week */}
-          <div className="flex">
-            {/* Day Labels on left (Mon, Wed, Fri) */}
-            <div className="flex flex-col justify-between pr-2 text-[9px] font-semibold text-pink-300/50 py-0.5">
-              <span className="h-5 leading-5 opacity-0">Sun</span>
-              <span className="h-5 leading-5">Mon</span>
-              <span className="h-5 leading-5 opacity-0">Tue</span>
-              <span className="h-5 leading-5">Wed</span>
-              <span className="h-5 leading-5 opacity-0">Thu</span>
-              <span className="h-5 leading-5">Fri</span>
-              <span className="h-5 leading-5 opacity-0">Sat</span>
+                  {/* Main Heatmap Grid & Miffy Reaction Section */}
+                  <div className="flex flex-col sm:flex-row items-center sm:items-stretch justify-between gap-3 sm:gap-4 my-1">
+                    {/* GitHub Style Heatmap Grid Container */}
+                    <div className="overflow-x-auto pb-1 scrollbar-thin flex-1 min-w-0">
+                      <div className="inline-flex flex-col min-w-max">
+                        {/* Month Labels Header */}
+                        <div className="flex ml-7 mb-1 text-[10px] font-semibold tracking-wide">
+                          {weeks.map((w, idx) => (
+                            <div
+                              key={idx}
+                              className="w-5 text-left text-pink-400/70"
+                              style={{ marginRight: '3px' }}
+                            >
+                              {w.monthLabel || ''}
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* Grid Rows: 7 days of the week */}
+                        <div className="flex">
+                          {/* Day Labels on left (Mon, Wed, Fri) */}
+                          <div className="flex flex-col justify-between pr-2 text-[9px] font-semibold text-pink-300/50 py-0.5">
+                            <span className="h-5 leading-5 opacity-0">Sun</span>
+                            <span className="h-5 leading-5">Mon</span>
+                            <span className="h-5 leading-5 opacity-0">Tue</span>
+                            <span className="h-5 leading-5">Wed</span>
+                            <span className="h-5 leading-5 opacity-0">Thu</span>
+                            <span className="h-5 leading-5">Fri</span>
+                            <span className="h-5 leading-5 opacity-0">Sat</span>
+                          </div>
+
+                          {/* Weeks Columns */}
+                          <div className="flex gap-[3px]">
+                            {weeks.map((week) => (
+                              <div key={week.weekIndex} className="flex flex-col gap-[3px]">
+                                {week.days.map((cell) => {
+                                  const hasCarrot = cell.hours > 0 && !cell.isFuture;
+
+                                    return (
+                                    <div
+                                      key={cell.dateStr}
+                                      onMouseEnter={() => setHoveredCell(cell)}
+                                      onMouseLeave={() => setHoveredCell(null)}
+                                      className={`w-5 h-5 rounded-[5px] flex items-center justify-center transition-all duration-150 cursor-pointer ${cell.isFuture
+                                          ? 'opacity-20 pointer-events-none bg-white/[0.02]'
+                                          : hasCarrot
+                                            ? getCellClasses(cell.level)
+                                            : getCellClasses(0)
+                                        } ${cell.isToday
+                                          ? isMatteBlack
+                                            ? 'ring-1.5 ring-white shadow-[0_0_6px_rgba(255,255,255,0.6)]'
+                                            : 'ring-1.5 ring-pink-500 shadow-[0_0_6px_rgba(244,63,94,0.6)]'
+                                          : ''
+                                        }`}
+                                    >
+                                      {hasCarrot && (
+                                        <CarrotIcon
+                                          size={13}
+                                          theme={theme}
+                                          className="transform transition-transform hover:scale-125"
+                                        />
+                                      )}
+                                    </div>
+                                    );
+                    })}
+                                  </div>
+                ))}
+                              </div>
             </div>
-
-            {/* Weeks Columns */}
-            <div className="flex gap-[3px]">
-              {weeks.map((week) => (
-                <div key={week.weekIndex} className="flex flex-col gap-[3px]">
-                  {week.days.map((cell) => {
-                    const hasCarrot = cell.hours > 0 && !cell.isFuture;
-
-                    return (
-                      <div
-                        key={cell.dateStr}
-                        onMouseEnter={() => setHoveredCell(cell)}
-                        onMouseLeave={() => setHoveredCell(null)}
-                        className={`w-5 h-5 rounded-[5px] flex items-center justify-center transition-all duration-150 cursor-pointer ${
-                          cell.isFuture
-                            ? 'opacity-20 pointer-events-none bg-white/[0.02]'
-                            : hasCarrot
-                              ? getCellClasses(cell.level)
-                              : getCellClasses(0)
-                        } ${
-                          cell.isToday
-                            ? isMatteBlack
-                              ? 'ring-1.5 ring-white shadow-[0_0_6px_rgba(255,255,255,0.6)]'
-                              : 'ring-1.5 ring-pink-500 shadow-[0_0_6px_rgba(244,63,94,0.6)]'
-                            : ''
-                        }`}
-                      >
-                        {hasCarrot && (
-                          <CarrotIcon
-                            size={13}
-                            level={cell.level || 1}
-                            theme={theme}
-                            className="transform transition-transform hover:scale-125"
-                          />
-                        )}
+                        </div>
                       </div>
-                    );
-                  })}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
 
-      {/* Legend & Details Footer */}
-      <div className="flex items-center justify-between pt-3 mt-3 border-t border-pink-500/15 text-[11px]">
-        <div className="flex items-center space-x-1.5 text-xs text-orange-400 font-medium">
-          <CarrotIcon size={13} level={3} theme={theme} />
-          <span>Each carrot = a day of deep focus</span>
-        </div>
+                      {/* Miffy Daily Reaction Card (Image to the right of graph, medium sized) */}
+                      <div
+                        className={`flex flex-col items-center justify-center p-3 rounded-2xl shrink-0 w-full sm:w-36 transition-all duration-300 ${isMatteBlack
+                            ? 'bg-white/[0.04] border border-white/10'
+                            : isDark
+                              ? 'bg-pink-950/40 border border-pink-500/20 shadow-sm'
+                              : 'bg-white/80 border border-pink-200/80 shadow-sm'
+                          }`}
+                      >
+                        <div className="w-20 h-20 sm:w-22 sm:h-22 rounded-2xl overflow-hidden bg-white/95 p-1 flex items-center justify-center shadow-sm border border-pink-100/70 mb-2">
+                          <img
+                            src={currentReaction.image}
+                            alt={currentReaction.alt}
+                            className="w-full h-full object-contain transition-all duration-300"
+                          />
+                        </div>
 
-        {/* Legend: Strictly lighter to darker, all same size */}
-        <div className="flex items-center space-x-1.5 text-[10px] opacity-75">
-          <span>Less</span>
-          {/* Level 0: Empty */}
-          <div
-            title="0 hrs"
-            className={`w-3.5 h-3.5 rounded-[3px] flex items-center justify-center ${getCellClasses(0)}`}
-          />
-          {/* Level 1: Lightest */}
-          <div
-            title="< 1 hr (Lightest)"
-            className={`w-3.5 h-3.5 rounded-[3px] flex items-center justify-center ${getCellClasses(1)}`}
-          >
-            <CarrotIcon size={10} level={1} theme={theme} />
-          </div>
-          {/* Level 2: Medium light */}
-          <div
-            title="1 - 2 hrs (Medium light)"
-            className={`w-3.5 h-3.5 rounded-[3px] flex items-center justify-center ${getCellClasses(2)}`}
-          >
-            <CarrotIcon size={10} level={2} theme={theme} />
-          </div>
-          {/* Level 3: Medium dark */}
-          <div
-            title="2 - 3.5 hrs (Darker)"
-            className={`w-3.5 h-3.5 rounded-[3px] flex items-center justify-center ${getCellClasses(3)}`}
-          >
-            <CarrotIcon size={10} level={3} theme={theme} />
-          </div>
-          {/* Level 4: Darkest */}
-          <div
-            title="3.5+ hrs (Darkest)"
-            className={`w-3.5 h-3.5 rounded-[3px] flex items-center justify-center ${getCellClasses(4)}`}
-          >
-            <CarrotIcon size={10} level={4} theme={theme} />
-          </div>
-          <span>More</span>
-        </div>
-      </div>
-    </div>
-  );
+                        <p
+                          className={`text-xs font-bold text-center leading-snug min-h-[32px] flex items-center justify-center transition-all duration-300 ${isDark ? 'text-pink-200' : 'text-pink-950'
+                            }`}
+                        >
+                          {currentReaction.text}
+                        </p>
+
+                        <span
+                          className={`text-[10px] mt-1 font-medium opacity-60 text-center ${isDark ? 'text-pink-300/70' : 'text-pink-900/70'
+                            }`}
+                        >
+                          {activeLabel} ({activeHours} hrs)
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Legend & Details Footer */}
+                    <div className="flex items-center justify-between pt-3 mt-3 border-t border-pink-500/15 text-[11px]">
+                      <div className="flex items-center space-x-1.5 text-xs text-orange-400 font-medium">
+                        <CarrotIcon size={13} level={3} theme={theme} />
+                        <span>Each carrot = a day of deep focus</span>
+                      </div>
+
+                      {/* Legend: Strictly lighter to darker, all same size */}
+                      <div className="flex items-center space-x-1.5 text-[10px] opacity-75">
+                        <span>Less</span>
+                        {/* Level 0: Empty */}
+                        <div
+                          title="0 hrs"
+                          className={`w-3.5 h-3.5 rounded-[3px] flex items-center justify-center ${getCellClasses(0)}`}
+                        />
+                        {/* Level 1: Lightest */}
+                        <div
+                          title="< 1 hr (Lightest)"
+                          className={`w-3.5 h-3.5 rounded-[3px] flex items-center justify-center ${getCellClasses(1)}`}
+                        >
+                          <CarrotIcon size={10} level={1} theme={theme} />
+                        </div>
+                        {/* Level 2: Medium light */}
+                        <div
+                          title="1 - 2 hrs (Medium light)"
+                          className={`w-3.5 h-3.5 rounded-[3px] flex items-center justify-center ${getCellClasses(2)}`}
+                        >
+                          <CarrotIcon size={10} level={2} theme={theme} />
+                        </div>
+                        {/* Level 3: Medium dark */}
+                        <div
+                          title="2 - 3.5 hrs (Darker)"
+                          className={`w-3.5 h-3.5 rounded-[3px] flex items-center justify-center ${getCellClasses(3)}`}
+                        >
+                          <CarrotIcon size={10} level={3} theme={theme} />
+                        </div>
+                        {/* Level 4: Darkest */}
+                        <div
+                          title="3.5+ hrs (Darkest)"
+                          className={`w-3.5 h-3.5 rounded-[3px] flex items-center justify-center ${getCellClasses(4)}`}
+                        >
+                          <CarrotIcon size={10} level={4} theme={theme} />
+                        </div>
+                        <span>More</span>
+                      </div>
+                    </div>
+                  </div>
+                  );
 });

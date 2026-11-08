@@ -11,70 +11,16 @@ interface CarrotIconProps {
 export const CarrotIcon: React.FC<CarrotIconProps> = ({
   className = "w-4 h-4",
   size = 14,
-  level = 2,
+  level: _level = 2,
   theme,
 }) => {
   const isMatteBlack = theme === 'matte-black';
 
-  // Constant size, pure light-to-dark tonal progression (Level 1: Lightest -> Level 4: Darkest)
-  let rootColor = '#fb923c';
-  let leafColor = '#4ade80';
-  let strokeColor = '#ea580c';
-  let leafStroke = '#22c55e';
-
-  if (isMatteBlack) {
-    if (level === 1) {
-      // Lightest: faint subtle zinc
-      rootColor = '#52525b';
-      leafColor = '#3f3f46';
-      strokeColor = '#27272a';
-      leafStroke = '#18181b';
-    } else if (level === 2) {
-      // Medium-light: silver zinc
-      rootColor = '#a1a1aa';
-      leafColor = '#71717a';
-      strokeColor = '#52525b';
-      leafStroke = '#3f3f46';
-    } else if (level === 3) {
-      // Medium-dark: bright silver-white
-      rootColor = '#e4e4e7';
-      leafColor = '#a1a1aa';
-      strokeColor = '#71717a';
-      leafStroke = '#52525b';
-    } else {
-      // Darkest / Highest intensity: pure radiant white
-      rootColor = '#ffffff';
-      leafColor = '#ffffff';
-      strokeColor = '#e4e4e7';
-      leafStroke = '#a1a1aa';
-    }
-  } else {
-    if (level === 1) {
-      // Lightest: soft, pale peach-orange and pale mint foliage
-      rootColor = '#fed7aa';
-      leafColor = '#bbf7d0';
-      strokeColor = '#fdba74';
-      leafStroke = '#86efac';
-    } else if (level === 2) {
-      // Medium-light: warm sunny golden orange
-      rootColor = '#fb923c';
-      leafColor = '#4ade80';
-      strokeColor = '#ea580c';
-      leafStroke = '#22c55e';
-    } else if (level === 3) {
-      // Medium-dark: rich deep vibrant carrot orange
-      rootColor = '#ea580c';
-      leafColor = '#16a34a';
-      strokeColor = '#c2410c';
-      leafStroke = '#15803d';
-    } else {
-      // Darkest / Highest intensity: deep saturated bold burnt-orange
-      rootColor = '#c2410c';
-      leafColor = '#15803d';
-      strokeColor = '#7c2d12';
-      leafStroke = '#14532d';
-    }
-  }
+  // Carrot color stays constant; activity intensity is indicated by the cell background
+  const rootColor = isMatteBlack ? '#ffffff' : '#fb923c';
+  const leafColor = isMatteBlack ? '#e4e4e7' : '#4ade80';
+  const strokeColor = isMatteBlack ? '#52525b' : '#ea580c';
+  const leafStroke = isMatteBlack ? '#3f3f46' : '#22c55e';
 
   return (
     <svg
@@ -121,21 +67,21 @@ export const CarrotIcon: React.FC<CarrotIconProps> = ({
       <path
         d="M9.8 10H14.2"
         stroke="#ffffff"
-        strokeOpacity={level === 1 ? 0.35 : 0.6}
+        strokeOpacity={0.6}
         strokeWidth="1"
         strokeLinecap="round"
       />
       <path
         d="M10.2 13H13.8"
         stroke="#ffffff"
-        strokeOpacity={level === 1 ? 0.3 : 0.55}
+        strokeOpacity={0.55}
         strokeWidth="0.9"
         strokeLinecap="round"
       />
       <path
         d="M11 16H13"
         stroke="#ffffff"
-        strokeOpacity={level === 1 ? 0.25 : 0.45}
+        strokeOpacity={0.45}
         strokeWidth="0.8"
         strokeLinecap="round"
       />
