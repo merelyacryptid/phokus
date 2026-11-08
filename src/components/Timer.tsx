@@ -31,7 +31,7 @@ interface TimerProps {
   onReset: () => void;
   onSessionComplete: () => void;
   onCompleteActiveTask: (taskId?: string) => void;
-  onUpdateActiveTaskTitle: (newTitle: string) => void;
+  onUpdateActiveTaskTitle: (newTitle: string, taskId?: string) => void;
   onCreateActiveTask: (title: string) => void;
 }
 
@@ -386,6 +386,14 @@ export const Timer: React.FC<TimerProps> = React.memo(({
     };
   }, [pipDocWindow]);
 
+  // Auto-focus input when editing active task title
+  useEffect(() => {
+    if (isEditingTask && taskInputRef.current) {
+      taskInputRef.current.focus();
+      taskInputRef.current.select();
+    }
+  }, [isEditingTask]);
+
   // Save inline task edit on main page
   const handleSaveEdit = () => {
     setIsEditingTask(false);
@@ -393,7 +401,7 @@ export const Timer: React.FC<TimerProps> = React.memo(({
     if (!trimmed) return;
 
     if (activeTask) {
-      onUpdateActiveTaskTitle(trimmed);
+      onUpdateActiveTaskTitle(trimmed, activeTask.id);
     } else {
       onCreateActiveTask(trimmed);
     }

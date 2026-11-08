@@ -526,25 +526,21 @@ export function App() {
   }, []);
 
   // Two-way sync: update active task title directly from main page
-  const handleUpdateActiveTaskTitle = useCallback((newTitle: string) => {
-    setActiveTaskId(targetId => {
-      if (targetId) {
-        setTasks(prev => prev.map(t => t.id === targetId ? { ...t, title: newTitle } : t));
-      }
-      return targetId;
+  const handleUpdateActiveTaskTitle = useCallback((newTitle: string, taskId?: string) => {
+    setTasks(prev => {
+      const targetId = taskId || activeTask?.id || activeTaskId || prev.find(t => !t.completed)?.id;
+      if (!targetId) return prev;
+      return prev.map(t => t.id === targetId ? { ...t, title: newTitle } : t);
     });
-  }, []);
+  }, [activeTask?.id, activeTaskId]);
 
   // Mark active task complete directly from main page checkbox
   const handleCompleteActiveTask = useCallback((taskId?: string) => {
-    setActiveTaskId(activeId => {
-      const targetId = taskId || activeId;
-      if (targetId) {
-        handleToggleTask(targetId);
-      }
-      return activeId;
-    });
-  }, [handleToggleTask]);
+    const targetId = taskId || activeTask?.id || activeTaskId;
+    if (targetId) {
+      handleToggleTask(targetId);
+    }
+  }, [activeTask?.id, activeTaskId, handleToggleTask]);
 
   // Create active task directly from main page input
   const handleCreateActiveTask = useCallback((title: string) => {
