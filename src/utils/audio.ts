@@ -189,6 +189,86 @@ class SoundEngine {
     }
   }
 
+  // Play satisfying task completion sound (tactile pop + bright ascending chime)
+  public playTaskComplete(volume: number = 0.7) {
+    try {
+      const ctx = this.initContext();
+      const now = ctx.currentTime;
+      const masterGain = ctx.createGain();
+      const effectiveVol = Math.max(0, Math.min(volume, 1));
+      masterGain.gain.setValueAtTime(effectiveVol, now);
+      masterGain.connect(ctx.destination);
+
+      // 1. Tactile haptic pop transient (0ms - 35ms)
+      const popOsc = ctx.createOscillator();
+      const popGain = ctx.createGain();
+      popOsc.type = 'sine';
+      popOsc.frequency.setValueAtTime(420, now);
+      popOsc.frequency.exponentialRampToValueAtTime(140, now + 0.03);
+
+      popGain.gain.setValueAtTime(0, now);
+      popGain.gain.linearRampToValueAtTime(0.25, now + 0.002);
+      popGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.035);
+
+      popOsc.connect(popGain);
+      popGain.connect(masterGain);
+      popOsc.start(now);
+      popOsc.stop(now + 0.04);
+
+      // 2. Cheerful ascending two-tone chime
+      // Note 1: E6 (1318.5 Hz) at +15ms
+      const t1 = now + 0.015;
+      const osc1 = ctx.createOscillator();
+      const g1 = ctx.createGain();
+      osc1.type = 'sine';
+      osc1.frequency.setValueAtTime(1318.5, t1);
+
+      g1.gain.setValueAtTime(0, t1);
+      g1.gain.linearRampToValueAtTime(0.25, t1 + 0.003);
+      g1.gain.exponentialRampToValueAtTime(0.0001, t1 + 0.22);
+
+      osc1.connect(g1);
+      g1.connect(masterGain);
+      osc1.start(t1);
+      osc1.stop(t1 + 0.25);
+
+      // Note 2: A6 (1760 Hz, perfect fourth above, celebratory resolution) at +70ms
+      const t2 = now + 0.07;
+      const osc2 = ctx.createOscillator();
+      const g2 = ctx.createGain();
+      osc2.type = 'sine';
+      osc2.frequency.setValueAtTime(1760, t2);
+
+      g2.gain.setValueAtTime(0, t2);
+      g2.gain.linearRampToValueAtTime(0.3, t2 + 0.003);
+      g2.gain.exponentialRampToValueAtTime(0.0001, t2 + 0.4);
+
+      osc2.connect(g2);
+      g2.connect(masterGain);
+      osc2.start(t2);
+      osc2.stop(t2 + 0.42);
+
+      // Sparkle shimmer overtone on the resolution note (A7 / 3520 Hz)
+      const osc3 = ctx.createOscillator();
+      const g3 = ctx.createGain();
+      osc3.type = 'sine';
+      osc3.frequency.setValueAtTime(3520, t2);
+
+      g3.gain.setValueAtTime(0, t2);
+      g3.gain.linearRampToValueAtTime(0.08, t2 + 0.003);
+      g3.gain.exponentialRampToValueAtTime(0.0001, t2 + 0.25);
+
+      osc3.connect(g3);
+      g3.connect(masterGain);
+      osc3.start(t2);
+      osc3.stop(t2 + 0.28);
+
+      this.scheduleAutoSuspend(1500);
+    } catch (e) {
+      console.warn('Task complete sound playback error:', e);
+    }
+  }
+
   // Play subtle tick sound
   public playTick(volume: number = 0.2) {
     try {

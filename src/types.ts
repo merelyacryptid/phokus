@@ -14,6 +14,7 @@ export interface TimerSettings {
   soundType: 'crystal' | 'bell' | 'marimba' | 'softBeep';
   tickSound: boolean;
   warningBell?: boolean;
+  taskSound?: boolean;
   showBunnyMascot: boolean;
 }
 

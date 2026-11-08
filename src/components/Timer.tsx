@@ -465,6 +465,11 @@ export const Timer: React.FC<TimerProps> = React.memo(({
     e.stopPropagation();
     if (!activeTask || isCompleting) return;
 
+    soundEngine.unlockAudio();
+    if (settings.soundAlerts && settings.taskSound !== false) {
+      soundEngine.playTaskComplete(settings.soundVolume);
+    }
+
     setIsCompleting(true);
 
     // Confetti celebration
@@ -483,6 +488,15 @@ export const Timer: React.FC<TimerProps> = React.memo(({
       setIsCompleting(false);
     }, 280);
   };
+
+  // Complete task triggered from Picture-in-Picture window
+  const handlePipCompleteTask = useCallback((taskId?: string) => {
+    soundEngine.unlockAudio();
+    if (settings.soundAlerts && settings.taskSound !== false) {
+      soundEngine.playTaskComplete(settings.soundVolume);
+    }
+    onCompleteActiveTask(taskId);
+  }, [settings.soundAlerts, settings.taskSound, settings.soundVolume, onCompleteActiveTask]);
 
   // Calculate percentage for subtle progress accent
   const progressPercent = Math.max(0, Math.min(100, ((totalSeconds - timeLeft) / totalSeconds) * 100));
@@ -513,7 +527,7 @@ export const Timer: React.FC<TimerProps> = React.memo(({
             onTogglePlay={onTogglePlay}
             onSkip={onSkip}
             onReset={handleResetClick}
-            onCompleteActiveTask={onCompleteActiveTask}
+            onCompleteActiveTask={handlePipCompleteTask}
           />,
           pipDocWindow.document.body
         )}

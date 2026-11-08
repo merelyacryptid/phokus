@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import type { Task, ThemeMode } from '../types';
 import { Check, Plus, Trash2, X, ListTodo, Target, ChevronUp, ChevronDown, GripVertical, Clock } from 'lucide-react';
+import { soundEngine } from '../utils/audio';
 import confetti from 'canvas-confetti';
 
 interface TasksDrawerProps {
@@ -65,6 +66,8 @@ export const TasksDrawer: React.FC<TasksDrawerProps> = React.memo(({
 
   const handleToggle = (task: Task) => {
     if (!task.completed) {
+      soundEngine.unlockAudio();
+      soundEngine.playTaskComplete();
       // Clean celebratory confetti
       confetti({
         particleCount: 35,

@@ -38,6 +38,7 @@ const DEFAULT_SETTINGS: TimerSettings = {
   soundType: 'crystal',
   tickSound: false,
   warningBell: true,
+  taskSound: true,
   showBunnyMascot: true,
 };
 
