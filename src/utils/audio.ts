@@ -25,7 +25,7 @@ class SoundEngine {
     if (this.currentAmbientType !== 'none') return;
     this.suspendTimer = setTimeout(() => {
       if (this.ctx && this.ctx.state === 'running' && this.currentAmbientType === 'none') {
-        this.ctx.suspend().catch(() => {});
+        this.ctx.suspend().catch(() => { });
       }
     }, delayMs);
   }
@@ -37,7 +37,7 @@ class SoundEngine {
       this.ctx = new AudioCtx();
     }
     if (this.ctx.state === 'suspended') {
-      this.ctx.resume().catch(() => {});
+      this.ctx.resume().catch(() => { });
     }
     return this.ctx;
   }
@@ -46,7 +46,7 @@ class SoundEngine {
     try {
       const ctx = this.initContext();
       if (ctx.state === 'suspended') {
-        ctx.resume().catch(() => {});
+        ctx.resume().catch(() => { });
       }
     } catch {
       // ignore
@@ -189,7 +189,7 @@ class SoundEngine {
     }
   }
 
-  // Play satisfying task completion sound (tactile pop + bright ascending chime)
+  // Play satisfying higher-pitched bubble pop sound for task completion
   public playTaskComplete(volume: number = 0.7) {
     try {
       const ctx = this.initContext();
@@ -199,69 +199,72 @@ class SoundEngine {
       masterGain.gain.setValueAtTime(effectiveVol, now);
       masterGain.connect(ctx.destination);
 
-      // 1. Tactile haptic pop transient (0ms - 35ms)
+      // 1. Crisp micro air-snap transient (0ms - 8ms)
+      const noiseBuffer = this.getNoiseBuffer('white-base', ctx);
+      const clickSource = ctx.createBufferSource();
+      clickSource.buffer = noiseBuffer;
+      const clickFilter = ctx.createBiquadFilter();
+      clickFilter.type = 'bandpass';
+      clickFilter.frequency.setValueAtTime(2800, now);
+      clickFilter.Q.setValueAtTime(2.2, now);
+      const clickGain = ctx.createGain();
+      clickGain.gain.setValueAtTime(0.06, now);
+      clickGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.008);
+
+      clickSource.connect(clickFilter);
+      clickFilter.connect(clickGain);
+      clickGain.connect(masterGain);
+      clickSource.start(now, 0, 0.01);
+      clickSource.stop(now + 0.012);
+
+      // 2. Bright tiny pre-pop pickup (0ms - 20ms)
+      const preOsc = ctx.createOscillator();
+      const preGain = ctx.createGain();
+      preOsc.type = 'sine';
+      preOsc.frequency.setValueAtTime(520, now);
+      preOsc.frequency.exponentialRampToValueAtTime(880, now + 0.016);
+
+      preGain.gain.setValueAtTime(0, now);
+      preGain.gain.linearRampToValueAtTime(0.18, now + 0.002);
+      preGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.022);
+
+      preOsc.connect(preGain);
+      preGain.connect(masterGain);
+      preOsc.start(now);
+      preOsc.stop(now + 0.025);
+
+      // 3. High, crisp upward bubble pop (+16ms - 82ms)
+      const t1 = now + 0.016;
       const popOsc = ctx.createOscillator();
       const popGain = ctx.createGain();
       popOsc.type = 'sine';
-      popOsc.frequency.setValueAtTime(420, now);
-      popOsc.frequency.exponentialRampToValueAtTime(140, now + 0.03);
+      popOsc.frequency.setValueAtTime(860, t1);
+      popOsc.frequency.exponentialRampToValueAtTime(2150, t1 + 0.038);
 
-      popGain.gain.setValueAtTime(0, now);
-      popGain.gain.linearRampToValueAtTime(0.25, now + 0.002);
-      popGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.035);
+      popGain.gain.setValueAtTime(0, t1);
+      popGain.gain.linearRampToValueAtTime(0.5, t1 + 0.003);
+      popGain.gain.exponentialRampToValueAtTime(0.0001, t1 + 0.065);
 
       popOsc.connect(popGain);
       popGain.connect(masterGain);
-      popOsc.start(now);
-      popOsc.stop(now + 0.04);
+      popOsc.start(t1);
+      popOsc.stop(t1 + 0.075);
 
-      // 2. Cheerful ascending two-tone chime
-      // Note 1: E6 (1318.5 Hz) at +15ms
-      const t1 = now + 0.015;
-      const osc1 = ctx.createOscillator();
-      const g1 = ctx.createGain();
-      osc1.type = 'sine';
-      osc1.frequency.setValueAtTime(1318.5, t1);
+      // 4. Airy bubble octave shimmer (+16ms - 58ms)
+      const harmonicOsc = ctx.createOscillator();
+      const harmonicGain = ctx.createGain();
+      harmonicOsc.type = 'sine';
+      harmonicOsc.frequency.setValueAtTime(1720, t1);
+      harmonicOsc.frequency.exponentialRampToValueAtTime(4300, t1 + 0.035);
 
-      g1.gain.setValueAtTime(0, t1);
-      g1.gain.linearRampToValueAtTime(0.25, t1 + 0.003);
-      g1.gain.exponentialRampToValueAtTime(0.0001, t1 + 0.22);
+      harmonicGain.gain.setValueAtTime(0, t1);
+      harmonicGain.gain.linearRampToValueAtTime(0.09, t1 + 0.002);
+      harmonicGain.gain.exponentialRampToValueAtTime(0.0001, t1 + 0.042);
 
-      osc1.connect(g1);
-      g1.connect(masterGain);
-      osc1.start(t1);
-      osc1.stop(t1 + 0.25);
-
-      // Note 2: A6 (1760 Hz, perfect fourth above, celebratory resolution) at +70ms
-      const t2 = now + 0.07;
-      const osc2 = ctx.createOscillator();
-      const g2 = ctx.createGain();
-      osc2.type = 'sine';
-      osc2.frequency.setValueAtTime(1760, t2);
-
-      g2.gain.setValueAtTime(0, t2);
-      g2.gain.linearRampToValueAtTime(0.3, t2 + 0.003);
-      g2.gain.exponentialRampToValueAtTime(0.0001, t2 + 0.4);
-
-      osc2.connect(g2);
-      g2.connect(masterGain);
-      osc2.start(t2);
-      osc2.stop(t2 + 0.42);
-
-      // Sparkle shimmer overtone on the resolution note (A7 / 3520 Hz)
-      const osc3 = ctx.createOscillator();
-      const g3 = ctx.createGain();
-      osc3.type = 'sine';
-      osc3.frequency.setValueAtTime(3520, t2);
-
-      g3.gain.setValueAtTime(0, t2);
-      g3.gain.linearRampToValueAtTime(0.08, t2 + 0.003);
-      g3.gain.exponentialRampToValueAtTime(0.0001, t2 + 0.25);
-
-      osc3.connect(g3);
-      g3.connect(masterGain);
-      osc3.start(t2);
-      osc3.stop(t2 + 0.28);
+      harmonicOsc.connect(harmonicGain);
+      harmonicGain.connect(masterGain);
+      harmonicOsc.start(t1);
+      harmonicOsc.stop(t1 + 0.048);
 
       this.scheduleAutoSuspend(1500);
     } catch (e) {

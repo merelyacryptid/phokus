@@ -376,9 +376,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = React.memo(({
 
               <div className="flex items-center justify-between">
                 <div className="flex flex-col pr-2">
-                  <span className={isDark ? 'text-pink-200/80' : 'text-pink-900/80'}>Task completion chime</span>
+                  <span className={isDark ? 'text-pink-200/80' : 'text-pink-900/80'}>Task completion pop</span>
                   <span className={`text-[10px] ${isDark ? 'text-pink-300/60' : 'text-pink-900/60'}`}>
-                    Satisfying chime when checking off a task
+                    Satisfying pop sound when checking off a task
                   </span>
                 </div>
                 <div className="flex items-center space-x-2 shrink-0">
