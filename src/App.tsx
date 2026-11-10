@@ -31,7 +31,8 @@ import {
   recoverAllAvailableStats,
   persistStatsBackup,
   calculateActualStreak,
-  syncStreakWithActivity
+  syncStreakWithActivity,
+  getTodayCompletedFocusCount
 } from './utils/stats';
 
 const DEFAULT_SETTINGS: TimerSettings = {
@@ -56,44 +57,16 @@ const DEFAULT_TASKS: Task[] = [
   { id: 't3', title: 'Solve 3 problem sets', completed: false, createdAt: Date.now() - 100000, pomodoroCount: 0 },
 ];
 
-const nowMs = Date.now();
-const getDayStr = (offsetDays: number) => {
-  const d = new Date();
-  d.setDate(d.getDate() - offsetDays);
-  return formatLocalDate(d);
-};
-
-const INITIAL_STATS: UserStats = {
-  totalFocusMinutes: 240,
-  completedFocusSessions: 6,
-  completedShortBreaks: 4,
-  completedLongBreaks: 1,
-  completedTasksCount: 4,
-  streakDays: 3,
-  lastActiveDate: getDayStr(0),
-  dailyActivity: {
-    [getDayStr(5)]: 40,
-    [getDayStr(4)]: 60,
-    [getDayStr(2)]: 80,
-    [getDayStr(1)]: 90,
-    [getDayStr(0)]: 50,
-  },
-  history: [
-    {
-      id: 'init_1',
-      date: new Date(nowMs - 3600000).toISOString(),
-      mode: 'focus',
-      durationMinutes: 50,
-      taskTitle: 'Review lecture notes & flashcards'
-    },
-    {
-      id: 'init_2',
-      date: new Date(nowMs - 86400000).toISOString(),
-      mode: 'focus',
-      durationMinutes: 90,
-      taskTitle: 'Deep work session 1'
-    }
-  ]
+const EMPTY_STATS: UserStats = {
+  totalFocusMinutes: 0,
+  completedFocusSessions: 0,
+  completedShortBreaks: 0,
+  completedLongBreaks: 0,
+  completedTasksCount: 0,
+  streakDays: 0,
+  lastActiveDate: formatLocalDate(new Date()),
+  dailyActivity: {},
+  history: [],
 };
 
 export function App() {
@@ -150,12 +123,14 @@ export function App() {
     }
 
     const recovered = recoverAllAvailableStats(loaded || undefined);
-    // If no existing activity or history exists anywhere, provide tutorial INITIAL_STATS
-    if (recovered.totalFocusMinutes === 0 && Object.keys(recovered.dailyActivity).length === 0 && !currentUser) {
-      return syncStreakWithActivity(INITIAL_STATS);
+    if (recovered.totalFocusMinutes === 0 && Object.keys(recovered.dailyActivity).length === 0) {
+      return syncStreakWithActivity(EMPTY_STATS);
     }
     return syncStreakWithActivity(recovered);
   });
+
+  // Track current local calendar day so stars reset cleanly to 0 at midnight
+  const [todayKey, setTodayKey] = useState<string>(() => formatLocalDate(new Date()));
 
   // Tasks state
   const [tasks, setTasks] = useState<Task[]>(() => {
@@ -195,8 +170,16 @@ export function App() {
   // Timer state
   const [mode, setMode] = useState<TimerMode>('focus');
   const [isRunning, setIsRunning] = useState<boolean>(false);
-  const [cycleCount, setCycleCount] = useState<number>(1);
   const [resetCount, setResetCount] = useState<number>(0);
+
+  // Derive stars strictly from focus sessions completed today (0 default stars for all users)
+  const completedTodayCount = useMemo(
+    () => getTodayCompletedFocusCount(stats.history, todayKey),
+    [stats.history, todayKey]
+  );
+  const cycleCount = completedTodayCount === 0
+    ? 0
+    : ((completedTodayCount - 1) % settings.longBreakInterval) + 1;
 
   // Modals state
   const [isTasksOpen, setIsTasksOpen] = useState(false);
@@ -207,10 +190,14 @@ export function App() {
   const [isBoredOpen, setIsBoredOpen] = useState(false);
   const [isGuideOpen, setIsGuideOpen] = useState(false);
 
-  // Pause all animations when tab is backgrounded
+  // Pause animations when hidden and refresh date key when returning across midnight
   useEffect(() => {
     const handleVisibilityChange = () => {
       document.documentElement.classList.toggle('tab-hidden', document.hidden);
+      if (!document.hidden) {
+        const currentKey = formatLocalDate(new Date());
+        setTodayKey((prev) => (prev !== currentKey ? currentKey : prev));
+      }
     };
     document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
@@ -393,21 +380,21 @@ export function App() {
       };
     });
 
-    // Advance session cycle: Break timer starts right after a focus session
+    setTodayKey((prev) => (prev !== today ? today : prev));
+
+    // Advance session cycle: Break timer starts right after a focus session completes
     if (mode === 'focus') {
-      const nextCycle = cycleCount + 1;
-      if (nextCycle > settings.longBreakInterval) {
-        setCycleCount(0);
+      const nextTodayTotal = getTodayCompletedFocusCount(stats.history, today) + 1;
+      if (nextTodayTotal % settings.longBreakInterval === 0) {
         switchMode('longBreak', true);
       } else {
-        setCycleCount(nextCycle);
         switchMode('shortBreak', true);
       }
     } else {
       // Break is finished, go back to focus
       switchMode('focus', settings.autoStartFocus);
     }
-  }, [mode, settings, cycleCount, activeTask, switchMode, updateStats]);
+  }, [mode, settings, stats.history, activeTask, switchMode, updateStats]);
 
   // Timer Action Handlers
   const handleTogglePlay = useCallback(() => {
@@ -419,18 +406,12 @@ export function App() {
   const handleSkip = useCallback(() => {
     soundEngine.unlockAudio();
     if (mode === 'focus') {
-      const nextCycle = cycleCount + 1;
-      if (nextCycle > settings.longBreakInterval) {
-        setCycleCount(0);
-        switchMode('longBreak', true);
-      } else {
-        setCycleCount(nextCycle);
-        switchMode('shortBreak', true);
-      }
+      // Skipping an incomplete focus session does not award a star
+      switchMode('shortBreak', true);
     } else {
       switchMode('focus', false);
     }
-  }, [mode, cycleCount, settings.longBreakInterval, switchMode]);
+  }, [mode, switchMode]);
 
   const handleReset = useCallback(() => {
     soundEngine.unlockAudio();
@@ -703,6 +684,7 @@ export function App() {
           resetCount={resetCount}
           activeTask={activeTask}
           cycleCount={cycleCount}
+          completedTodayCount={completedTodayCount}
           settings={settings}
           theme={theme}
           onModeChange={(m) => switchMode(m, false)}

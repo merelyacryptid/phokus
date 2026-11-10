@@ -66,7 +66,7 @@ export function mapFirebaseUserToProfile(user: User, existingStats?: UserStats):
     completedShortBreaks: 0,
     completedLongBreaks: 0,
     completedTasksCount: 0,
-    streakDays: 1,
+    streakDays: 0,
     lastActiveDate: formatLocalDate(new Date()),
     dailyActivity: {},
     history: []

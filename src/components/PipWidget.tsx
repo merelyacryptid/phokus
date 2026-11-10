@@ -11,6 +11,7 @@ interface PipWidgetProps {
   isRunning: boolean;
   activeTask: Task | null;
   cycleCount: number;
+  completedTodayCount?: number;
   totalIntervals: number;
   theme: ThemeMode;
   onTogglePlay: () => void;
@@ -182,6 +183,7 @@ export const PipWidget: React.FC<PipWidgetProps> = ({
   isRunning,
   activeTask,
   cycleCount,
+  completedTodayCount = cycleCount,
   totalIntervals,
   theme,
   onTogglePlay,
@@ -284,8 +286,11 @@ export const PipWidget: React.FC<PipWidgetProps> = ({
             )}
           </div>
 
-          {/* Stars */}
-          <div style={{ display: 'flex', gap: '4px' }}>
+          {/* Stars (linked to today's completed focus sessions) */}
+          <div
+            title={`${completedTodayCount} focus ${completedTodayCount === 1 ? 'session' : 'sessions'} completed today`}
+            style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
+          >
             {Array.from({ length: totalIntervals }).map((_, idx) => {
               const isCompleted = idx < cycleCount;
               return (
@@ -300,6 +305,21 @@ export const PipWidget: React.FC<PipWidgetProps> = ({
                 />
               );
             })}
+            {completedTodayCount > totalIntervals && (
+              <span
+                style={{
+                  fontSize: '10px',
+                  fontWeight: 700,
+                  padding: '1px 5px',
+                  borderRadius: '9999px',
+                  backgroundColor: c.badgeBg,
+                  color: c.badgeColor,
+                  border: c.badgeBorder,
+                }}
+              >
+                {completedTodayCount}
+              </span>
+            )}
           </div>
         </div>
 

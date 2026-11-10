@@ -122,7 +122,7 @@ export const AuthModal: React.FC<AuthModalProps> = React.memo(({
               completedShortBreaks: 0,
               completedLongBreaks: 0,
               completedTasksCount: 0,
-              streakDays: 1,
+              streakDays: 0,
               lastActiveDate: new Date().toISOString().split('T')[0],
               dailyActivity: {},
               history: []

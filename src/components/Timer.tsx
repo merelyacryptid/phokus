@@ -24,6 +24,7 @@ interface TimerProps {
   resetCount?: number;
   activeTask: Task | null;
   cycleCount: number;
+  completedTodayCount?: number;
   settings: TimerSettings;
   theme: ThemeMode;
   onModeChange: (newMode: TimerMode) => void;
@@ -42,6 +43,7 @@ export const Timer: React.FC<TimerProps> = React.memo(({
   resetCount,
   activeTask,
   cycleCount,
+  completedTodayCount = cycleCount,
   settings,
   theme,
   onModeChange,
@@ -674,6 +676,7 @@ export const Timer: React.FC<TimerProps> = React.memo(({
             isRunning={isRunning}
             activeTask={activeTask}
             cycleCount={cycleCount}
+            completedTodayCount={completedTodayCount}
             totalIntervals={settings.longBreakInterval}
             theme={theme}
             onTogglePlay={onTogglePlay}
@@ -845,8 +848,11 @@ export const Timer: React.FC<TimerProps> = React.memo(({
         })}
       </div>
 
-      {/* Pomodoro Session Cycle Indicator */}
-      <div className="flex items-center space-x-2 mb-4">
+      {/* Pomodoro Session Cycle Indicator (linked to today's completed focus sessions) */}
+      <div
+        title={`${completedTodayCount} focus ${completedTodayCount === 1 ? 'session' : 'sessions'} completed today`}
+        className="flex items-center space-x-2 mb-4"
+      >
         {Array.from({ length: settings.longBreakInterval }).map((_, idx) => {
           const isCompleted = idx < cycleCount;
           return (
@@ -870,6 +876,19 @@ export const Timer: React.FC<TimerProps> = React.memo(({
             />
           );
         })}
+        {completedTodayCount > settings.longBreakInterval && (
+          <span
+            className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${
+              isMatteBlack
+                ? 'bg-white/15 text-white border border-white/25'
+                : isDark
+                  ? 'bg-pink-500/20 text-pink-200 border border-pink-400/35'
+                  : 'bg-white/80 text-pink-900 border border-pink-200/80 shadow-sm'
+            }`}
+          >
+            {completedTodayCount} today
+          </span>
+        )}
       </div>
 
       {/* Main Digital Clock Display: 09:58 */}

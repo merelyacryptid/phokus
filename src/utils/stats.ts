@@ -12,6 +12,26 @@ export function formatLocalDate(d: Date): string {
 }
 
 /**
+ * Counts genuine completed focus sessions for a specific local date (defaults to today).
+ * Excludes placeholder tutorial items ('init_1', 'init_2') so no user starts with default stars.
+ */
+export function getTodayCompletedFocusCount(
+  history: SessionHistoryItem[] = [],
+  todayStr: string = formatLocalDate(new Date())
+): number {
+  if (!Array.isArray(history) || history.length === 0) return 0;
+
+  return history.filter((item) => {
+    if (item.mode !== 'focus') return false;
+    if (item.id === 'init_1' || item.id === 'init_2') return false;
+    if (!item.durationMinutes || item.durationMinutes <= 0) return false;
+    const itemDate = new Date(item.date);
+    if (Number.isNaN(itemDate.getTime())) return false;
+    return formatLocalDate(itemDate) === todayStr;
+  }).length;
+}
+
+/**
  * Calculates the exact streak of consecutive active days from dailyActivity and history.
  * An active day is any calendar day with focus minutes > 0.
  * If today has focus activity, streak includes today.
