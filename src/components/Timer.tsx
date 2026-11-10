@@ -24,10 +24,12 @@ import { soundEngine } from '../utils/audio';
 import {
   formatDeadlineLabel,
   getDeadlineBadgeClasses,
-  getDefaultDeadlineValue,
   isDeadlineReached,
-  toDateTimeLocalValue,
+  splitDeadlineTo12h,
+  combine12hToDeadline,
+  type Deadline12hParts,
 } from '../utils/deadline';
+import { DeadlineFields } from './DeadlineFields';
 import confetti from 'canvas-confetti';
 
 interface TimerProps {
@@ -76,7 +78,9 @@ export const Timer: React.FC<TimerProps> = React.memo(({
   const [isCompleting, setIsCompleting] = useState(false);
   const [editText, setEditText] = useState('');
   const [isEditingDeadline, setIsEditingDeadline] = useState(false);
-  const [deadlineDraft, setDeadlineDraft] = useState('');
+  const [deadlineDraftParts, setDeadlineDraftParts] = useState<Deadline12hParts>(() =>
+    splitDeadlineTo12h(undefined, { emptyTime: false })
+  );
   const [nowMs, setNowMs] = useState<number>(() => Date.now());
   const taskInputRef = useRef<HTMLInputElement>(null);
 
@@ -830,7 +834,9 @@ export const Timer: React.FC<TimerProps> = React.memo(({
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation();
-                        setDeadlineDraft(toDateTimeLocalValue(activeTask.deadline));
+                        setDeadlineDraftParts(
+                          splitDeadlineTo12h(activeTask.deadline, { emptyTime: false, nowMs: Date.now() })
+                        );
                         setIsEditingDeadline(true);
                       }}
                       title={`${overdue ? 'Past deadline' : 'Before deadline'}: ${label} (click to edit)`}
@@ -849,7 +855,9 @@ export const Timer: React.FC<TimerProps> = React.memo(({
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
-                      setDeadlineDraft(getDefaultDeadlineValue(Date.now()));
+                      setDeadlineDraftParts(
+                        splitDeadlineTo12h(undefined, { emptyTime: false, nowMs: Date.now() })
+                      );
                       setIsEditingDeadline(true);
                     }}
                     title="Add optional deadline"
@@ -886,42 +894,32 @@ export const Timer: React.FC<TimerProps> = React.memo(({
           </div>
         )}
 
-        {/* Inline Active Task Deadline Editor on Main Page */}
+        {/* Inline Active Task Deadline Editor on Main Page (12h AM/PM Time first, Date second defaulting to today) */}
         {activeTask && isEditingDeadline && onUpdateTaskDeadline && (
           <div className="mt-2 flex items-center justify-center gap-1.5 flex-wrap">
-            <label htmlFor="active-task-deadline-edit" className="sr-only">
-              Active task deadline
-            </label>
-            <input
-              id="active-task-deadline-edit"
-              type="datetime-local"
-              value={deadlineDraft}
-              onChange={(e) => setDeadlineDraft(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.nativeEvent.isComposing) return;
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  onUpdateTaskDeadline(activeTask.id, deadlineDraft.trim() || undefined);
-                  setIsEditingDeadline(false);
-                  setNowMs(Date.now());
-                } else if (e.key === 'Escape') {
-                  setIsEditingDeadline(false);
-                }
+            <DeadlineFields
+              value={deadlineDraftParts}
+              onChange={setDeadlineDraftParts}
+              theme={theme}
+              allowEmptyHour={false}
+              onEnter={() => {
+                onUpdateTaskDeadline(
+                  activeTask.id,
+                  combine12hToDeadline(deadlineDraftParts, Date.now())
+                );
+                setIsEditingDeadline(false);
+                setNowMs(Date.now());
               }}
-              style={{ colorScheme: isDark ? 'dark' : 'light' }}
-              className={`px-2.5 py-1 rounded-xl text-xs font-medium outline-none border ${
-                isMatteBlack
-                  ? 'bg-[#151518] text-white border-neutral-600 focus-visible:border-white'
-                  : isDark
-                    ? 'bg-[#1f1b2b] text-white border-pink-500/40 focus-visible:border-pink-400'
-                    : 'bg-white/95 text-pink-950 border-pink-300 focus-visible:border-pink-500'
-              }`}
+              onEscape={() => setIsEditingDeadline(false)}
               autoFocus
             />
             <button
               type="button"
               onClick={() => {
-                onUpdateTaskDeadline(activeTask.id, deadlineDraft.trim() || undefined);
+                onUpdateTaskDeadline(
+                  activeTask.id,
+                  combine12hToDeadline(deadlineDraftParts, Date.now())
+                );
                 setIsEditingDeadline(false);
                 setNowMs(Date.now());
               }}

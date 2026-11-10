@@ -19,10 +19,12 @@ import { soundEngine } from '../utils/audio';
 import {
   formatDeadlineLabel,
   getDeadlineBadgeClasses,
-  getDefaultDeadlineValue,
   isDeadlineReached,
-  toDateTimeLocalValue,
+  splitDeadlineTo12h,
+  combine12hToDeadline,
+  type Deadline12hParts,
 } from '../utils/deadline';
+import { DeadlineFields } from './DeadlineFields';
 import confetti from 'canvas-confetti';
 
 interface TasksDrawerProps {
@@ -57,9 +59,13 @@ const TasksDrawerInner: React.FC<Omit<TasksDrawerProps, 'isOpen'>> = ({
 }) => {
   const [newTitle, setNewTitle] = useState('');
   const [estimatedMinutes, setEstimatedMinutes] = useState('');
-  const [newDeadline, setNewDeadline] = useState('');
+  const [newDeadlineParts, setNewDeadlineParts] = useState<Deadline12hParts>(() =>
+    splitDeadlineTo12h(undefined, { emptyTime: true })
+  );
   const [editingDeadlineTaskId, setEditingDeadlineTaskId] = useState<string | null>(null);
-  const [editingDeadlineValue, setEditingDeadlineValue] = useState('');
+  const [editingDeadlineParts, setEditingDeadlineParts] = useState<Deadline12hParts>(() =>
+    splitDeadlineTo12h(undefined, { emptyTime: false })
+  );
   const [nowMs, setNowMs] = useState<number>(() => Date.now());
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
@@ -90,23 +96,24 @@ const TasksDrawerInner: React.FC<Omit<TasksDrawerProps, 'isOpen'>> = ({
     if (!newTitle.trim()) return;
     const parsedEst = estimatedMinutes.trim() ? parseInt(estimatedMinutes, 10) : undefined;
     const validEst = (parsedEst && parsedEst > 0 && !isNaN(parsedEst)) ? parsedEst : undefined;
-    const validDeadline = newDeadline.trim() || undefined;
+    const validDeadline = combine12hToDeadline(newDeadlineParts, Date.now());
     onAddTask(newTitle.trim(), validEst, validDeadline);
     setNewTitle('');
     setEstimatedMinutes('');
-    setNewDeadline('');
+    setNewDeadlineParts(splitDeadlineTo12h(undefined, { emptyTime: true, nowMs: Date.now() }));
     setNowMs(Date.now());
   };
 
   const handleStartEditDeadline = (task: Task) => {
     setEditingDeadlineTaskId(task.id);
-    setEditingDeadlineValue(
-      task.deadline ? toDateTimeLocalValue(task.deadline) : getDefaultDeadlineValue(Date.now())
+    setEditingDeadlineParts(
+      splitDeadlineTo12h(task.deadline, { emptyTime: false, nowMs: Date.now() })
     );
   };
 
   const handleSaveDeadline = (taskId: string) => {
-    onUpdateTaskDeadline(taskId, editingDeadlineValue.trim() || undefined);
+    const nextDeadline = combine12hToDeadline(editingDeadlineParts, Date.now());
+    onUpdateTaskDeadline(taskId, nextDeadline);
     setEditingDeadlineTaskId(null);
     setNowMs(Date.now());
   };
@@ -385,28 +392,16 @@ const TasksDrawerInner: React.FC<Omit<TasksDrawerProps, 'isOpen'>> = ({
                         )}
                       </div>
 
-                      {/* Inline Deadline Editor */}
+                      {/* Inline Deadline Editor (12h AM/PM Time first, Date second defaulting to today) */}
                       {isEditingThisDeadline && (
                         <div className="mt-1.5 flex items-center gap-1.5 flex-wrap">
-                          <label htmlFor={`edit-deadline-${task.id}`} className="sr-only">
-                            Edit task deadline
-                          </label>
-                          <input
-                            id={`edit-deadline-${task.id}`}
-                            type="datetime-local"
-                            value={editingDeadlineValue}
-                            onChange={(e) => setEditingDeadlineValue(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.nativeEvent.isComposing) return;
-                              if (e.key === 'Enter') {
-                                e.preventDefault();
-                                handleSaveDeadline(task.id);
-                              } else if (e.key === 'Escape') {
-                                setEditingDeadlineTaskId(null);
-                              }
-                            }}
-                            style={{ colorScheme: isDark ? 'dark' : 'light' }}
-                            className={`px-2 py-1 rounded-lg text-[11px] font-medium outline-none ${inputBaseClass}`}
+                          <DeadlineFields
+                            value={editingDeadlineParts}
+                            onChange={setEditingDeadlineParts}
+                            theme={theme}
+                            allowEmptyHour={false}
+                            onEnter={() => handleSaveDeadline(task.id)}
+                            onEscape={() => setEditingDeadlineTaskId(null)}
                             autoFocus
                           />
                           <button
@@ -571,7 +566,7 @@ const TasksDrawerInner: React.FC<Omit<TasksDrawerProps, 'isOpen'>> = ({
             </button>
           </div>
 
-          <div className="flex items-center justify-between gap-2 text-xs">
+          <div className="flex items-center flex-wrap justify-between gap-2 text-xs">
             {/* Optional Time Estimate */}
             <div className="relative flex items-center shrink-0">
               <label htmlFor="new-task-est" className="sr-only">Estimated minutes (optional)</label>
@@ -592,35 +587,31 @@ const TasksDrawerInner: React.FC<Omit<TasksDrawerProps, 'isOpen'>> = ({
                 }}
                 placeholder={`Est: ${defaultFocusMinutes}m`}
                 title={`Estimated time in minutes (optional, default: ${defaultFocusMinutes}m)`}
-                className={`w-24 pl-7 pr-2.5 py-1.5 rounded-xl text-xs font-medium outline-none transition-colors ${inputBaseClass}`}
+                className={`w-22 pl-7 pr-2 py-1 rounded-xl text-[11px] font-medium outline-none transition-colors ${inputBaseClass}`}
               />
             </div>
 
-            {/* Optional Deadline */}
-            <div className="flex items-center gap-1.5 flex-1 min-w-0 justify-end">
-              <label
-                htmlFor="new-task-deadline"
+            {/* Optional Deadline (12h AM/PM Time first, Date second defaulting to today) */}
+            <div className="flex items-center gap-1.5 flex-wrap justify-end">
+              <span
                 className={`text-[11px] font-medium shrink-0 flex items-center gap-1 ${
                   isMatteBlack ? 'text-neutral-400' : isDark ? 'text-pink-300/70' : 'text-pink-900/70'
                 }`}
               >
                 <CalendarClock size={12} />
-                <span>Deadline</span>
-              </label>
-              <input
-                id="new-task-deadline"
-                name="deadline"
-                type="datetime-local"
-                value={newDeadline}
-                onChange={(e) => setNewDeadline(e.target.value)}
-                title="Optional task deadline"
-                style={{ colorScheme: isDark ? 'dark' : 'light' }}
-                className={`min-w-0 max-w-[180px] px-2.5 py-1.5 rounded-xl text-[11px] font-medium outline-none transition-colors ${inputBaseClass}`}
+              </span>
+              <DeadlineFields
+                value={newDeadlineParts}
+                onChange={setNewDeadlineParts}
+                theme={theme}
+                allowEmptyHour
               />
-              {newDeadline && (
+              {newDeadlineParts.hour12 && (
                 <button
                   type="button"
-                  onClick={() => setNewDeadline('')}
+                  onClick={() =>
+                    setNewDeadlineParts(splitDeadlineTo12h(undefined, { emptyTime: true, nowMs: Date.now() }))
+                  }
                   title="Clear deadline"
                   aria-label="Clear selected deadline"
                   className={`p-1 rounded-lg transition-colors shrink-0 ${
