@@ -450,8 +450,9 @@ export function App() {
 
   // Task actions:
   // 1. Every newly added task is appended to the bottom (below previously added tasks)
-  const handleAddTask = useCallback((title: string, estimatedMinutes?: number) => {
+  const handleAddTask = useCallback((title: string, estimatedMinutes?: number, deadline?: string) => {
     soundEngine.unlockAudio();
+    const trimmedDeadline = deadline?.trim();
     const newTask: Task = {
       id: 'task_' + Date.now(),
       title,
@@ -459,9 +460,20 @@ export function App() {
       createdAt: Date.now(),
       pomodoroCount: 0,
       estimatedMinutes: (estimatedMinutes && estimatedMinutes > 0) ? estimatedMinutes : undefined,
+      deadline: trimmedDeadline || undefined,
     };
     setTasks(prev => [...prev, newTask]);
     setActiveTaskId(prev => prev || newTask.id);
+  }, []);
+
+  // Update or clear an existing task's deadline
+  const handleUpdateTaskDeadline = useCallback((taskId: string, deadline?: string) => {
+    const trimmedDeadline = deadline?.trim();
+    setTasks(prev =>
+      prev.map(t =>
+        t.id === taskId ? { ...t, deadline: trimmedDeadline || undefined } : t
+      )
+    );
   }, []);
 
   // 2. When a task is marked complete, the task below it appears as current doing task
@@ -695,6 +707,7 @@ export function App() {
           onCompleteActiveTask={handleCompleteActiveTask}
           onUpdateActiveTaskTitle={handleUpdateActiveTaskTitle}
           onCreateActiveTask={handleCreateActiveTask}
+          onUpdateTaskDeadline={handleUpdateTaskDeadline}
         />
       </main>
 
@@ -729,6 +742,7 @@ export function App() {
         onClearAll={handleClearAllTasks}
         onSelectActiveTask={handleSelectActiveTask}
         onReorderTasks={handleReorderTasks}
+        onUpdateTaskDeadline={handleUpdateTaskDeadline}
       />
 
       <SettingsModal

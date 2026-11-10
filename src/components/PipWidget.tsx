@@ -1,7 +1,8 @@
 import React from 'react';
 import type { TimerMode, ThemeMode, Task } from '../types';
-import { Play, Pause, SkipForward, RotateCcw, Check, Star } from 'lucide-react';
+import { Play, Pause, SkipForward, RotateCcw, Check, Star, CalendarClock, AlertCircle } from 'lucide-react';
 import { BunnyEarsLogo } from './BunnyIcon';
+import { formatDeadlineLabel, isDeadlineReached } from '../utils/deadline';
 
 interface PipWidgetProps {
   mode: TimerMode;
@@ -13,6 +14,7 @@ interface PipWidgetProps {
   cycleCount: number;
   completedTodayCount?: number;
   totalIntervals: number;
+  nowMs?: number;
   theme: ThemeMode;
   onTogglePlay: () => void;
   onSkip: () => void;
@@ -185,6 +187,7 @@ export const PipWidget: React.FC<PipWidgetProps> = ({
   cycleCount,
   completedTodayCount = cycleCount,
   totalIntervals,
+  nowMs = 0,
   theme,
   onTogglePlay,
   onSkip,
@@ -193,6 +196,8 @@ export const PipWidget: React.FC<PipWidgetProps> = ({
   onCompleteActiveTask,
 }) => {
   const c = PIP_THEMES[theme] || PIP_THEMES['bunny-pink'];
+  const [fallbackNow] = React.useState(() => Date.now());
+  const currentNow = nowMs > 0 ? nowMs : fallbackNow;
 
   const minutes = Math.floor(timeLeft / 60);
   const seconds = timeLeft % 60;
@@ -408,6 +413,38 @@ export const PipWidget: React.FC<PipWidgetProps> = ({
                 >
                   {activeTask.title}
                 </span>
+                {activeTask.deadline && (() => {
+                  const isDarkTheme = theme === 'dark-mesh' || theme === 'matte-black';
+                  const overdue = isDeadlineReached(activeTask.deadline, currentNow);
+                  const deadlineLabel = formatDeadlineLabel(activeTask.deadline, currentNow);
+                  return (
+                    <span
+                      title={`${overdue ? 'Past deadline' : 'Before deadline'}: ${deadlineLabel}`}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '3px',
+                        fontSize: '10px',
+                        fontWeight: 700,
+                        padding: '1px 6px',
+                        borderRadius: '9999px',
+                        flexShrink: 0,
+                        backgroundColor: overdue
+                          ? isDarkTheme ? 'rgba(239, 68, 68, 0.2)' : 'rgba(254, 226, 226, 0.92)'
+                          : isDarkTheme ? 'rgba(16, 185, 129, 0.18)' : 'rgba(209, 250, 229, 0.92)',
+                        color: overdue
+                          ? isDarkTheme ? '#f87171' : '#dc2626'
+                          : isDarkTheme ? '#34d399' : '#047857',
+                        border: overdue
+                          ? isDarkTheme ? '1px solid rgba(248, 113, 113, 0.45)' : '1px solid rgba(239, 68, 68, 0.45)'
+                          : isDarkTheme ? '1px solid rgba(52, 211, 153, 0.4)' : '1px solid rgba(16, 185, 129, 0.4)',
+                      }}
+                    >
+                      {overdue ? <AlertCircle size={10} /> : <CalendarClock size={10} />}
+                      <span>{deadlineLabel}</span>
+                    </span>
+                  );
+                })()}
               </>
             ) : (
               <span

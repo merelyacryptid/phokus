@@ -1,7 +1,28 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import type { Task, ThemeMode } from '../types';
-import { Check, Plus, Trash2, X, ListTodo, Target, ChevronUp, ChevronDown, GripVertical, Clock } from 'lucide-react';
+import {
+  Check,
+  Plus,
+  Trash2,
+  X,
+  ListTodo,
+  Target,
+  ChevronUp,
+  ChevronDown,
+  GripVertical,
+  Clock,
+  CalendarClock,
+  CalendarPlus,
+  AlertCircle,
+} from 'lucide-react';
 import { soundEngine } from '../utils/audio';
+import {
+  formatDeadlineLabel,
+  getDeadlineBadgeClasses,
+  getDefaultDeadlineValue,
+  isDeadlineReached,
+  toDateTimeLocalValue,
+} from '../utils/deadline';
 import confetti from 'canvas-confetti';
 
 interface TasksDrawerProps {
@@ -11,16 +32,16 @@ interface TasksDrawerProps {
   theme: ThemeMode;
   defaultFocusMinutes?: number;
   onClose: () => void;
-  onAddTask: (title: string, estimatedMinutes?: number) => void;
+  onAddTask: (title: string, estimatedMinutes?: number, deadline?: string) => void;
   onToggleTask: (taskId: string) => void;
   onDeleteTask: (taskId: string) => void;
   onClearAll: () => void;
   onSelectActiveTask: (taskId: string) => void;
   onReorderTasks: (newTasks: Task[]) => void;
+  onUpdateTaskDeadline: (taskId: string, deadline?: string) => void;
 }
 
-export const TasksDrawer: React.FC<TasksDrawerProps> = React.memo(({
-  isOpen,
+const TasksDrawerInner: React.FC<Omit<TasksDrawerProps, 'isOpen'>> = ({
   tasks,
   activeTaskId,
   theme,
@@ -32,17 +53,27 @@ export const TasksDrawer: React.FC<TasksDrawerProps> = React.memo(({
   onClearAll,
   onSelectActiveTask,
   onReorderTasks,
+  onUpdateTaskDeadline,
 }) => {
   const [newTitle, setNewTitle] = useState('');
   const [estimatedMinutes, setEstimatedMinutes] = useState('');
+  const [newDeadline, setNewDeadline] = useState('');
+  const [editingDeadlineTaskId, setEditingDeadlineTaskId] = useState<string | null>(null);
+  const [editingDeadlineValue, setEditingDeadlineValue] = useState('');
+  const [nowMs, setNowMs] = useState<number>(() => Date.now());
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const [confirmClear, setConfirmClear] = useState(false);
+
   const isMatteBlack = theme === 'matte-black';
   const isDark = theme === 'dark-mesh' || isMatteBlack;
   const completedCount = useMemo(() => tasks.filter(t => t.completed).length, [tasks]);
 
-  if (!isOpen) return null;
+  // Periodically refresh current wall-clock time so deadlines flip green -> red automatically
+  useEffect(() => {
+    const id = setInterval(() => setNowMs(Date.now()), 15000);
+    return () => clearInterval(id);
+  }, []);
 
   const handleClearClick = () => {
     if (confirmClear) {
@@ -59,9 +90,30 @@ export const TasksDrawer: React.FC<TasksDrawerProps> = React.memo(({
     if (!newTitle.trim()) return;
     const parsedEst = estimatedMinutes.trim() ? parseInt(estimatedMinutes, 10) : undefined;
     const validEst = (parsedEst && parsedEst > 0 && !isNaN(parsedEst)) ? parsedEst : undefined;
-    onAddTask(newTitle.trim(), validEst);
+    const validDeadline = newDeadline.trim() || undefined;
+    onAddTask(newTitle.trim(), validEst, validDeadline);
     setNewTitle('');
     setEstimatedMinutes('');
+    setNewDeadline('');
+    setNowMs(Date.now());
+  };
+
+  const handleStartEditDeadline = (task: Task) => {
+    setEditingDeadlineTaskId(task.id);
+    setEditingDeadlineValue(
+      task.deadline ? toDateTimeLocalValue(task.deadline) : getDefaultDeadlineValue(Date.now())
+    );
+  };
+
+  const handleSaveDeadline = (taskId: string) => {
+    onUpdateTaskDeadline(taskId, editingDeadlineValue.trim() || undefined);
+    setEditingDeadlineTaskId(null);
+    setNowMs(Date.now());
+  };
+
+  const handleClearDeadline = (taskId: string) => {
+    onUpdateTaskDeadline(taskId, undefined);
+    setEditingDeadlineTaskId(null);
   };
 
   const handleToggle = (task: Task) => {
@@ -118,6 +170,12 @@ export const TasksDrawer: React.FC<TasksDrawerProps> = React.memo(({
     setDragOverIndex(null);
   };
 
+  const inputBaseClass = isMatteBlack
+    ? 'bg-[#151518] text-white placeholder-neutral-500 border border-neutral-700 focus-visible:border-white focus-visible:ring-1 focus-visible:ring-white/50'
+    : isDark
+      ? 'bg-[#1f1b2b] text-white placeholder-pink-300/40 border border-pink-500/30 focus-visible:border-pink-400 focus-visible:ring-1 focus-visible:ring-pink-500/50'
+      : 'bg-pink-50 text-pink-950 placeholder-pink-900/40 border border-pink-200 focus-visible:border-pink-500 focus-visible:ring-1 focus-visible:ring-pink-400/50';
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in">
       {/* Background click to dismiss */}
@@ -126,7 +184,7 @@ export const TasksDrawer: React.FC<TasksDrawerProps> = React.memo(({
       {/* Main Card with Fixed Height & Solid Opaque Background */}
       <div
         data-tour="tasks-drawer-card"
-        className={`relative w-full max-w-md h-[580px] max-h-[88vh] flex flex-col rounded-3xl p-6 shadow-2xl transition-colors duration-200 ${isMatteBlack
+        className={`relative w-full max-w-md h-[600px] max-h-[90vh] flex flex-col rounded-3xl p-6 shadow-2xl transition-colors duration-200 ${isMatteBlack
           ? 'bg-[#0f0f12] border border-neutral-700/80 text-white shadow-2xl shadow-black/95'
           : isDark
             ? 'bg-[#161420] border border-pink-500/30 text-white shadow-2xl shadow-black/90'
@@ -176,7 +234,9 @@ export const TasksDrawer: React.FC<TasksDrawerProps> = React.memo(({
             )}
 
             <button
+              type="button"
               onClick={onClose}
+              aria-label="Close tasks drawer"
               className={`p-2 rounded-xl transition-colors ${isDark ? 'hover:bg-white/10 text-neutral-400 hover:text-white' : 'hover:bg-pink-100 text-pink-800 hover:text-pink-950'
                 }`}
             >
@@ -213,6 +273,8 @@ export const TasksDrawer: React.FC<TasksDrawerProps> = React.memo(({
               const isCurrentFocus = activeTaskId === task.id && !task.completed;
               const isDragging = draggedIndex === idx;
               const isOver = dragOverIndex === idx && draggedIndex !== idx;
+              const isEditingThisDeadline = editingDeadlineTaskId === task.id;
+              const overdue = task.deadline ? isDeadlineReached(task.deadline, nowMs) : false;
 
               return (
                 <div
@@ -256,6 +318,7 @@ export const TasksDrawer: React.FC<TasksDrawerProps> = React.memo(({
 
                     {/* Square Checkbox */}
                     <button
+                      type="button"
                       onClick={() => handleToggle(task)}
                       title={task.completed ? "Mark as uncompleted" : "Mark as completed"}
                       className={`w-6 h-6 rounded-lg flex items-center justify-center transition-colors duration-150 shrink-0 ${task.completed
@@ -272,12 +335,12 @@ export const TasksDrawer: React.FC<TasksDrawerProps> = React.memo(({
                       {task.completed && <Check size={16} className="stroke-[3]" />}
                     </button>
 
-                    {/* Task Title */}
+                    {/* Task Title, Estimate, and Optional Editable Deadline */}
                     <div className="flex flex-col min-w-0 flex-1">
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center flex-wrap gap-1.5 min-w-0">
                         <span
                           onClick={() => handleToggle(task)}
-                          className={`text-sm sm:text-base truncate cursor-pointer transition-colors ${task.completed
+                          className={`text-sm sm:text-base truncate max-w-full cursor-pointer transition-colors ${task.completed
                             ? isMatteBlack
                               ? 'line-through text-neutral-500 font-normal'
                               : isDark
@@ -305,19 +368,116 @@ export const TasksDrawer: React.FC<TasksDrawerProps> = React.memo(({
                             <span>{task.estimatedMinutes}m</span>
                           </span>
                         )}
+                        {task.deadline && !isEditingThisDeadline && (
+                          <button
+                            type="button"
+                            onClick={() => handleStartEditDeadline(task)}
+                            title={`${overdue ? 'Past deadline' : 'Before deadline'}: ${formatDeadlineLabel(task.deadline, nowMs)} (click to edit)`}
+                            className={`inline-flex items-center space-x-1 px-1.5 py-0.5 rounded-md text-[10px] font-semibold shrink-0 transition-opacity cursor-pointer hover:opacity-85 ${getDeadlineBadgeClasses(overdue, theme)} ${task.completed ? 'opacity-65' : ''}`}
+                          >
+                            {overdue ? (
+                              <AlertCircle size={10} className="stroke-[2.3] shrink-0" />
+                            ) : (
+                              <CalendarClock size={10} className="stroke-[2.2] shrink-0" />
+                            )}
+                            <span>{formatDeadlineLabel(task.deadline, nowMs)}</span>
+                          </button>
+                        )}
                       </div>
+
+                      {/* Inline Deadline Editor */}
+                      {isEditingThisDeadline && (
+                        <div className="mt-1.5 flex items-center gap-1.5 flex-wrap">
+                          <label htmlFor={`edit-deadline-${task.id}`} className="sr-only">
+                            Edit task deadline
+                          </label>
+                          <input
+                            id={`edit-deadline-${task.id}`}
+                            type="datetime-local"
+                            value={editingDeadlineValue}
+                            onChange={(e) => setEditingDeadlineValue(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.nativeEvent.isComposing) return;
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                                handleSaveDeadline(task.id);
+                              } else if (e.key === 'Escape') {
+                                setEditingDeadlineTaskId(null);
+                              }
+                            }}
+                            style={{ colorScheme: isDark ? 'dark' : 'light' }}
+                            className={`px-2 py-1 rounded-lg text-[11px] font-medium outline-none ${inputBaseClass}`}
+                            autoFocus
+                          />
+                          <button
+                            type="button"
+                            onClick={() => handleSaveDeadline(task.id)}
+                            title="Save deadline"
+                            aria-label="Save deadline"
+                            className={`p-1 rounded-lg transition-colors ${
+                              isMatteBlack
+                                ? 'bg-white text-black hover:bg-neutral-200'
+                                : 'bg-pink-600 text-white hover:bg-pink-500'
+                            }`}
+                          >
+                            <Check size={12} className="stroke-[2.5]" />
+                          </button>
+                          {task.deadline && (
+                            <button
+                              type="button"
+                              onClick={() => handleClearDeadline(task.id)}
+                              title="Remove deadline"
+                              aria-label="Remove deadline"
+                              className={`p-1 rounded-lg transition-colors ${
+                                isDark
+                                  ? 'bg-red-500/20 text-red-300 hover:bg-red-500/30'
+                                  : 'bg-red-100 text-red-600 hover:bg-red-200'
+                              }`}
+                            >
+                              <Trash2 size={11} />
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => setEditingDeadlineTaskId(null)}
+                            title="Cancel editing"
+                            aria-label="Cancel editing deadline"
+                            className={`p-1 rounded-lg transition-colors ${
+                              isDark ? 'hover:bg-white/10 text-neutral-400' : 'hover:bg-pink-200/70 text-pink-800'
+                            }`}
+                          >
+                            <X size={12} />
+                          </button>
+                        </div>
+                      )}
+
                       {isCurrentFocus && (
-                        <span className={`text-[10px] font-bold uppercase tracking-wider ${isMatteBlack ? 'text-neutral-300' : 'text-pink-400'}`}>
+                        <span className={`text-[10px] font-bold uppercase tracking-wider mt-0.5 ${isMatteBlack ? 'text-neutral-300' : 'text-pink-400'}`}>
                           Current Focus
                         </span>
                       )}
                     </div>
                   </div>
 
-                  {/* Actions: Reorder up/down, Select Focus, Delete */}
+                  {/* Actions: Add/Edit Deadline, Reorder up/down, Select Focus, Delete */}
                   <div className="flex items-center space-x-1 shrink-0 ml-2">
+                    {/* Add/Edit Deadline Button */}
+                    <button
+                      type="button"
+                      onClick={() => handleStartEditDeadline(task)}
+                      title={task.deadline ? 'Edit deadline' : 'Add deadline'}
+                      aria-label={task.deadline ? 'Edit deadline' : 'Add deadline'}
+                      className={`p-1.5 rounded-lg transition-colors ${isMatteBlack
+                        ? 'hover:bg-white/10 text-neutral-400 hover:text-white'
+                        : isDark ? 'hover:bg-white/10 text-pink-300/70 hover:text-pink-100' : 'hover:bg-pink-200/60 text-pink-900/60 hover:text-pink-950'
+                        }`}
+                    >
+                      <CalendarPlus size={15} />
+                    </button>
+
                     {/* Move Up */}
                     <button
+                      type="button"
                       onClick={() => moveTask(idx, idx - 1)}
                       disabled={idx === 0}
                       title="Move Up"
@@ -331,6 +491,7 @@ export const TasksDrawer: React.FC<TasksDrawerProps> = React.memo(({
 
                     {/* Move Down */}
                     <button
+                      type="button"
                       onClick={() => moveTask(idx, idx + 1)}
                       disabled={idx === tasks.length - 1}
                       title="Move Down"
@@ -345,6 +506,7 @@ export const TasksDrawer: React.FC<TasksDrawerProps> = React.memo(({
                     {/* Focus Target Button */}
                     {!task.completed && (
                       <button
+                        type="button"
                         onClick={() => onSelectActiveTask(task.id)}
                         title="Set as Current Focus on Timer"
                         className={`p-1.5 rounded-lg text-xs flex items-center transition-colors ${isCurrentFocus
@@ -366,6 +528,7 @@ export const TasksDrawer: React.FC<TasksDrawerProps> = React.memo(({
 
                     {/* Delete Button */}
                     <button
+                      type="button"
                       onClick={() => onDeleteTask(task.id)}
                       title="Delete task"
                       className={`p-1.5 rounded-lg transition-colors ${isDark
@@ -383,56 +546,99 @@ export const TasksDrawer: React.FC<TasksDrawerProps> = React.memo(({
         </div>
 
         {/* Add Task Form (Appends below previously added task) */}
-        <form onSubmit={handleSubmit} className={`mt-4 pt-4 border-t ${isMatteBlack ? 'border-neutral-800' : 'border-pink-500/20'} flex items-center space-x-2 shrink-0`}>
-          <input
-            type="text"
-            value={newTitle}
-            onChange={(e) => setNewTitle(e.target.value)}
-            placeholder="Add a new task... (press Enter)"
-            className={`flex-1 min-w-0 px-4 py-2.5 rounded-2xl text-sm font-medium outline-none transition-colors ${isMatteBlack
-              ? 'bg-[#151518] text-white placeholder-neutral-500 border border-neutral-700 focus:border-white focus:ring-1 focus:ring-white/50'
-              : isDark
-                ? 'bg-[#1f1b2b] text-white placeholder-pink-300/40 border border-pink-500/30 focus:border-pink-400 focus:ring-1 focus:ring-pink-500/50'
-                : 'bg-pink-50 text-pink-950 placeholder-pink-900/40 border border-pink-200 focus:border-pink-500'
-              }`}
-          />
-          <div className="relative flex items-center shrink-0">
-            <Clock size={13} className={`absolute left-2.5 pointer-events-none ${
-              isMatteBlack ? 'text-neutral-400' : isDark ? 'text-pink-300/60' : 'text-pink-900/50'
-            }`} />
+        <form onSubmit={handleSubmit} className={`mt-4 pt-4 border-t ${isMatteBlack ? 'border-neutral-800' : 'border-pink-500/20'} space-y-2 shrink-0`}>
+          <div className="flex items-center space-x-2">
+            <label htmlFor="new-task-title" className="sr-only">Task title</label>
             <input
+              id="new-task-title"
+              name="title"
               type="text"
-              inputMode="numeric"
-              value={estimatedMinutes}
-              onChange={(e) => {
-                const val = e.target.value.replace(/[^0-9]/g, '');
-                if (val.length <= 3) {
-                  setEstimatedMinutes(val);
-                }
-              }}
-              placeholder={`Est: ${defaultFocusMinutes}m`}
-              title={`Estimated time in minutes (optional, default: ${defaultFocusMinutes}m)`}
-              className={`w-24 sm:w-28 pl-7 pr-2.5 py-2.5 rounded-2xl text-xs font-medium outline-none transition-colors ${
-                isMatteBlack
-                  ? 'bg-[#151518] text-white placeholder-neutral-500 border border-neutral-700 focus:border-white focus:ring-1 focus:ring-white/50'
-                  : isDark
-                    ? 'bg-[#1f1b2b] text-white placeholder-pink-300/40 border border-pink-500/30 focus:border-pink-400 focus:ring-1 focus:ring-pink-500/50'
-                    : 'bg-pink-50 text-pink-950 placeholder-pink-900/40 border border-pink-200 focus:border-pink-500'
-              }`}
+              value={newTitle}
+              onChange={(e) => setNewTitle(e.target.value)}
+              placeholder="Add a new task... (press Enter)"
+              className={`flex-1 min-w-0 px-4 py-2.5 rounded-2xl text-sm font-medium outline-none transition-colors ${inputBaseClass}`}
             />
+            <button
+              type="submit"
+              disabled={!newTitle.trim()}
+              aria-label="Add task"
+              className={`p-2.5 rounded-2xl transition-all disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 shadow-md shrink-0 ${isMatteBlack
+                ? 'bg-white hover:bg-neutral-200 text-black shadow-[0_0_12px_rgba(255,255,255,0.3)]'
+                : 'bg-pink-600 hover:bg-pink-500 text-white shadow-[0_0_12px_rgba(244,63,94,0.4)]'
+                }`}
+            >
+              <Plus size={20} className="stroke-[2.5]" />
+            </button>
           </div>
-          <button
-            type="submit"
-            disabled={!newTitle.trim()}
-            className={`p-2.5 rounded-2xl transition-all disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 text-white shadow-md shrink-0 ${isMatteBlack
-              ? 'bg-white hover:bg-neutral-200 text-black shadow-[0_0_12px_rgba(255,255,255,0.3)]'
-              : 'bg-pink-600 hover:bg-pink-500 active:scale-95 text-white shadow-[0_0_12px_rgba(244,63,94,0.4)]'
-              }`}
-          >
-            <Plus size={20} className="stroke-[2.5]" />
-          </button>
+
+          <div className="flex items-center justify-between gap-2 text-xs">
+            {/* Optional Time Estimate */}
+            <div className="relative flex items-center shrink-0">
+              <label htmlFor="new-task-est" className="sr-only">Estimated minutes (optional)</label>
+              <Clock size={13} className={`absolute left-2.5 pointer-events-none ${
+                isMatteBlack ? 'text-neutral-400' : isDark ? 'text-pink-300/60' : 'text-pink-900/50'
+              }`} />
+              <input
+                id="new-task-est"
+                name="estimatedMinutes"
+                type="text"
+                inputMode="numeric"
+                value={estimatedMinutes}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/[^0-9]/g, '');
+                  if (val.length <= 3) {
+                    setEstimatedMinutes(val);
+                  }
+                }}
+                placeholder={`Est: ${defaultFocusMinutes}m`}
+                title={`Estimated time in minutes (optional, default: ${defaultFocusMinutes}m)`}
+                className={`w-24 pl-7 pr-2.5 py-1.5 rounded-xl text-xs font-medium outline-none transition-colors ${inputBaseClass}`}
+              />
+            </div>
+
+            {/* Optional Deadline */}
+            <div className="flex items-center gap-1.5 flex-1 min-w-0 justify-end">
+              <label
+                htmlFor="new-task-deadline"
+                className={`text-[11px] font-medium shrink-0 flex items-center gap-1 ${
+                  isMatteBlack ? 'text-neutral-400' : isDark ? 'text-pink-300/70' : 'text-pink-900/70'
+                }`}
+              >
+                <CalendarClock size={12} />
+                <span>Deadline</span>
+              </label>
+              <input
+                id="new-task-deadline"
+                name="deadline"
+                type="datetime-local"
+                value={newDeadline}
+                onChange={(e) => setNewDeadline(e.target.value)}
+                title="Optional task deadline"
+                style={{ colorScheme: isDark ? 'dark' : 'light' }}
+                className={`min-w-0 max-w-[180px] px-2.5 py-1.5 rounded-xl text-[11px] font-medium outline-none transition-colors ${inputBaseClass}`}
+              />
+              {newDeadline && (
+                <button
+                  type="button"
+                  onClick={() => setNewDeadline('')}
+                  title="Clear deadline"
+                  aria-label="Clear selected deadline"
+                  className={`p-1 rounded-lg transition-colors shrink-0 ${
+                    isDark ? 'hover:bg-white/10 text-neutral-400' : 'hover:bg-pink-100 text-pink-800'
+                  }`}
+                >
+                  <X size={13} />
+                </button>
+              )}
+            </div>
+          </div>
         </form>
       </div>
     </div>
   );
+};
+
+export const TasksDrawer: React.FC<TasksDrawerProps> = React.memo(({ isOpen, ...props }) => {
+  if (!isOpen) return null;
+  return <TasksDrawerInner {...props} />;
 });

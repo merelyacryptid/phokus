@@ -11,11 +11,23 @@ import {
   Pencil, 
   Star,
   Plus,
-  Clock
+  Clock,
+  CalendarClock,
+  CalendarPlus,
+  AlertCircle,
+  X,
+  Trash2
 } from 'lucide-react';
 import { BunnyMascot } from './BunnyMascot';
 import { PipWidget } from './PipWidget';
 import { soundEngine } from '../utils/audio';
+import {
+  formatDeadlineLabel,
+  getDeadlineBadgeClasses,
+  getDefaultDeadlineValue,
+  isDeadlineReached,
+  toDateTimeLocalValue,
+} from '../utils/deadline';
 import confetti from 'canvas-confetti';
 
 interface TimerProps {
@@ -35,6 +47,7 @@ interface TimerProps {
   onCompleteActiveTask: (taskId?: string) => void;
   onUpdateActiveTaskTitle: (newTitle: string, taskId?: string) => void;
   onCreateActiveTask: (title: string) => void;
+  onUpdateTaskDeadline?: (taskId: string, deadline?: string) => void;
 }
 
 export const Timer: React.FC<TimerProps> = React.memo(({
@@ -54,6 +67,7 @@ export const Timer: React.FC<TimerProps> = React.memo(({
   onCompleteActiveTask,
   onUpdateActiveTaskTitle,
   onCreateActiveTask,
+  onUpdateTaskDeadline,
 }) => {
   const isMatteBlack = theme === 'matte-black';
   const isDark = theme === 'dark-mesh' || isMatteBlack;
@@ -61,7 +75,15 @@ export const Timer: React.FC<TimerProps> = React.memo(({
   const [isEditingTask, setIsEditingTask] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);
   const [editText, setEditText] = useState('');
+  const [isEditingDeadline, setIsEditingDeadline] = useState(false);
+  const [deadlineDraft, setDeadlineDraft] = useState('');
+  const [nowMs, setNowMs] = useState<number>(() => Date.now());
   const taskInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const id = setInterval(() => setNowMs(Date.now()), 15000);
+    return () => clearInterval(id);
+  }, []);
 
   // Document Picture-in-Picture Window & Video fallback
   const [pipDocWindow, setPipDocWindow] = useState<Window | null>(null);
@@ -678,6 +700,7 @@ export const Timer: React.FC<TimerProps> = React.memo(({
             cycleCount={cycleCount}
             completedTodayCount={completedTodayCount}
             totalIntervals={settings.longBreakInterval}
+            nowMs={nowMs}
             theme={theme}
             onTogglePlay={onTogglePlay}
             onSkip={onSkip}
@@ -695,13 +718,13 @@ export const Timer: React.FC<TimerProps> = React.memo(({
         </div>
       )}
 
-      {/* Main Page Active Task Row with Checkbox & Inline Editing */}
+      {/* Main Page Active Task Row with Checkbox, Estimate, Deadline & Inline Editing */}
       <div
         data-tour="task-setup"
-        className="mb-4 flex items-center justify-center max-w-md w-full px-4 min-h-[44px]"
+        className="mb-4 flex flex-col items-center justify-center max-w-xl w-full px-4 min-h-[44px]"
       >
         {isEditingTask ? (
-          <div className="w-full flex items-center justify-center space-x-2">
+          <div className="w-full max-w-md flex items-center justify-center space-x-2">
             <input
               ref={taskInputRef}
               type="text"
@@ -709,6 +732,7 @@ export const Timer: React.FC<TimerProps> = React.memo(({
               onChange={(e) => setEditText(e.target.value)}
               onBlur={handleSaveEdit}
               onKeyDown={(e) => {
+                if (e.nativeEvent.isComposing) return;
                 if (e.key === 'Enter') handleSaveEdit();
                 if (e.key === 'Escape') setIsEditingTask(false);
               }}
@@ -724,11 +748,12 @@ export const Timer: React.FC<TimerProps> = React.memo(({
             />
           </div>
         ) : (
-          <div className="flex items-center space-x-3 group cursor-pointer max-w-full">
+          <div className="flex items-center justify-center flex-wrap gap-2 group max-w-full">
             {activeTask ? (
               <>
                 {/* Main page checkbox to mark active task complete */}
                 <button
+                  type="button"
                   onClick={handleMainCheckboxClick}
                   title="Mark active task as done (advances to next task below)"
                   className={`w-7 h-7 rounded-xl flex items-center justify-center transition-all duration-200 shrink-0 ${
@@ -759,7 +784,7 @@ export const Timer: React.FC<TimerProps> = React.memo(({
                 <div
                   onClick={startEditing}
                   title="Click to edit task title directly"
-                  className={`flex items-center space-x-2 truncate py-1 px-2.5 rounded-xl transition-all duration-200 ${
+                  className={`flex items-center space-x-2 max-w-[300px] sm:max-w-[380px] truncate py-1 px-2.5 rounded-xl cursor-pointer transition-all duration-200 ${
                     isCompleting ? 'line-through opacity-50 scale-[0.98]' : ''
                   } ${
                     isMatteBlack ? 'hover:bg-white/5' : 'hover:bg-pink-500/10'
@@ -774,32 +799,79 @@ export const Timer: React.FC<TimerProps> = React.memo(({
                   >
                     {activeTask.title}
                   </span>
-                  {activeTask.estimatedMinutes && (
-                    <span
-                      title={`Estimated focus duration: ${activeTask.estimatedMinutes} minutes`}
-                      className={`inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-xs font-semibold shrink-0 ${
-                        isMatteBlack
-                          ? 'bg-neutral-800 text-neutral-300 border border-neutral-700'
-                          : isDark
-                            ? 'bg-pink-500/20 text-pink-200 border border-pink-500/35'
-                            : 'bg-pink-100 text-pink-700 border border-pink-300'
-                      }`}
-                    >
-                      <Clock size={11} className="stroke-[2.2]" />
-                      <span>{activeTask.estimatedMinutes}m</span>
-                    </span>
-                  )}
                   {!isCompleting && (
                     <Pencil size={14} className={`opacity-0 group-hover:opacity-80 transition-opacity ${isMatteBlack ? 'text-neutral-400' : 'text-pink-400'} shrink-0`} />
                   )}
                 </div>
+
+                {/* Estimated Time Badge */}
+                {activeTask.estimatedMinutes && (
+                  <span
+                    title={`Estimated focus duration: ${activeTask.estimatedMinutes} minutes`}
+                    className={`inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-xs font-semibold shrink-0 ${
+                      isMatteBlack
+                        ? 'bg-neutral-800 text-neutral-300 border border-neutral-700'
+                        : isDark
+                          ? 'bg-pink-500/20 text-pink-200 border border-pink-500/35'
+                          : 'bg-pink-100 text-pink-700 border border-pink-300'
+                    }`}
+                  >
+                    <Clock size={11} className="stroke-[2.2]" />
+                    <span>{activeTask.estimatedMinutes}m</span>
+                  </span>
+                )}
+
+                {/* Deadline Badge / Add Deadline Button (green before deadline, red at/after deadline) */}
+                {activeTask.deadline && !isEditingDeadline ? (() => {
+                  const overdue = isDeadlineReached(activeTask.deadline, nowMs);
+                  const label = formatDeadlineLabel(activeTask.deadline, nowMs);
+                  return (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDeadlineDraft(toDateTimeLocalValue(activeTask.deadline));
+                        setIsEditingDeadline(true);
+                      }}
+                      title={`${overdue ? 'Past deadline' : 'Before deadline'}: ${label} (click to edit)`}
+                      className={`inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-xs font-semibold shrink-0 cursor-pointer transition-opacity hover:opacity-85 ${getDeadlineBadgeClasses(overdue, theme)}`}
+                    >
+                      {overdue ? (
+                        <AlertCircle size={11} className="stroke-[2.3] shrink-0" />
+                      ) : (
+                        <CalendarClock size={11} className="stroke-[2.2] shrink-0" />
+                      )}
+                      <span>{label}</span>
+                    </button>
+                  );
+                })() : !activeTask.deadline && !isEditingDeadline && onUpdateTaskDeadline ? (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setDeadlineDraft(getDefaultDeadlineValue(Date.now()));
+                      setIsEditingDeadline(true);
+                    }}
+                    title="Add optional deadline"
+                    aria-label="Add deadline to active task"
+                    className={`opacity-0 group-hover:opacity-80 hover:!opacity-100 p-1.5 rounded-xl transition-all shrink-0 ${
+                      isMatteBlack
+                        ? 'text-neutral-400 hover:text-white hover:bg-white/10'
+                        : isDark
+                          ? 'text-pink-300/70 hover:text-pink-100 hover:bg-pink-500/15'
+                          : 'text-pink-800/60 hover:text-pink-950 hover:bg-pink-200/50'
+                    }`}
+                  >
+                    <CalendarPlus size={14} />
+                  </button>
+                ) : null}
               </>
             ) : (
               /* When no task is selected yet */
               <div
                 onClick={startEditing}
                 title="Click to add a task"
-                className={`flex items-center space-x-2 py-1.5 px-4 rounded-xl border border-dashed transition-all ${
+                className={`flex items-center space-x-2 py-1.5 px-4 rounded-xl border border-dashed cursor-pointer transition-all ${
                   isMatteBlack
                     ? 'border-neutral-700 hover:border-white bg-white/5 text-neutral-300'
                     : isDark
@@ -811,6 +883,83 @@ export const Timer: React.FC<TimerProps> = React.memo(({
                 <span className="text-base font-semibold">What do you want to focus on?</span>
               </div>
             )}
+          </div>
+        )}
+
+        {/* Inline Active Task Deadline Editor on Main Page */}
+        {activeTask && isEditingDeadline && onUpdateTaskDeadline && (
+          <div className="mt-2 flex items-center justify-center gap-1.5 flex-wrap">
+            <label htmlFor="active-task-deadline-edit" className="sr-only">
+              Active task deadline
+            </label>
+            <input
+              id="active-task-deadline-edit"
+              type="datetime-local"
+              value={deadlineDraft}
+              onChange={(e) => setDeadlineDraft(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.nativeEvent.isComposing) return;
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  onUpdateTaskDeadline(activeTask.id, deadlineDraft.trim() || undefined);
+                  setIsEditingDeadline(false);
+                  setNowMs(Date.now());
+                } else if (e.key === 'Escape') {
+                  setIsEditingDeadline(false);
+                }
+              }}
+              style={{ colorScheme: isDark ? 'dark' : 'light' }}
+              className={`px-2.5 py-1 rounded-xl text-xs font-medium outline-none border ${
+                isMatteBlack
+                  ? 'bg-[#151518] text-white border-neutral-600 focus-visible:border-white'
+                  : isDark
+                    ? 'bg-[#1f1b2b] text-white border-pink-500/40 focus-visible:border-pink-400'
+                    : 'bg-white/95 text-pink-950 border-pink-300 focus-visible:border-pink-500'
+              }`}
+              autoFocus
+            />
+            <button
+              type="button"
+              onClick={() => {
+                onUpdateTaskDeadline(activeTask.id, deadlineDraft.trim() || undefined);
+                setIsEditingDeadline(false);
+                setNowMs(Date.now());
+              }}
+              title="Save deadline"
+              aria-label="Save deadline"
+              className={`p-1.5 rounded-xl transition-colors ${
+                isMatteBlack ? 'bg-white text-black hover:bg-neutral-200' : 'bg-pink-600 text-white hover:bg-pink-500'
+              }`}
+            >
+              <Check size={13} className="stroke-[2.5]" />
+            </button>
+            {activeTask.deadline && (
+              <button
+                type="button"
+                onClick={() => {
+                  onUpdateTaskDeadline(activeTask.id, undefined);
+                  setIsEditingDeadline(false);
+                }}
+                title="Remove deadline"
+                aria-label="Remove deadline"
+                className={`p-1.5 rounded-xl transition-colors ${
+                  isDark ? 'bg-red-500/20 text-red-300 hover:bg-red-500/30' : 'bg-red-100 text-red-600 hover:bg-red-200'
+                }`}
+              >
+                <Trash2 size={12} />
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => setIsEditingDeadline(false)}
+              title="Cancel"
+              aria-label="Cancel deadline edit"
+              className={`p-1.5 rounded-xl transition-colors ${
+                isDark ? 'hover:bg-white/10 text-neutral-300' : 'hover:bg-pink-100 text-pink-800'
+              }`}
+            >
+              <X size={13} />
+            </button>
           </div>
         )}
       </div>

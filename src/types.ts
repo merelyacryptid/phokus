@@ -25,6 +25,7 @@ export interface Task {
   createdAt: number;
   pomodoroCount: number;
   estimatedMinutes?: number;
+  deadline?: string; // Local wall-clock 'YYYY-MM-DDTHH:mm' (or 'YYYY-MM-DD')
 }
 
 export interface SessionHistoryItem {
