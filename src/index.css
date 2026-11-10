@@ -173,3 +173,70 @@
   animation-play-state: paused !important;
 }
 
+/* Fixed pre-rendered static background layers for Picture-in-Picture (avoids per-tick blur repaints) */
+.pip-bg-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  contain: layout style paint;
+  z-index: 0;
+}
+
+.pip-bg-bunny-pink {
+  background-color: #fff5ea;
+  background-image: url('/pip-bg-bunny-pink.png');
+  background-image: image-set(
+    url('/pip-bg-bunny-pink.webp') type('image/webp') 1x,
+    url('/pip-bg-bunny-pink-2x.webp') type('image/webp') 2x,
+    url('/pip-bg-bunny-pink.png') type('image/png') 1x,
+    url('/pip-bg-bunny-pink-2x.png') type('image/png') 2x
+  );
+}
+
+.pip-bg-light-aura {
+  background-color: #ffffff;
+  background-image: url('/pip-bg-light-aura.png');
+  background-image: image-set(
+    url('/pip-bg-light-aura.webp') type('image/webp') 1x,
+    url('/pip-bg-light-aura-2x.webp') type('image/webp') 2x,
+    url('/pip-bg-light-aura.png') type('image/png') 1x,
+    url('/pip-bg-light-aura-2x.png') type('image/png') 2x
+  );
+}
+
+.pip-bg-dark-mesh {
+  background-color: #05040a;
+  background-image: url('/pip-bg-dark-mesh.png');
+  background-image: image-set(
+    url('/pip-bg-dark-mesh.webp') type('image/webp') 1x,
+    url('/pip-bg-dark-mesh-2x.webp') type('image/webp') 2x,
+    url('/pip-bg-dark-mesh.png') type('image/png') 1x,
+    url('/pip-bg-dark-mesh-2x.png') type('image/png') 2x
+  );
+}
+
+.pip-bg-matte-black {
+  background-color: #09090b;
+  background-image: url('/pip-bg-matte-black.png');
+  background-image: image-set(
+    url('/pip-bg-matte-black.webp') type('image/webp') 1x,
+    url('/pip-bg-matte-black-2x.webp') type('image/webp') 2x,
+    url('/pip-bg-matte-black.png') type('image/png') 1x,
+    url('/pip-bg-matte-black-2x.png') type('image/png') 2x
+  );
+}
+
+.pip-action-btn {
+  transition: transform 0.15s ease, filter 0.15s ease, box-shadow 0.15s ease;
+}
+.pip-action-btn:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.06);
+}
+.pip-action-btn:active {
+  transform: translateY(1px);
+}
+

@@ -221,8 +221,10 @@ export function App() {
     localStorage.setItem('phokus_theme', theme);
     if (theme === 'dark-mesh' || theme === 'matte-black') {
       document.documentElement.classList.add('dark');
+      document.documentElement.style.colorScheme = 'dark';
     } else {
       document.documentElement.classList.remove('dark');
+      document.documentElement.style.colorScheme = 'light';
     }
   }, [theme]);
 
@@ -318,7 +320,7 @@ export function App() {
   }, []);
 
   // Handle timer completion - PLAYS SOUND FOR BOTH FOCUS AND BREAK COMPLETION
-  const handleSessionComplete = useCallback(() => {
+  const handleSessionComplete = useCallback((extraMinutes: number = 0) => {
     // Play gentle chime whenever a focus session ends OR whenever a break ends
     soundEngine.unlockAudio();
     if (settings.soundAlerts) {
@@ -340,11 +342,12 @@ export function App() {
 
     const now = new Date();
     const today = formatLocalDate(now);
-    const durationMinutes = mode === 'focus'
+    const baseDurationMinutes = mode === 'focus'
       ? ((activeTask && activeTask.estimatedMinutes && activeTask.estimatedMinutes > 0) ? activeTask.estimatedMinutes : settings.focusMinutes)
       : mode === 'shortBreak'
         ? settings.shortBreakMinutes
         : settings.longBreakMinutes;
+    const durationMinutes = baseDurationMinutes + (mode === 'focus' && extraMinutes > 0 ? extraMinutes : 0);
 
     // Record stats
     updateStats(prev => {

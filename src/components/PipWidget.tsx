@@ -6,6 +6,8 @@ import { BunnyEarsLogo } from './BunnyIcon';
 interface PipWidgetProps {
   mode: TimerMode;
   timeLeft: number;
+  totalSeconds: number;
+  extraFocusMinutes?: number;
   isRunning: boolean;
   activeTask: Task | null;
   cycleCount: number;
@@ -14,141 +16,169 @@ interface PipWidgetProps {
   onTogglePlay: () => void;
   onSkip: () => void;
   onReset: () => void;
+  onAddTenMinutes: () => void;
   onCompleteActiveTask: (taskId?: string) => void;
 }
 
 interface PipThemeConfig {
-  bg: string;
   color: string;
   borderColor: string;
   logoBg: string;
   logoColor: string;
+  logoBorder: string;
   badgeBg: string;
   badgeColor: string;
   badgeBorder: string;
+  badgeShadow: string;
   starActive: string;
   starInactive: string;
+  starGlow: string;
   digitColor: string;
   digitShadow: string;
+  progressTrack: string;
+  progressFill: string;
+  progressShadow: string;
   taskCheckboxBorder: string;
   taskCheckboxBg: string;
   taskCheckColor: string;
   taskTextColor: string;
+  taskTextShadow: string;
   taskPlaceholderColor: string;
   mainBtnBg: string;
   mainBtnColor: string;
   mainBtnShadow: string;
-  secBtnBg: string;
-  secBtnBorder: string;
-  secBtnColor: string;
+  secBtnClass: string;
 }
 
 const PIP_THEMES: Record<ThemeMode, PipThemeConfig> = {
   'matte-black': {
-    bg: '#09090b',
     color: '#ffffff',
-    borderColor: 'rgba(255, 255, 255, 0.2)',
-    logoBg: 'rgba(255, 255, 255, 0.12)',
+    borderColor: 'rgba(255, 255, 255, 0.16)',
+    logoBg: '#18181b',
     logoColor: '#ffffff',
+    logoBorder: '1px solid #3f3f46',
     badgeBg: '#ffffff',
     badgeColor: '#000000',
     badgeBorder: 'none',
+    badgeShadow: '0 0 15px rgba(255, 255, 255, 0.35)',
     starActive: '#ffffff',
-    starInactive: 'rgba(255, 255, 255, 0.2)',
+    starInactive: '#404040',
+    starGlow: 'drop-shadow(0 0 6px rgba(255, 255, 255, 0.65))',
     digitColor: '#ffffff',
-    digitShadow: '0 0 16px rgba(255, 255, 255, 0.25)',
-    taskCheckboxBorder: '2px solid rgba(255, 255, 255, 0.6)',
-    taskCheckboxBg: 'rgba(255, 255, 255, 0.08)',
+    digitShadow: '0 0 24px rgba(255, 255, 255, 0.2)',
+    progressTrack: '#27272a',
+    progressFill: '#ffffff',
+    progressShadow: '0 0 12px rgba(255, 255, 255, 0.8)',
+    taskCheckboxBorder: '2px solid #a1a1aa',
+    taskCheckboxBg: '#18181b',
     taskCheckColor: '#ffffff',
-    taskTextColor: '#e4e4e7',
+    taskTextColor: '#ffffff',
+    taskTextShadow: '0 0 8px rgba(255, 255, 255, 0.2)',
     taskPlaceholderColor: 'rgba(255, 255, 255, 0.45)',
     mainBtnBg: '#ffffff',
     mainBtnColor: '#000000',
     mainBtnShadow: '0 4px 14px rgba(255, 255, 255, 0.25)',
-    secBtnBg: 'rgba(255, 255, 255, 0.08)',
-    secBtnBorder: 'rgba(255, 255, 255, 0.22)',
-    secBtnColor: '#ffffff',
+    secBtnClass: 'glass-btn-matte',
   },
   'dark-mesh': {
-    bg: '#07050d',
     color: '#ffffff',
-    borderColor: 'rgba(244, 63, 142, 0.35)',
-    logoBg: 'rgba(244, 63, 142, 0.2)',
+    borderColor: 'rgba(244, 63, 142, 0.28)',
+    logoBg: 'rgba(236, 72, 153, 0.16)',
     logoColor: '#f472b6',
-    badgeBg: 'rgba(244, 63, 142, 0.25)',
-    badgeColor: '#fda4af',
-    badgeBorder: '1px solid rgba(244, 63, 142, 0.45)',
-    starActive: '#f43f5e',
-    starInactive: 'rgba(244, 63, 142, 0.25)',
+    logoBorder: '1px solid rgba(236, 72, 153, 0.3)',
+    badgeBg: 'rgba(219, 39, 119, 0.3)',
+    badgeColor: '#fce7f3',
+    badgeBorder: '1px solid rgba(236, 72, 153, 0.5)',
+    badgeShadow: '0 0 14px rgba(244, 63, 94, 0.3)',
+    starActive: '#f472b6',
+    starInactive: 'rgba(80, 7, 36, 0.65)',
+    starGlow: 'drop-shadow(0 0 6px rgba(244, 63, 94, 0.7))',
     digitColor: '#ffffff',
-    digitShadow: '0 0 24px rgba(244, 63, 142, 0.4)',
-    taskCheckboxBorder: '2px solid rgba(244, 63, 142, 0.6)',
+    digitShadow: '0 0 28px rgba(244, 63, 94, 0.35)',
+    progressTrack: 'rgba(80, 7, 36, 0.6)',
+    progressFill: 'linear-gradient(90deg, #ec4899, #fb7185, #f9a8d4)',
+    progressShadow: '0 0 10px rgba(244, 63, 94, 0.6)',
+    taskCheckboxBorder: '2px solid rgba(244, 114, 182, 0.6)',
     taskCheckboxBg: 'rgba(255, 255, 255, 0.06)',
-    taskCheckColor: '#f43f5e',
-    taskTextColor: '#fda4af',
-    taskPlaceholderColor: 'rgba(255, 255, 255, 0.4)',
-    mainBtnBg: '#f43f5e',
+    taskCheckColor: '#f472b6',
+    taskTextColor: '#fce7f3',
+    taskTextShadow: '0 0 10px rgba(244, 63, 94, 0.3)',
+    taskPlaceholderColor: 'rgba(252, 231, 243, 0.55)',
+    mainBtnBg: 'linear-gradient(135deg, #f43f5e, #db2777)',
     mainBtnColor: '#ffffff',
     mainBtnShadow: '0 4px 16px rgba(244, 63, 94, 0.45)',
-    secBtnBg: 'rgba(255, 255, 255, 0.06)',
-    secBtnBorder: 'rgba(244, 63, 142, 0.35)',
-    secBtnColor: '#ffffff',
+    secBtnClass: 'glass-btn-dark',
   },
   'light-aura': {
-    bg: '#ffffff',
-    color: '#831433',
-    borderColor: 'rgba(244, 114, 182, 0.35)',
-    logoBg: 'rgba(254, 205, 211, 0.65)',
-    logoColor: '#ec4899',
-    badgeBg: '#fff0f5',
-    badgeColor: '#9d174d',
-    badgeBorder: '1px solid rgba(244, 114, 182, 0.35)',
-    starActive: '#ec4899',
-    starInactive: 'rgba(244, 114, 182, 0.25)',
-    digitColor: '#831433',
-    digitShadow: 'none',
+    color: '#500724',
+    borderColor: 'rgba(244, 114, 182, 0.3)',
+    logoBg: 'rgba(252, 231, 243, 0.75)',
+    logoColor: '#db2777',
+    logoBorder: '1px solid rgba(244, 114, 182, 0.22)',
+    badgeBg: 'rgba(255, 255, 255, 0.92)',
+    badgeColor: '#500724',
+    badgeBorder: '1px solid #fbcfe8',
+    badgeShadow: '0 1px 2px rgba(80, 7, 36, 0.06)',
+    starActive: '#fbbf24',
+    starInactive: 'rgba(249, 168, 212, 0.45)',
+    starGlow: 'drop-shadow(0 1px 2px rgba(251, 191, 36, 0.35))',
+    digitColor: '#500724',
+    digitShadow: '0 1px 2px rgba(80, 7, 36, 0.08)',
+    progressTrack: 'rgba(251, 207, 232, 0.65)',
+    progressFill: 'linear-gradient(90deg, #f472b6, #f43f5e)',
+    progressShadow: 'none',
     taskCheckboxBorder: '2px solid #f472b6',
-    taskCheckboxBg: '#fff0f5',
-    taskCheckColor: '#ec4899',
-    taskTextColor: '#831433',
-    taskPlaceholderColor: 'rgba(131, 20, 51, 0.45)',
-    mainBtnBg: '#ec4899',
+    taskCheckboxBg: '#ffffff',
+    taskCheckColor: '#f472b6',
+    taskTextColor: '#500724',
+    taskTextShadow: 'none',
+    taskPlaceholderColor: 'rgba(80, 7, 36, 0.55)',
+    mainBtnBg: 'linear-gradient(135deg, #ec4899, #f43f5e)',
     mainBtnColor: '#ffffff',
     mainBtnShadow: '0 4px 14px rgba(236, 72, 153, 0.3)',
-    secBtnBg: 'rgba(255, 240, 245, 0.9)',
-    secBtnBorder: 'rgba(244, 114, 182, 0.35)',
-    secBtnColor: '#9d174d',
+    secBtnClass: 'glass-btn-pink',
   },
   'bunny-pink': {
-    bg: '#fff5ea',
-    color: '#831433',
-    borderColor: 'rgba(251, 113, 133, 0.35)',
-    logoBg: 'rgba(254, 205, 215, 0.8)',
-    logoColor: '#e11d48',
-    badgeBg: 'rgba(255, 255, 255, 0.95)',
-    badgeColor: '#9f1239',
-    badgeBorder: '1px solid rgba(251, 113, 133, 0.35)',
-    starActive: '#f43f5e',
-    starInactive: 'rgba(251, 113, 133, 0.25)',
-    digitColor: '#831433',
-    digitShadow: 'none',
-    taskCheckboxBorder: '2px solid #fb7185',
+    color: '#500724',
+    borderColor: 'rgba(251, 113, 133, 0.3)',
+    logoBg: 'rgba(252, 231, 243, 0.75)',
+    logoColor: '#db2777',
+    logoBorder: '1px solid rgba(251, 113, 133, 0.22)',
+    badgeBg: 'rgba(255, 255, 255, 0.92)',
+    badgeColor: '#500724',
+    badgeBorder: '1px solid #fbcfe8',
+    badgeShadow: '0 1px 2px rgba(80, 7, 36, 0.06)',
+    starActive: '#fbbf24',
+    starInactive: 'rgba(249, 168, 212, 0.45)',
+    starGlow: 'drop-shadow(0 1px 2px rgba(251, 191, 36, 0.35))',
+    digitColor: '#500724',
+    digitShadow: '0 1px 2px rgba(80, 7, 36, 0.08)',
+    progressTrack: 'rgba(251, 207, 232, 0.65)',
+    progressFill: 'linear-gradient(90deg, #f472b6, #f43f5e)',
+    progressShadow: 'none',
+    taskCheckboxBorder: '2px solid #f472b6',
     taskCheckboxBg: '#ffffff',
-    taskCheckColor: '#f43f5e',
-    taskTextColor: '#9f1239',
-    taskPlaceholderColor: 'rgba(159, 18, 57, 0.5)',
-    mainBtnBg: '#f43f5e',
+    taskCheckColor: '#f472b6',
+    taskTextColor: '#500724',
+    taskTextShadow: 'none',
+    taskPlaceholderColor: 'rgba(80, 7, 36, 0.55)',
+    mainBtnBg: 'linear-gradient(135deg, #f43f5e, #ec4899)',
     mainBtnColor: '#ffffff',
     mainBtnShadow: '0 4px 14px rgba(244, 63, 94, 0.35)',
-    secBtnBg: 'rgba(255, 255, 255, 0.85)',
-    secBtnBorder: 'rgba(251, 113, 133, 0.35)',
-    secBtnColor: '#831433',
+    secBtnClass: 'glass-btn-pink',
   },
 };
+
+// Isolated memoized static background layer so 1s timer ticks never re-render the fixed theme background
+const PipBackground = React.memo(({ theme }: { theme: ThemeMode }) => (
+  <div aria-hidden="true" className={`pip-bg-layer pip-bg-${theme}`} />
+));
 
 export const PipWidget: React.FC<PipWidgetProps> = ({
   mode,
   timeLeft,
+  totalSeconds,
+  extraFocusMinutes = 0,
   isRunning,
   activeTask,
   cycleCount,
@@ -157,6 +187,7 @@ export const PipWidget: React.FC<PipWidgetProps> = ({
   onTogglePlay,
   onSkip,
   onReset,
+  onAddTenMinutes,
   onCompleteActiveTask,
 }) => {
   const c = PIP_THEMES[theme] || PIP_THEMES['bunny-pink'];
@@ -164,221 +195,317 @@ export const PipWidget: React.FC<PipWidgetProps> = ({
   const minutes = Math.floor(timeLeft / 60);
   const seconds = timeLeft % 60;
   const formattedTime = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+  const progressPercent = totalSeconds > 0
+    ? Math.max(0, Math.min(100, ((totalSeconds - timeLeft) / totalSeconds) * 100))
+    : 0;
 
   const modeLabel = mode === 'focus' ? 'FOCUS' : mode === 'shortBreak' ? 'SHORT BREAK' : 'LONG BREAK';
 
   return (
     <div
       style={{
+        position: 'relative',
         width: '100vw',
         height: '100vh',
+        overflow: 'hidden',
         boxSizing: 'border-box',
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'space-between',
-        padding: '16px',
         userSelect: 'none',
         fontFamily: "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif",
-        backgroundColor: c.bg,
+        colorScheme: theme === 'dark-mesh' || theme === 'matte-black' ? 'dark' : 'light',
         color: c.color,
         border: '1px solid ' + c.borderColor,
       }}
     >
-      {/* Top Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <div
-            style={{
-              padding: '4px',
-              borderRadius: '8px',
-              backgroundColor: c.logoBg,
-              color: c.logoColor,
-            }}
-          >
-            <BunnyEarsLogo className="w-4 h-4" />
-          </div>
-          <span
-            style={{
-              fontSize: '11px',
-              fontWeight: 700,
-              letterSpacing: '0.08em',
-              textTransform: 'uppercase',
-              padding: '2px 8px',
-              borderRadius: '9999px',
-              backgroundColor: c.badgeBg,
-              color: c.badgeColor,
-              border: c.badgeBorder,
-            }}
-          >
-            {modeLabel}
-          </span>
-        </div>
+      {/* Fixed pre-rendered aura background image for the current theme */}
+      <PipBackground theme={theme} />
 
-        {/* Stars */}
-        <div style={{ display: 'flex', gap: '4px' }}>
-          {Array.from({ length: totalIntervals }).map((_, idx) => (
-            <Star
-              key={idx}
-              size={14}
+      {/* Foreground HUD */}
+      <div
+        style={{
+          position: 'relative',
+          zIndex: 1,
+          width: '100%',
+          height: '100%',
+          boxSizing: 'border-box',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'space-between',
+          padding: '14px 16px',
+        }}
+      >
+        {/* Top Header */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <div
               style={{
-                fill: idx < cycleCount ? c.starActive : 'none',
-                color: idx < cycleCount ? c.starActive : c.starInactive,
+                padding: '4px',
+                borderRadius: '8px',
+                backgroundColor: c.logoBg,
+                color: c.logoColor,
+                border: c.logoBorder,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
               }}
-            />
-          ))}
-        </div>
-      </div>
-
-      {/* Center Clock and Task */}
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', margin: '4px 0' }}>
-        <div
-          style={{
-            fontSize: '48px',
-            fontWeight: 800,
-            lineHeight: 1,
-            letterSpacing: '-0.03em',
-            fontVariantNumeric: 'tabular-nums',
-            color: c.digitColor,
-            textShadow: c.digitShadow,
-          }}
-        >
-          {formattedTime}
-        </div>
-
-        {/* Active Task Name with Checkbox */}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            marginTop: '8px',
-            maxWidth: '92%',
-          }}
-        >
-          {activeTask ? (
-            <>
-              <button
-                onClick={() => onCompleteActiveTask(activeTask.id)}
-                title="Mark task done"
+            >
+              <BunnyEarsLogo className="w-4 h-4" />
+            </div>
+            <span
+              style={{
+                fontSize: '11px',
+                fontWeight: 700,
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
+                padding: '2px 8px',
+                borderRadius: '9999px',
+                backgroundColor: c.badgeBg,
+                color: c.badgeColor,
+                border: c.badgeBorder,
+                boxShadow: c.badgeShadow,
+              }}
+            >
+              {modeLabel}
+            </span>
+            {mode === 'focus' && extraFocusMinutes > 0 && (
+              <span
+                title={`+${extraFocusMinutes} minutes added to current focus session`}
                 style={{
-                  width: '20px',
-                  height: '20px',
-                  borderRadius: '6px',
-                  border: c.taskCheckboxBorder,
-                  backgroundColor: c.taskCheckboxBg,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: 'pointer',
-                  flexShrink: 0,
-                  padding: 0,
+                  fontSize: '10px',
+                  fontWeight: 700,
+                  padding: '2px 6px',
+                  borderRadius: '9999px',
+                  backgroundColor: c.badgeBg,
+                  color: c.badgeColor,
+                  border: c.badgeBorder,
                 }}
               >
-                <Check size={13} style={{ color: c.taskCheckColor }} />
-              </button>
+                +{extraFocusMinutes}m
+              </span>
+            )}
+          </div>
+
+          {/* Stars */}
+          <div style={{ display: 'flex', gap: '4px' }}>
+            {Array.from({ length: totalIntervals }).map((_, idx) => {
+              const isCompleted = idx < cycleCount;
+              return (
+                <Star
+                  key={idx}
+                  size={14}
+                  style={{
+                    fill: isCompleted ? c.starActive : 'none',
+                    color: isCompleted ? c.starActive : c.starInactive,
+                    filter: isCompleted ? c.starGlow : 'none',
+                  }}
+                />
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Center Clock, Progress Bar, and Task */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', margin: '2px 0' }}>
+          <div
+            style={{
+              fontSize: '46px',
+              fontWeight: 800,
+              lineHeight: 1,
+              letterSpacing: '-0.03em',
+              fontVariantNumeric: 'tabular-nums',
+              color: c.digitColor,
+              textShadow: c.digitShadow,
+            }}
+          >
+            {formattedTime}
+          </div>
+
+          {/* Minimal Theme-Matched Progress Bar */}
+          <div
+            style={{
+              width: '144px',
+              height: '4px',
+              borderRadius: '9999px',
+              backgroundColor: c.progressTrack,
+              marginTop: '6px',
+              overflow: 'hidden',
+            }}
+          >
+            <div
+              style={{
+                width: `${progressPercent}%`,
+                height: '100%',
+                borderRadius: '9999px',
+                background: c.progressFill,
+                boxShadow: c.progressShadow,
+                transition: 'width 0.8s linear',
+              }}
+            />
+          </div>
+
+          {/* Active Task Name with Checkbox */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              marginTop: '7px',
+              maxWidth: '92%',
+            }}
+          >
+            {activeTask ? (
+              <>
+                <button
+                  type="button"
+                  onClick={() => onCompleteActiveTask(activeTask.id)}
+                  title="Mark task done"
+                  aria-label="Mark active task done"
+                  style={{
+                    width: '20px',
+                    height: '20px',
+                    borderRadius: '6px',
+                    border: c.taskCheckboxBorder,
+                    backgroundColor: c.taskCheckboxBg,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    flexShrink: 0,
+                    padding: 0,
+                  }}
+                >
+                  <Check size={13} style={{ color: c.taskCheckColor }} />
+                </button>
+                <span
+                  style={{
+                    fontSize: '12px',
+                    fontWeight: 600,
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    color: c.taskTextColor,
+                    textShadow: c.taskTextShadow,
+                  }}
+                >
+                  {activeTask.title}
+                </span>
+              </>
+            ) : (
               <span
                 style={{
                   fontSize: '12px',
-                  fontWeight: 600,
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  color: c.taskTextColor,
+                  fontWeight: 500,
+                  color: c.taskPlaceholderColor,
                 }}
               >
-                {activeTask.title}
+                {isRunning ? 'Focusing...' : 'Ready to start'}
               </span>
-            </>
-          ) : (
-            <span
+            )}
+          </div>
+        </div>
+
+        {/* Bottom Controls: Pause / Resume, +10m (focus), Skip, Reset */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+          {/* Main Pause / Resume Button */}
+          <button
+            type="button"
+            onClick={onTogglePlay}
+            title={isRunning ? 'Pause Timer' : 'Resume Timer'}
+            className="pip-action-btn"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '0 16px',
+              height: '36px',
+              borderRadius: '12px',
+              fontWeight: 700,
+              fontSize: '13px',
+              border: 'none',
+              cursor: 'pointer',
+              background: c.mainBtnBg,
+              color: c.mainBtnColor,
+              boxShadow: c.mainBtnShadow,
+            }}
+          >
+            {isRunning ? (
+              <>
+                <Pause size={15} />
+                <span>Pause</span>
+              </>
+            ) : (
+              <>
+                <Play size={15} style={{ marginLeft: '1px' }} />
+                <span>Resume</span>
+              </>
+            )}
+          </button>
+
+          {/* +10m Button for Current Focus Session */}
+          {mode === 'focus' && (
+            <button
+              type="button"
+              onClick={onAddTenMinutes}
+              title="Add 10 minutes to this focus session"
+              aria-label="Add 10 minutes to current focus session"
+              className={`pip-action-btn ${c.secBtnClass}`}
               style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '0 10px',
+                height: '36px',
+                borderRadius: '12px',
+                fontWeight: 700,
                 fontSize: '12px',
-                fontWeight: 500,
-                color: c.taskPlaceholderColor,
+                cursor: 'pointer',
+                letterSpacing: '-0.02em',
               }}
             >
-              {isRunning ? 'Focusing...' : 'Ready to start'}
-            </span>
+              +10m
+            </button>
           )}
+
+          {/* Skip Button */}
+          <button
+            type="button"
+            onClick={onSkip}
+            title="Skip to next session"
+            aria-label="Skip to next session"
+            className={`pip-action-btn ${c.secBtnClass}`}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '36px',
+              height: '36px',
+              borderRadius: '12px',
+              cursor: 'pointer',
+            }}
+          >
+            <SkipForward size={15} />
+          </button>
+
+          {/* Reset Button */}
+          <button
+            type="button"
+            onClick={onReset}
+            title="Reset session"
+            aria-label="Reset session"
+            className={`pip-action-btn ${c.secBtnClass}`}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '36px',
+              height: '36px',
+              borderRadius: '12px',
+              cursor: 'pointer',
+            }}
+          >
+            <RotateCcw size={15} />
+          </button>
         </div>
-      </div>
-
-      {/* Bottom Controls: Pause & Resume, Skip, Reset */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
-        {/* Main Pause / Resume Button */}
-        <button
-          onClick={onTogglePlay}
-          title={isRunning ? "Pause Timer" : "Resume Timer"}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            padding: '8px 18px',
-            borderRadius: '12px',
-            fontWeight: 700,
-            fontSize: '13px',
-            border: 'none',
-            cursor: 'pointer',
-            backgroundColor: c.mainBtnBg,
-            color: c.mainBtnColor,
-            boxShadow: c.mainBtnShadow,
-            transition: 'transform 0.15s ease',
-          }}
-        >
-          {isRunning ? (
-            <>
-              <Pause size={16} />
-              <span>Pause</span>
-            </>
-          ) : (
-            <>
-              <Play size={16} style={{ marginLeft: '1px' }} />
-              <span>Resume</span>
-            </>
-          )}
-        </button>
-
-        {/* Skip Button */}
-        <button
-          onClick={onSkip}
-          title="Skip to next session"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: '36px',
-            height: '36px',
-            borderRadius: '12px',
-            border: '1px solid ' + c.secBtnBorder,
-            backgroundColor: c.secBtnBg,
-            color: c.secBtnColor,
-            cursor: 'pointer',
-          }}
-        >
-          <SkipForward size={16} />
-        </button>
-
-        {/* Reset Button */}
-        <button
-          onClick={onReset}
-          title="Reset session"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: '36px',
-            height: '36px',
-            borderRadius: '12px',
-            border: '1px solid ' + c.secBtnBorder,
-            backgroundColor: c.secBtnBg,
-            color: c.secBtnColor,
-            cursor: 'pointer',
-          }}
-        >
-          <RotateCcw size={16} />
-        </button>
       </div>
     </div>
   );
 };
-

@@ -30,7 +30,7 @@ interface TimerProps {
   onTogglePlay: () => void;
   onSkip: () => void;
   onReset: () => void;
-  onSessionComplete: () => void;
+  onSessionComplete: (extraMinutes?: number) => void;
   onCompleteActiveTask: (taskId?: string) => void;
   onUpdateActiveTaskTitle: (newTitle: string, taskId?: string) => void;
   onCreateActiveTask: (title: string) => void;
@@ -66,14 +66,33 @@ export const Timer: React.FC<TimerProps> = React.memo(({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPiPActive, setIsPiPActive] = useState(false);
+  const pipBgImagesRef = useRef<Partial<Record<ThemeMode, HTMLImageElement>>>({});
+
+  // Pre-warm fixed PiP background images cleanly after mount
+  useEffect(() => {
+    const themePaths: Record<ThemeMode, string> = {
+      'bunny-pink': '/pip-bg-bunny-pink-2x.webp',
+      'light-aura': '/pip-bg-light-aura-2x.webp',
+      'dark-mesh': '/pip-bg-dark-mesh-2x.webp',
+      'matte-black': '/pip-bg-matte-black-2x.webp',
+    };
+    (Object.entries(themePaths) as [ThemeMode, string][]).forEach(([key, src]) => {
+      if (!pipBgImagesRef.current[key]) {
+        const img = new Image();
+        img.decoding = 'async';
+        img.src = src;
+        pipBgImagesRef.current[key] = img;
+      }
+    });
+  }, []);
 
   // Focus duration: Use task's custom estimatedMinutes if present, otherwise default to settings.focusMinutes
   const focusMinutes = (activeTask && activeTask.estimatedMinutes && activeTask.estimatedMinutes > 0)
     ? activeTask.estimatedMinutes
     : settings.focusMinutes;
 
-  // Total seconds calculation based on mode and settings
-  const totalSeconds = (
+  // Base session duration (without temporary +10m extensions)
+  const baseTotalSeconds = (
     mode === 'focus' 
       ? focusMinutes 
       : mode === 'shortBreak' 
@@ -81,8 +100,14 @@ export const Timer: React.FC<TimerProps> = React.memo(({
         : settings.longBreakMinutes
   ) * 60;
 
+  // Temporary +10m extensions scoped exclusively to the current focus session
+  const [extraFocusMinutes, setExtraFocusMinutes] = useState<number>(0);
+  const extraFocusMinutesRef = useRef<number>(0);
+
+  const totalSeconds = baseTotalSeconds + (mode === 'focus' ? extraFocusMinutes * 60 : 0);
+
   // Local accurate timer state (isolates high-frequency ticks to Timer component)
-  const [timeLeft, setTimeLeft] = useState<number>(totalSeconds);
+  const [timeLeft, setTimeLeft] = useState<number>(baseTotalSeconds);
   const timerEndRef = useRef<number | null>(null);
   const lastTickSecond = useRef<number>(timeLeft);
   const timeLeftRef = useRef<number>(timeLeft);
@@ -108,6 +133,10 @@ export const Timer: React.FC<TimerProps> = React.memo(({
   useEffect(() => {
     totalSecondsRef.current = totalSeconds;
   }, [totalSeconds]);
+
+  useEffect(() => {
+    extraFocusMinutesRef.current = extraFocusMinutes;
+  }, [extraFocusMinutes]);
 
   useEffect(() => {
     settingsRef.current = settings;
@@ -169,15 +198,17 @@ export const Timer: React.FC<TimerProps> = React.memo(({
 
     if (shouldResetTimer) {
       // oxlint-disable-next-line react/set-state-in-effect
-      setTimeLeft(totalSeconds);
+      setExtraFocusMinutes(0);
+      extraFocusMinutesRef.current = 0;
+      setTimeLeft(baseTotalSeconds);
       hasWarnedRef.current = false;
       if (isRunningRef.current) {
-        timerEndRef.current = Date.now() + totalSeconds * 1000;
+        timerEndRef.current = Date.now() + baseTotalSeconds * 1000;
       } else {
         timerEndRef.current = null;
       }
     }
-  }, [mode, totalSeconds, resetCount, activeTask, settings.focusMinutes, settings.shortBreakMinutes, settings.longBreakMinutes]);
+  }, [mode, baseTotalSeconds, resetCount, activeTask, settings.focusMinutes, settings.shortBreakMinutes, settings.longBreakMinutes]);
 
   // High-accuracy timer tick interval
   useEffect(() => {
@@ -216,11 +247,14 @@ export const Timer: React.FC<TimerProps> = React.memo(({
       }
 
       if (remainingSec <= 0) {
+        const addedMinutes = extraFocusMinutesRef.current;
         clearInterval(interval);
         setTimeLeft(0);
         timerEndRef.current = null;
         hasWarnedRef.current = false;
-        onSessionComplete();
+        setExtraFocusMinutes(0);
+        extraFocusMinutesRef.current = 0;
+        onSessionComplete(addedMinutes);
       } else {
         setTimeLeft(remainingSec);
       }
@@ -238,8 +272,35 @@ export const Timer: React.FC<TimerProps> = React.memo(({
     document.title = `${formatted} ${modeLabel} | Phokus`;
   }, [timeLeft, mode]);
 
+  // Add +10 minutes to the CURRENT focus session's overall time (without modifying saved preferences)
+  const handleAddTenMinutes = useCallback(() => {
+    if (modeRef.current !== 'focus') return;
+    soundEngine.unlockAudio();
+
+    const addSeconds = 10 * 60;
+    const nextTimeLeft = timeLeftRef.current + addSeconds;
+
+    if (isRunningRef.current) {
+      const currentEnd = timerEndRef.current || (Date.now() + timeLeftRef.current * 1000);
+      timerEndRef.current = currentEnd + addSeconds * 1000;
+    }
+
+    timeLeftRef.current = nextTimeLeft;
+    setTimeLeft(nextTimeLeft);
+
+    const nextExtra = extraFocusMinutesRef.current + 10;
+    extraFocusMinutesRef.current = nextExtra;
+    setExtraFocusMinutes(nextExtra);
+
+    if (nextTimeLeft > 300) {
+      hasWarnedRef.current = false;
+    }
+  }, []);
+
   const handleResetClick = () => {
-    setTimeLeft(totalSeconds);
+    setExtraFocusMinutes(0);
+    extraFocusMinutesRef.current = 0;
+    setTimeLeft(baseTotalSeconds);
     timerEndRef.current = null;
     hasWarnedRef.current = false;
     onReset();
@@ -262,7 +323,7 @@ export const Timer: React.FC<TimerProps> = React.memo(({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Palette per theme
+    // Palette per theme matching main page exact tokens
     const paletteMap: Record<ThemeMode, {
       bg: string;
       border: string;
@@ -271,90 +332,127 @@ export const Timer: React.FC<TimerProps> = React.memo(({
       subText: string;
       btnBg: string;
       btnText: string;
+      progressTrack: string;
+      progressFill: string;
     }> = {
       'matte-black': {
         bg: '#09090b',
-        border: '#ffffff',
+        border: 'rgba(255, 255, 255, 0.25)',
         modeText: '#ffffff',
         digits: '#ffffff',
-        subText: '#a1a1aa',
+        subText: '#e4e4e7',
         btnBg: '#ffffff',
         btnText: '#000000',
+        progressTrack: '#27272a',
+        progressFill: '#ffffff',
       },
       'dark-mesh': {
-        bg: '#07050d',
-        border: '#f43f5e',
-        modeText: '#fb7185',
+        bg: '#05040a',
+        border: 'rgba(244, 63, 142, 0.4)',
+        modeText: '#fce7f3',
         digits: '#ffffff',
-        subText: '#fda4af',
+        subText: '#fce7f3',
         btnBg: '#f43f5e',
         btnText: '#ffffff',
+        progressTrack: 'rgba(80, 7, 36, 0.6)',
+        progressFill: '#f472b6',
       },
       'light-aura': {
         bg: '#ffffff',
-        border: '#f472b6',
-        modeText: '#ec4899',
-        digits: '#831433',
-        subText: '#9d174d',
+        border: 'rgba(244, 114, 182, 0.35)',
+        modeText: '#db2777',
+        digits: '#500724',
+        subText: '#500724',
         btnBg: '#ec4899',
         btnText: '#ffffff',
+        progressTrack: 'rgba(251, 207, 232, 0.7)',
+        progressFill: '#f43f5e',
       },
       'bunny-pink': {
         bg: '#fff5ea',
-        border: '#fb7185',
-        modeText: '#e11d48',
-        digits: '#831433',
-        subText: '#9f1239',
+        border: 'rgba(251, 113, 133, 0.35)',
+        modeText: '#db2777',
+        digits: '#500724',
+        subText: '#500724',
         btnBg: '#f43f5e',
         btnText: '#ffffff',
+        progressTrack: 'rgba(251, 207, 232, 0.7)',
+        progressFill: '#f43f5e',
       },
     };
 
     const p = paletteMap[theme] || paletteMap['bunny-pink'];
 
-    // Draw PiP frame
+    // Draw PiP frame without reallocating canvas dimensions every tick
     const width = 360;
-    const height = 210;
-    canvas.width = width;
-    canvas.height = height;
+    const height = 230;
+    if (canvas.width !== width || canvas.height !== height) {
+      canvas.width = width;
+      canvas.height = height;
+    } else {
+      ctx.clearRect(0, 0, width, height);
+    }
 
-    // Background
-    ctx.fillStyle = p.bg;
-    ctx.fillRect(0, 0, width, height);
+    // Draw fixed pre-rendered aura background image if loaded, fallback to base color
+    const bgImg = pipBgImagesRef.current[theme];
+    if (bgImg && bgImg.complete && bgImg.naturalWidth > 0) {
+      ctx.drawImage(bgImg, 0, 0, width, height);
+    } else {
+      ctx.fillStyle = p.bg;
+      ctx.fillRect(0, 0, width, height);
+    }
 
     // Subtle border
     ctx.strokeStyle = p.border;
-    ctx.lineWidth = 4;
-    ctx.strokeRect(2, 2, width - 4, height - 4);
+    ctx.lineWidth = 3;
+    ctx.strokeRect(1.5, 1.5, width - 3, height - 3);
 
-    // Mode label
+    // Mode label (+ extra focus badge if extended)
     ctx.fillStyle = p.modeText;
-    ctx.font = '600 15px "Plus Jakarta Sans", sans-serif';
+    ctx.font = '700 13px "Plus Jakarta Sans", sans-serif';
     ctx.textAlign = 'center';
-    const modeLabel = mode === 'focus' ? 'FOCUS' : mode === 'shortBreak' ? 'SHORT BREAK' : 'LONG BREAK';
-    ctx.fillText(modeLabel, width / 2, 38);
+    const baseLabel = mode === 'focus' ? 'FOCUS' : mode === 'shortBreak' ? 'SHORT BREAK' : 'LONG BREAK';
+    const modeLabel = mode === 'focus' && extraFocusMinutes > 0 ? `${baseLabel} · +${extraFocusMinutes}M` : baseLabel;
+    ctx.fillText(modeLabel, width / 2, 34);
 
     // Digits
     ctx.fillStyle = p.digits;
-    ctx.font = '800 64px "Plus Jakarta Sans", sans-serif';
-    ctx.fillText(formattedTime, width / 2, 108);
+    ctx.font = '800 62px "Plus Jakarta Sans", sans-serif';
+    ctx.fillText(formattedTime, width / 2, 102);
+
+    // Slim progress bar matching Document PiP
+    const pct = totalSeconds > 0 ? Math.max(0, Math.min(1, (totalSeconds - timeLeft) / totalSeconds)) : 0;
+    const barW = 144;
+    const barH = 4;
+    const barX = (width - barW) / 2;
+    const barY = 114;
+    ctx.fillStyle = p.progressTrack;
+    ctx.beginPath();
+    ctx.roundRect(barX, barY, barW, barH, 2);
+    ctx.fill();
+    if (pct > 0) {
+      ctx.fillStyle = p.progressFill;
+      ctx.beginPath();
+      ctx.roundRect(barX, barY, Math.max(4, barW * pct), barH, 2);
+      ctx.fill();
+    }
 
     // Active task or quote
     ctx.fillStyle = p.subText;
     ctx.font = '600 13px "Plus Jakarta Sans", sans-serif';
     const subText = activeTask ? activeTask.title : (isRunning ? 'Stay in flow...' : 'Ready to begin');
-    ctx.fillText(subText.slice(0, 32), width / 2, 138);
+    ctx.fillText(subText.slice(0, 32), width / 2, 144);
 
     // Pause / Resume Action Pill on canvas
     ctx.fillStyle = p.btnBg;
     ctx.beginPath();
-    ctx.roundRect(width / 2 - 65, height - 44, 130, 28, 14);
+    ctx.roundRect(width / 2 - 65, height - 46, 130, 30, 15);
     ctx.fill();
 
     ctx.fillStyle = p.btnText;
     ctx.font = '700 13px "Plus Jakarta Sans", sans-serif';
-    ctx.fillText(isRunning ? '❚❚ PAUSE' : '▶ RESUME', width / 2, height - 25);
-  }, [theme, mode, formattedTime, activeTask, isRunning]);
+    ctx.fillText(isRunning ? '❚❚ PAUSE' : '▶ RESUME', width / 2, height - 26);
+  }, [theme, mode, formattedTime, activeTask, isRunning, extraFocusMinutes, totalSeconds, timeLeft]);
 
   // Update canvas for Picture in Picture only when PiP is actually active
   useEffect(() => {
@@ -405,8 +503,15 @@ export const Timer: React.FC<TimerProps> = React.memo(({
       try {
         const pipWindow = await window.documentPictureInPicture.requestWindow({
           width: 360,
-          height: 230,
+          height: 238,
         });
+
+        // Ensure relative URLs (e.g. fixed /pip-bg-* images) resolve reliably inside about:blank PiP
+        const baseEl = pipWindow.document.createElement('base');
+        baseEl.href = window.location.href;
+        pipWindow.document.head.appendChild(baseEl);
+
+        pipWindow.document.documentElement.style.colorScheme = isDark ? 'dark' : 'light';
 
         // Copy styles to PiP window
         [...document.styleSheets].forEach((styleSheet) => {
@@ -542,7 +647,9 @@ export const Timer: React.FC<TimerProps> = React.memo(({
   }, [settings.soundAlerts, settings.taskSound, settings.soundVolume, onCompleteActiveTask]);
 
   // Calculate percentage for subtle progress accent
-  const progressPercent = Math.max(0, Math.min(100, ((totalSeconds - timeLeft) / totalSeconds) * 100));
+  const progressPercent = totalSeconds > 0
+    ? Math.max(0, Math.min(100, ((totalSeconds - timeLeft) / totalSeconds) * 100))
+    : 0;
 
   return (
     <div className="flex flex-col items-center justify-center my-auto select-none z-10 transition-all duration-300 hw-accelerated">
@@ -556,12 +663,14 @@ export const Timer: React.FC<TimerProps> = React.memo(({
         onClick={onTogglePlay} 
       />
 
-      {/* Document Picture-in-Picture Portal with Pause / Resume controls */}
+      {/* Document Picture-in-Picture Portal with Pause / Resume & +10m controls */}
       {pipDocWindow &&
         createPortal(
           <PipWidget
             mode={mode}
             timeLeft={timeLeft}
+            totalSeconds={totalSeconds}
+            extraFocusMinutes={extraFocusMinutes}
             isRunning={isRunning}
             activeTask={activeTask}
             cycleCount={cycleCount}
@@ -570,6 +679,7 @@ export const Timer: React.FC<TimerProps> = React.memo(({
             onTogglePlay={onTogglePlay}
             onSkip={onSkip}
             onReset={handleResetClick}
+            onAddTenMinutes={handleAddTenMinutes}
             onCompleteActiveTask={handlePipCompleteTask}
           />,
           pipDocWindow.document.body
@@ -790,12 +900,28 @@ export const Timer: React.FC<TimerProps> = React.memo(({
             style={{ width: `${progressPercent}%` }}
           />
         </div>
+
+        {/* Indicator when temporary +10m time has been added to current focus session */}
+        {mode === 'focus' && extraFocusMinutes > 0 && (
+          <span
+            className={`mt-2 text-[11px] font-bold px-2.5 py-0.5 rounded-full tracking-wide ${
+              isMatteBlack
+                ? 'bg-white/15 text-white border border-white/25'
+                : isDark
+                  ? 'bg-pink-500/20 text-pink-200 border border-pink-400/35'
+                  : 'bg-white/80 text-pink-900 border border-pink-200/80 shadow-sm'
+            }`}
+          >
+            +{extraFocusMinutes}m added to this session
+          </span>
+        )}
       </div>
 
       {/* Glassmorphic Control Buttons */}
       <div className="flex items-center space-x-3 sm:space-x-4 mt-8">
         {/* Play / Pause Button */}
         <button
+          type="button"
           onClick={onTogglePlay}
           title={isRunning ? "Pause (Space)" : "Start (Space)"}
           className={`p-3.5 sm:p-4 rounded-2xl transition-all duration-200 ${btnClass}`}
@@ -807,8 +933,22 @@ export const Timer: React.FC<TimerProps> = React.memo(({
           )}
         </button>
 
+        {/* Add +10m to current focus session only */}
+        {mode === 'focus' && (
+          <button
+            type="button"
+            onClick={handleAddTenMinutes}
+            title="Add 10 minutes to current focus session"
+            aria-label="Add 10 minutes to current focus session"
+            className={`px-3.5 h-[50px] sm:h-[54px] rounded-2xl font-bold text-xs sm:text-sm tracking-tight flex items-center justify-center transition-all duration-200 cursor-pointer ${btnClass}`}
+          >
+            +10m
+          </button>
+        )}
+
         {/* Skip Button */}
         <button
+          type="button"
           onClick={onSkip}
           title="Skip to next session"
           className={`p-3.5 sm:p-4 rounded-2xl transition-all duration-200 ${btnClass}`}
@@ -818,6 +958,7 @@ export const Timer: React.FC<TimerProps> = React.memo(({
 
         {/* Reset Button */}
         <button
+          type="button"
           onClick={handleResetClick}
           title="Reset timer (R)"
           className={`p-3.5 sm:p-4 rounded-2xl transition-all duration-200 ${btnClass}`}
@@ -827,6 +968,7 @@ export const Timer: React.FC<TimerProps> = React.memo(({
 
         {/* Picture-in-Picture Button */}
         <button
+          type="button"
           data-tour="pip-button"
           onClick={togglePictureInPicture}
           title="Picture-in-Picture Floating Timer (with Pause & Resume)"
