@@ -443,6 +443,17 @@ export const Timer: React.FC<TimerProps> = React.memo(({
     const modeLabel = mode === 'focus' && extraFocusMinutes > 0 ? `${baseLabel} · +${extraFocusMinutes}M` : baseLabel;
     ctx.fillText(modeLabel, width / 2, 34);
 
+    // Current local time top-right
+    const currentTimeText = new Date().toLocaleTimeString([], {
+      hour: 'numeric',
+      minute: '2-digit',
+    });
+    ctx.fillStyle = p.subText;
+    ctx.font = '600 11px "Plus Jakarta Sans", sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText(currentTimeText, width - 16, 34);
+    ctx.textAlign = 'center';
+
     // Digits
     ctx.fillStyle = p.digits;
     ctx.font = '800 62px "Plus Jakarta Sans", sans-serif';
@@ -486,7 +497,7 @@ export const Timer: React.FC<TimerProps> = React.memo(({
   useEffect(() => {
     if (!isPiPActive && !document.pictureInPictureElement) return;
     drawCanvasFrame();
-  }, [isPiPActive, drawCanvasFrame, timeLeft]);
+  }, [isPiPActive, drawCanvasFrame, timeLeft, nowMs]);
 
   // MediaSession integration for Video PiP controls
   useEffect(() => {
@@ -701,9 +712,6 @@ export const Timer: React.FC<TimerProps> = React.memo(({
             extraFocusMinutes={extraFocusMinutes}
             isRunning={isRunning}
             activeTask={activeTask}
-            cycleCount={cycleCount}
-            completedTodayCount={completedTodayCount}
-            totalIntervals={settings.longBreakInterval}
             nowMs={nowMs}
             theme={theme}
             onTogglePlay={onTogglePlay}

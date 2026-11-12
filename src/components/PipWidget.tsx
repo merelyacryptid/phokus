@@ -1,6 +1,6 @@
 import React from 'react';
 import type { TimerMode, ThemeMode, Task } from '../types';
-import { Play, Pause, SkipForward, RotateCcw, Check, Star, CalendarClock, AlertCircle } from 'lucide-react';
+import { Play, Pause, SkipForward, RotateCcw, Check, Clock, CalendarClock, AlertCircle } from 'lucide-react';
 import { BunnyEarsLogo } from './BunnyIcon';
 import { formatDeadlineLabel, isDeadlineReached } from '../utils/deadline';
 
@@ -11,9 +11,6 @@ interface PipWidgetProps {
   extraFocusMinutes?: number;
   isRunning: boolean;
   activeTask: Task | null;
-  cycleCount: number;
-  completedTodayCount?: number;
-  totalIntervals: number;
   nowMs?: number;
   theme: ThemeMode;
   onTogglePlay: () => void;
@@ -33,9 +30,9 @@ interface PipThemeConfig {
   badgeColor: string;
   badgeBorder: string;
   badgeShadow: string;
-  starActive: string;
-  starInactive: string;
-  starGlow: string;
+  clockBg: string;
+  clockColor: string;
+  clockBorder: string;
   digitColor: string;
   digitShadow: string;
   progressTrack: string;
@@ -64,9 +61,9 @@ const PIP_THEMES: Record<ThemeMode, PipThemeConfig> = {
     badgeColor: '#000000',
     badgeBorder: 'none',
     badgeShadow: '0 0 15px rgba(255, 255, 255, 0.35)',
-    starActive: '#ffffff',
-    starInactive: '#404040',
-    starGlow: 'drop-shadow(0 0 6px rgba(255, 255, 255, 0.65))',
+    clockBg: 'rgba(255, 255, 255, 0.08)',
+    clockColor: '#e4e4e7',
+    clockBorder: '1px solid rgba(255, 255, 255, 0.16)',
     digitColor: '#ffffff',
     digitShadow: '0 0 24px rgba(255, 255, 255, 0.2)',
     progressTrack: '#27272a',
@@ -93,9 +90,9 @@ const PIP_THEMES: Record<ThemeMode, PipThemeConfig> = {
     badgeColor: '#fce7f3',
     badgeBorder: '1px solid rgba(236, 72, 153, 0.5)',
     badgeShadow: '0 0 14px rgba(244, 63, 94, 0.3)',
-    starActive: '#f472b6',
-    starInactive: 'rgba(80, 7, 36, 0.65)',
-    starGlow: 'drop-shadow(0 0 6px rgba(244, 63, 94, 0.7))',
+    clockBg: 'rgba(255, 255, 255, 0.08)',
+    clockColor: '#fce7f3',
+    clockBorder: '1px solid rgba(244, 114, 182, 0.28)',
     digitColor: '#ffffff',
     digitShadow: '0 0 28px rgba(244, 63, 94, 0.35)',
     progressTrack: 'rgba(80, 7, 36, 0.6)',
@@ -122,9 +119,9 @@ const PIP_THEMES: Record<ThemeMode, PipThemeConfig> = {
     badgeColor: '#500724',
     badgeBorder: '1px solid #fbcfe8',
     badgeShadow: '0 1px 2px rgba(80, 7, 36, 0.06)',
-    starActive: '#fbbf24',
-    starInactive: 'rgba(249, 168, 212, 0.45)',
-    starGlow: 'drop-shadow(0 1px 2px rgba(251, 191, 36, 0.35))',
+    clockBg: 'rgba(255, 255, 255, 0.78)',
+    clockColor: '#831843',
+    clockBorder: '1px solid rgba(244, 114, 182, 0.3)',
     digitColor: '#500724',
     digitShadow: '0 1px 2px rgba(80, 7, 36, 0.08)',
     progressTrack: 'rgba(251, 207, 232, 0.65)',
@@ -151,9 +148,9 @@ const PIP_THEMES: Record<ThemeMode, PipThemeConfig> = {
     badgeColor: '#500724',
     badgeBorder: '1px solid #fbcfe8',
     badgeShadow: '0 1px 2px rgba(80, 7, 36, 0.06)',
-    starActive: '#fbbf24',
-    starInactive: 'rgba(249, 168, 212, 0.45)',
-    starGlow: 'drop-shadow(0 1px 2px rgba(251, 191, 36, 0.35))',
+    clockBg: 'rgba(255, 255, 255, 0.78)',
+    clockColor: '#831843',
+    clockBorder: '1px solid rgba(244, 114, 182, 0.3)',
     digitColor: '#500724',
     digitShadow: '0 1px 2px rgba(80, 7, 36, 0.08)',
     progressTrack: 'rgba(251, 207, 232, 0.65)',
@@ -184,9 +181,6 @@ export const PipWidget: React.FC<PipWidgetProps> = ({
   extraFocusMinutes = 0,
   isRunning,
   activeTask,
-  cycleCount,
-  completedTodayCount = cycleCount,
-  totalIntervals,
   nowMs = 0,
   theme,
   onTogglePlay,
@@ -196,8 +190,26 @@ export const PipWidget: React.FC<PipWidgetProps> = ({
   onCompleteActiveTask,
 }) => {
   const c = PIP_THEMES[theme] || PIP_THEMES['bunny-pink'];
-  const [fallbackNow] = React.useState(() => Date.now());
-  const currentNow = nowMs > 0 ? nowMs : fallbackNow;
+  const [clockNow, setClockNow] = React.useState<number>(() => Date.now());
+
+  React.useEffect(() => {
+    const id = setInterval(() => setClockNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  const currentNow = Math.max(clockNow, nowMs);
+  const currentDate = new Date(currentNow);
+  const currentTimeLabel = currentDate.toLocaleTimeString([], {
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+  const currentFullLabel = currentDate.toLocaleString([], {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  });
 
   const minutes = Math.floor(timeLeft / 60);
   const seconds = timeLeft % 60;
@@ -291,40 +303,26 @@ export const PipWidget: React.FC<PipWidgetProps> = ({
             )}
           </div>
 
-          {/* Stars (linked to today's completed focus sessions) */}
+          {/* Current local time */}
           <div
-            title={`${completedTodayCount} focus ${completedTodayCount === 1 ? 'session' : 'sessions'} completed today`}
-            style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
+            title={currentFullLabel}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '4px',
+              fontSize: '11px',
+              fontWeight: 700,
+              fontVariantNumeric: 'tabular-nums',
+              letterSpacing: '0.01em',
+              padding: '2px 8px',
+              borderRadius: '9999px',
+              backgroundColor: c.clockBg,
+              color: c.clockColor,
+              border: c.clockBorder,
+            }}
           >
-            {Array.from({ length: totalIntervals }).map((_, idx) => {
-              const isCompleted = idx < cycleCount;
-              return (
-                <Star
-                  key={idx}
-                  size={14}
-                  style={{
-                    fill: isCompleted ? c.starActive : 'none',
-                    color: isCompleted ? c.starActive : c.starInactive,
-                    filter: isCompleted ? c.starGlow : 'none',
-                  }}
-                />
-              );
-            })}
-            {completedTodayCount > totalIntervals && (
-              <span
-                style={{
-                  fontSize: '10px',
-                  fontWeight: 700,
-                  padding: '1px 5px',
-                  borderRadius: '9999px',
-                  backgroundColor: c.badgeBg,
-                  color: c.badgeColor,
-                  border: c.badgeBorder,
-                }}
-              >
-                {completedTodayCount}
-              </span>
-            )}
+            <Clock size={11} />
+            <span>{currentTimeLabel}</span>
           </div>
         </div>
 
