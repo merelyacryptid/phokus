@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import type { Task, ThemeMode } from '../types';
 import {
   Check,
@@ -22,6 +22,7 @@ import {
   isDeadlineReached,
   splitDeadlineTo12h,
   combine12hToDeadline,
+  parseNaturalDeadline,
   type Deadline12hParts,
 } from '../utils/deadline';
 import { DeadlineFields } from './DeadlineFields';
@@ -59,14 +60,22 @@ const TasksDrawerInner: React.FC<Omit<TasksDrawerProps, 'isOpen'>> = ({
 }) => {
   const [newTitle, setNewTitle] = useState('');
   const [estimatedMinutes, setEstimatedMinutes] = useState('');
-  const [newDeadlineParts, setNewDeadlineParts] = useState<Deadline12hParts>(() =>
-    splitDeadlineTo12h(undefined, { emptyTime: true })
-  );
+  const [deadlineText, setDeadlineText] = useState('');
+  const [deadlineTouched, setDeadlineTouched] = useState(false);
+  const deadlineInputRef = useRef<HTMLInputElement>(null);
   const [editingDeadlineTaskId, setEditingDeadlineTaskId] = useState<string | null>(null);
   const [editingDeadlineParts, setEditingDeadlineParts] = useState<Deadline12hParts>(() =>
     splitDeadlineTo12h(undefined, { emptyTime: false })
   );
   const [nowMs, setNowMs] = useState<number>(() => Date.now());
+
+  const trimmedDeadlineText = deadlineText.trim();
+  const parsedNewDeadline = useMemo(
+    () => (trimmedDeadlineText ? parseNaturalDeadline(trimmedDeadlineText, nowMs) : null),
+    [trimmedDeadlineText, nowMs]
+  );
+  const showDeadlineError =
+    deadlineTouched && trimmedDeadlineText.length > 0 && parsedNewDeadline === null;
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const [confirmClear, setConfirmClear] = useState(false);
@@ -94,14 +103,26 @@ const TasksDrawerInner: React.FC<Omit<TasksDrawerProps, 'isOpen'>> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTitle.trim()) return;
+    const submitNow = Date.now();
+    let validDeadline: string | undefined;
+    if (trimmedDeadlineText) {
+      const parsed = parseNaturalDeadline(trimmedDeadlineText, submitNow);
+      if (!parsed) {
+        setDeadlineTouched(true);
+        setNowMs(submitNow);
+        deadlineInputRef.current?.focus();
+        return;
+      }
+      validDeadline = parsed;
+    }
     const parsedEst = estimatedMinutes.trim() ? parseInt(estimatedMinutes, 10) : undefined;
     const validEst = (parsedEst && parsedEst > 0 && !isNaN(parsedEst)) ? parsedEst : undefined;
-    const validDeadline = combine12hToDeadline(newDeadlineParts, Date.now());
     onAddTask(newTitle.trim(), validEst, validDeadline);
     setNewTitle('');
     setEstimatedMinutes('');
-    setNewDeadlineParts(splitDeadlineTo12h(undefined, { emptyTime: true, nowMs: Date.now() }));
-    setNowMs(Date.now());
+    setDeadlineText('');
+    setDeadlineTouched(false);
+    setNowMs(submitNow);
   };
 
   const handleStartEditDeadline = (task: Task) => {
@@ -541,7 +562,8 @@ const TasksDrawerInner: React.FC<Omit<TasksDrawerProps, 'isOpen'>> = ({
         </div>
 
         {/* Add Task Form (Appends below previously added task) */}
-        <form onSubmit={handleSubmit} className={`mt-4 pt-4 border-t ${isMatteBlack ? 'border-neutral-800' : 'border-pink-500/20'} space-y-2 shrink-0`}>
+        <form onSubmit={handleSubmit} className={`mt-4 pt-4 border-t ${isMatteBlack ? 'border-neutral-800' : 'border-pink-500/20'} space-y-2.5 shrink-0`}>
+          {/* Row 1: Task Title + Estimated Time + Add Button */}
           <div className="flex items-center space-x-2">
             <label htmlFor="new-task-title" className="sr-only">Task title</label>
             <input
@@ -550,24 +572,12 @@ const TasksDrawerInner: React.FC<Omit<TasksDrawerProps, 'isOpen'>> = ({
               type="text"
               value={newTitle}
               onChange={(e) => setNewTitle(e.target.value)}
-              placeholder="Add a new task... (press Enter)"
+              placeholder="Add a new task..."
+              title="Press Enter to add task"
               className={`flex-1 min-w-0 px-4 py-2.5 rounded-2xl text-sm font-medium outline-none transition-colors ${inputBaseClass}`}
             />
-            <button
-              type="submit"
-              disabled={!newTitle.trim()}
-              aria-label="Add task"
-              className={`p-2.5 rounded-2xl transition-all disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 shadow-md shrink-0 ${isMatteBlack
-                ? 'bg-white hover:bg-neutral-200 text-black shadow-[0_0_12px_rgba(255,255,255,0.3)]'
-                : 'bg-pink-600 hover:bg-pink-500 text-white shadow-[0_0_12px_rgba(244,63,94,0.4)]'
-                }`}
-            >
-              <Plus size={20} className="stroke-[2.5]" />
-            </button>
-          </div>
 
-          <div className="flex items-center flex-wrap justify-between gap-2 text-xs">
-            {/* Optional Time Estimate */}
+            {/* Optional Time Estimate next to task naming field */}
             <div className="relative flex items-center shrink-0">
               <label htmlFor="new-task-est" className="sr-only">Estimated minutes (optional)</label>
               <Clock size={13} className={`absolute left-2.5 pointer-events-none ${
@@ -587,34 +597,99 @@ const TasksDrawerInner: React.FC<Omit<TasksDrawerProps, 'isOpen'>> = ({
                 }}
                 placeholder={`Est: ${defaultFocusMinutes}m`}
                 title={`Estimated time in minutes (optional, default: ${defaultFocusMinutes}m)`}
-                className={`w-22 pl-7 pr-2 py-1 rounded-xl text-[11px] font-medium outline-none transition-colors ${inputBaseClass}`}
+                className={`w-22 pl-7 pr-2 py-2.5 rounded-2xl text-xs font-medium outline-none transition-colors ${inputBaseClass}`}
               />
             </div>
 
-            {/* Optional Deadline (12h AM/PM Time first, Date second defaulting to today) */}
-            <div className="flex items-center gap-1.5 flex-wrap justify-end">
-              <span
-                className={`text-[11px] font-medium shrink-0 flex items-center gap-1 ${
-                  isMatteBlack ? 'text-neutral-400' : isDark ? 'text-pink-300/70' : 'text-pink-900/70'
+            <button
+              type="submit"
+              disabled={!newTitle.trim()}
+              aria-label="Add task"
+              className={`p-2.5 rounded-2xl transition-all disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 shadow-md shrink-0 ${isMatteBlack
+                ? 'bg-white hover:bg-neutral-200 text-black shadow-[0_0_12px_rgba(255,255,255,0.3)]'
+                : 'bg-pink-600 hover:bg-pink-500 text-white shadow-[0_0_12px_rgba(244,63,94,0.4)]'
+                }`}
+            >
+              <Plus size={20} className="stroke-[2.5]" />
+            </button>
+          </div>
+
+          {/* Row 2: Single Natural-Language Deadline Field with Format Hint */}
+          <div className="space-y-1">
+            <div className="flex items-center justify-between gap-2 px-1">
+              <label
+                htmlFor="new-task-deadline"
+                id="new-task-deadline-hint"
+                className={`text-[11px] font-medium leading-tight ${
+                  isMatteBlack ? 'text-neutral-400' : isDark ? 'text-pink-300/75' : 'text-pink-900/70'
                 }`}
               >
-                <CalendarClock size={12} />
-              </span>
-              <DeadlineFields
-                value={newDeadlineParts}
-                onChange={setNewDeadlineParts}
-                theme={theme}
-                allowEmptyHour
+                Deadline (opt) — format: <span className="font-semibold">5 pm</span>, <span className="font-semibold">tom 3:30 pm</span>, <span className="font-semibold">Nov 12 12 pm</span>
+              </label>
+              {parsedNewDeadline && (
+                <span
+                  aria-live="polite"
+                  className={`shrink-0 px-2 py-0.5 rounded-full text-[10px] font-semibold tracking-tight ${getDeadlineBadgeClasses(
+                    isDeadlineReached(parsedNewDeadline, nowMs),
+                    theme
+                  )}`}
+                >
+                  {formatDeadlineLabel(parsedNewDeadline, nowMs)}
+                </span>
+              )}
+            </div>
+
+            <div className="relative flex items-center">
+              <CalendarClock
+                size={14}
+                aria-hidden="true"
+                className={`absolute left-3.5 pointer-events-none ${
+                  showDeadlineError
+                    ? isDark ? 'text-red-400' : 'text-red-500'
+                    : isMatteBlack ? 'text-neutral-400' : isDark ? 'text-pink-300/60' : 'text-pink-900/50'
+                }`}
               />
-              {newDeadlineParts.hour12 && (
+              <input
+                ref={deadlineInputRef}
+                id="new-task-deadline"
+                name="deadlineText"
+                type="text"
+                value={deadlineText}
+                onChange={(e) => {
+                  setDeadlineText(e.target.value);
+                  if (deadlineTouched) setDeadlineTouched(false);
+                }}
+                onBlur={() => {
+                  if (trimmedDeadlineText.length > 0) {
+                    setDeadlineTouched(true);
+                  }
+                }}
+                placeholder="e.g. Nov 12 12 pm, tom 5 pm, or 4:30 pm (defaults to today)"
+                aria-invalid={showDeadlineError}
+                aria-describedby={
+                  showDeadlineError
+                    ? 'new-task-deadline-hint new-task-deadline-error'
+                    : 'new-task-deadline-hint'
+                }
+                className={`w-full pl-9 pr-8 py-2 rounded-2xl text-xs font-medium outline-none transition-colors ${
+                  showDeadlineError
+                    ? isDark
+                      ? 'bg-red-950/30 border border-red-400/80 text-white placeholder-red-200/40 focus:border-red-400'
+                      : 'bg-red-50/70 border border-red-500 text-pink-950 placeholder-red-400/70 focus:border-red-600'
+                    : inputBaseClass
+                }`}
+              />
+              {deadlineText && (
                 <button
                   type="button"
-                  onClick={() =>
-                    setNewDeadlineParts(splitDeadlineTo12h(undefined, { emptyTime: true, nowMs: Date.now() }))
-                  }
+                  onClick={() => {
+                    setDeadlineText('');
+                    setDeadlineTouched(false);
+                    deadlineInputRef.current?.focus();
+                  }}
                   title="Clear deadline"
-                  aria-label="Clear selected deadline"
-                  className={`p-1 rounded-lg transition-colors shrink-0 ${
+                  aria-label="Clear deadline text"
+                  className={`absolute right-2.5 p-1 rounded-lg transition-colors ${
                     isDark ? 'hover:bg-white/10 text-neutral-400' : 'hover:bg-pink-100 text-pink-800'
                   }`}
                 >
@@ -622,6 +697,19 @@ const TasksDrawerInner: React.FC<Omit<TasksDrawerProps, 'isOpen'>> = ({
                 </button>
               )}
             </div>
+
+            {showDeadlineError && (
+              <p
+                id="new-task-deadline-error"
+                role="alert"
+                className={`flex items-center gap-1.5 px-1 text-[11px] font-medium ${
+                  isDark ? 'text-red-400' : 'text-red-600'
+                }`}
+              >
+                <AlertCircle size={12} className="shrink-0" role="img" aria-label="Error" />
+                <span>Unrecognized format. Try &quot;5 pm&quot;, &quot;tom 3:30 pm&quot;, or &quot;Nov 12 12 pm&quot;.</span>
+              </p>
+            )}
           </div>
         </form>
       </div>

@@ -63,7 +63,7 @@ export const DeadlineFields: React.FC<DeadlineFieldsProps> = ({
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.nativeEvent.isComposing) return;
+    if (e.nativeEvent.isComposing || e.keyCode === 229) return;
     if (e.key === 'Enter' && onEnter) {
       e.preventDefault();
       onEnter();
