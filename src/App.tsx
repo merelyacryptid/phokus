@@ -759,6 +759,7 @@ export function App() {
         stats={stats}
         currentUser={currentUser}
         theme={theme}
+        todayKey={todayKey}
         onClose={handleCloseStats}
         onOpenAuth={handleOpenAuth}
         onUpdateStreak={handleUpdateStreak}

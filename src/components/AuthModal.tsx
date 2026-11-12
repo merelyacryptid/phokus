@@ -25,6 +25,7 @@ import {
   updateUserNickname,
   formatAuthError
 } from '../utils/firebase';
+import { formatLocalDate } from '../utils/stats';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -123,7 +124,7 @@ export const AuthModal: React.FC<AuthModalProps> = React.memo(({
               completedLongBreaks: 0,
               completedTasksCount: 0,
               streakDays: 0,
-              lastActiveDate: new Date().toISOString().split('T')[0],
+              lastActiveDate: formatLocalDate(new Date()),
               dailyActivity: {},
               history: []
             }
@@ -191,6 +192,10 @@ export const AuthModal: React.FC<AuthModalProps> = React.memo(({
   };
 
   const handleDemoSignIn = () => {
+    const now = new Date();
+    const localDayKey = (daysAgo: number) =>
+      formatLocalDate(new Date(now.getFullYear(), now.getMonth(), now.getDate() - daysAgo));
+
     const demoUser: UserProfile = {
       id: 'demo_user_1',
       name: 'Bunny Learner',
@@ -202,12 +207,12 @@ export const AuthModal: React.FC<AuthModalProps> = React.memo(({
         completedLongBreaks: 1,
         completedTasksCount: 7,
         streakDays: 5,
-        lastActiveDate: new Date().toISOString().split('T')[0],
+        lastActiveDate: localDayKey(0),
         dailyActivity: {
-          [new Date(Date.now() - 3 * 86400000).toISOString().split('T')[0]]: 80,
-          [new Date(Date.now() - 2 * 86400000).toISOString().split('T')[0]]: 120,
-          [new Date(Date.now() - 1 * 86400000).toISOString().split('T')[0]]: 90,
-          [new Date().toISOString().split('T')[0]]: 40,
+          [localDayKey(3)]: 80,
+          [localDayKey(2)]: 120,
+          [localDayKey(1)]: 90,
+          [localDayKey(0)]: 40,
         },
         history: [
           {

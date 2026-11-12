@@ -48,18 +48,14 @@ export function calculateActualStreak(
 
   const hasActivity = (d: Date): boolean => {
     const localKey = formatLocalDate(d);
-    const utcKey = d.toISOString().split('T')[0];
-
-    const localMin = dailyActivity[localKey] || 0;
-    const utcMin = localKey !== utcKey ? (dailyActivity[utcKey] || 0) : 0;
-    if (localMin > 0 || utcMin > 0) return true;
+    if ((dailyActivity[localKey] || 0) > 0) return true;
 
     return history.some(item => {
-      if (item.mode !== 'focus' || !item.durationMinutes || item.durationMinutes <= 0) return false;
+      if (item.mode !== 'focus' || item.id === 'init_1' || item.id === 'init_2') return false;
+      if (!item.durationMinutes || item.durationMinutes <= 0) return false;
       const itemDate = new Date(item.date);
-      const itemLocal = formatLocalDate(itemDate);
-      const itemUtc = itemDate.toISOString().split('T')[0];
-      return itemLocal === localKey || itemUtc === utcKey;
+      if (Number.isNaN(itemDate.getTime())) return false;
+      return formatLocalDate(itemDate) === localKey;
     });
   };
 

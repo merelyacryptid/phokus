@@ -8,6 +8,7 @@ interface StatsModalProps {
   stats: UserStats;
   currentUser: UserProfile | null;
   theme: ThemeMode;
+  todayKey?: string;
   onClose: () => void;
   onOpenAuth: () => void;
   onUpdateStreak?: (newStreak: number) => void;
@@ -18,6 +19,7 @@ export const StatsModal: React.FC<StatsModalProps> = React.memo(({
   stats,
   currentUser,
   theme,
+  todayKey,
   onClose,
   onOpenAuth,
   onUpdateStreak,
@@ -185,6 +187,7 @@ export const StatsModal: React.FC<StatsModalProps> = React.memo(({
           <CarrotContributionGraph
             dailyActivity={stats.dailyActivity}
             theme={theme}
+            todayKey={todayKey}
           />
 
           {/* Session History Log (Durations in Hours) */}

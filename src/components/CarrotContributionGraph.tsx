@@ -7,6 +7,7 @@ import { formatLocalDate } from '../utils/stats';
 interface CarrotContributionGraphProps {
   dailyActivity: Record<string, number>; // dateStr -> minutes
   theme: ThemeMode;
+  todayKey?: string;
 }
 
 interface DayCell {
@@ -26,15 +27,29 @@ interface WeekColumn {
   days: DayCell[];
 }
 
-// Pure helper function defined outside the component to satisfy react(purity)
-function buildContributionWeeks(dailyActivity: Record<string, number> = {}) {
-  const safeDaily = dailyActivity || {};
+function parseLocalDateKey(dateKey?: string): Date {
+  if (dateKey) {
+    const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateKey);
+    if (match) {
+      const y = Number(match[1]);
+      const m = Number(match[2]);
+      const d = Number(match[3]);
+      return new Date(y, m - 1, d);
+    }
+  }
   const now = new Date();
-  const todayStr = formatLocalDate(now);
-  const currentDayOfWeek = now.getDay(); // 0 (Sun) to 6 (Sat)
+  return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+}
+
+// Pure helper function defined outside the component to satisfy react(purity)
+function buildContributionWeeks(dailyActivity: Record<string, number> = {}, todayKey?: string) {
+  const safeDaily = dailyActivity || {};
+  const todayDate = parseLocalDateKey(todayKey);
+  const todayStr = formatLocalDate(todayDate);
+  const currentDayOfWeek = todayDate.getDay(); // 0 (Sun) to 6 (Sat)
 
   // End on the Saturday of this week (in local time)
-  const endOfWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() + (6 - currentDayOfWeek));
+  const endOfWeek = new Date(todayDate.getFullYear(), todayDate.getMonth(), todayDate.getDate() + (6 - currentDayOfWeek));
 
   const numWeeks = 14;
   // Start date is Sunday of 14 weeks ago (in local time)
@@ -43,10 +58,11 @@ function buildContributionWeeks(dailyActivity: Record<string, number> = {}) {
   const weekCols: WeekColumn[] = [];
   let carrots = 0;
   let totalMinutes = 0;
+  let todayHours = 0;
   let lastSeenMonth = -1;
 
   // End of today timestamp for future boundary checks
-  const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999).getTime();
+  const endOfToday = new Date(todayDate.getFullYear(), todayDate.getMonth(), todayDate.getDate(), 23, 59, 59, 999).getTime();
 
   for (let w = 0; w < numWeeks; w++) {
     const days: DayCell[] = [];
@@ -56,14 +72,17 @@ function buildContributionWeeks(dailyActivity: Record<string, number> = {}) {
       // Local date arithmetic
       const cellDate = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate() + (w * 7 + d));
       const dateStr = formatLocalDate(cellDate);
-      const utcDateStr = cellDate.toISOString().split('T')[0];
 
-      // Check both local date key and UTC key in case data was recorded under either
-      const minutes = safeDaily[dateStr] || (dateStr !== utcDateStr ? safeDaily[utcDateStr] : 0) || 0;
+      // Look up strictly by local calendar date YYYY-MM-DD
+      const minutes = safeDaily[dateStr] || 0;
       const hours = Number((minutes / 60).toFixed(1));
 
       const isToday = dateStr === todayStr;
       const isFuture = cellDate.getTime() > endOfToday && !isToday;
+
+      if (isToday) {
+        todayHours = hours;
+      }
 
       // Level calculation based on hours focused
       let level: 0 | 1 | 2 | 3 | 4 = 0;
@@ -107,11 +126,6 @@ function buildContributionWeeks(dailyActivity: Record<string, number> = {}) {
     });
   }
 
-  // Today's hours: check local date string and UTC date string
-  const utcTodayStr = now.toISOString().split('T')[0];
-  const todayMinutes = safeDaily[todayStr] || (todayStr !== utcTodayStr ? safeDaily[utcTodayStr] : 0) || 0;
-  const todayHours = Number((todayMinutes / 60).toFixed(1));
-
   return {
     weeks: weekCols,
     totalCarrots: carrots,
@@ -123,6 +137,7 @@ function buildContributionWeeks(dailyActivity: Record<string, number> = {}) {
 export const CarrotContributionGraph: React.FC<CarrotContributionGraphProps> = React.memo(({
   dailyActivity,
   theme,
+  todayKey,
 }) => {
   const isMatteBlack = theme === 'matte-black';
   const isDark = theme === 'dark-mesh' || isMatteBlack;
@@ -193,8 +208,8 @@ export const CarrotContributionGraph: React.FC<CarrotContributionGraphProps> = R
 
   // Generate 14 weeks of GitHub-style contribution data
   const { weeks, totalCarrots, totalHoursInRange, todayHours } = useMemo(() => {
-    return buildContributionWeeks(dailyActivity);
-  }, [dailyActivity]);
+    return buildContributionWeeks(dailyActivity, todayKey);
+  }, [dailyActivity, todayKey]);
 
     // Miffy reaction card is dedicated and static to today's focus hours only
     const currentReaction = useMemo(() => {
