@@ -2,22 +2,24 @@
 
 I built a simple, sweet and minimalist customisable pomodoro web application for exam season (and yes it is bunny themed)
 
+<img width="2874" height="1560" alt="image" src="https://github.com/user-attachments/assets/d75e3289-1b72-4645-a837-23116e5e4e9d" />
+
 ## Key Features
 
-- **Pomodoro Timer**:
+- **Features**:
   - Focus, Short Break, and Long Break intervals.
   - **My defaults**: 40 minutes (Focus), 10 minutes (Short Break), 20 minutes (Long Break).
-  - Fully editable in **Settings** (change duration, long break cycle interval, auto-start options).
+  - Fully customisable in **Settings** (change duration, long break cycle interval, auto-start options).
   - Cycle progress indicator - clean star indicators showing current session in cycle (so you can feel accomplished).
   - Picture-in-Picture (PiP) mini floating timer window.
-
-- **Productivity helpers**:
-  - Maintain a list of todos and strike them out as you get through each session
-    - Task completion confetti!!
+  - Maintain a list of todos and strike them out as you get through each session.
   - Encouraging quotes : Click anytime to cycle through soothing, mindful quotes.
+  - A 'bored?' section that has mini-games that are perfect to play for short 10-15 minute breaks without getting distracted.
+    
+**Stats**:
   - Total focus time (hours & minutes) and session counts (because its nice to see progress)
-  - Visual 7-day bar chart showing daily focus minutes
-  - & a bunny mascot that cheers you on!
+  - Visual heatmap showing overall days spent focussing.
+  - (& a bunny mascot that cheers you on!)
 
 - **User Authentication & Focus Statistics**:
   - Sign in / Sign up with email or username to sync and maintain focus stats.
@@ -28,9 +30,8 @@ I built a simple, sweet and minimalist customisable pomodoro web application for
 - **Themes**:
   - **White & Pink & Bunnies (Default)**: Soft pastel blush pinks, creamy white glassmorphism, and some bunnies.
   - **Midnight Glow (Dark Mode)**: Ambient indigo/purple/magenta glowing mesh gradient
-  - more themes coming soon
+  - **Matte Black:** Pure black and white theme with a Hollow Knight mascot.
   - Instant theme toggle in the bottom control bar or settings.
-
 
 - **Built-in Web Audio Synthesizer**:
   - 100% offline, zero-network-latency audio generation via Web Audio API.
