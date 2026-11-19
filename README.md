@@ -17,7 +17,7 @@ I built a simple, sweet and minimalist customisable pomodoro web application for
   - A 'bored?' section that has mini-games that are perfect to play for short 10-15 minute breaks without getting distracted.
     
 **Stats**:
-  - Total focus time (hours & minutes) and session counts (because its nice to see progress)
+  - Total focus time (hours & minutes) and session counts
   - Visual heatmap showing overall days spent focussing.
   - (& a bunny mascot that cheers you on!)
 
