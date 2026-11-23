@@ -312,11 +312,11 @@ export const MiffyTour: React.FC<MiffyTourProps> = ({ isOpen, onClose, theme }) 
           {/* Subtle Ambient Aura Glow Behind Miffy */}
           <div
             className={`absolute inset-0 rounded-full blur-xl -z-10 ${
-              isMatteBlack ? 'bg-white/20' : 'bg-pink-400/35'
+              isMatteBlack ? 'bg-white/20' : theme === 'clean-green' ? 'bg-emerald-400/35' : 'bg-pink-400/35'
             }`}
           />
           <img
-            src="/miffy.png"
+            src={theme === 'clean-green' ? '/miffy-green.png' : '/miffy.png'}
             alt="Miffy Mascot Guide"
             className="w-16 sm:w-20 h-auto object-contain select-none drop-shadow-[0_6px_16px_rgba(0,0,0,0.25)] hover:scale-105 transition-transform duration-200"
             draggable={false}

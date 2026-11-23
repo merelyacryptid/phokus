@@ -202,7 +202,9 @@ export const CarrotContributionGraph: React.FC<CarrotContributionGraphProps> = R
         // Darkest: deep saturated roasted orange
         return 'bg-orange-600/90 border border-orange-700 shadow-[0_0_10px_rgba(234,88,12,0.45)]';
       default:
-        return 'bg-pink-100/40 border border-pink-200/60 hover:border-pink-300';
+        return theme === 'clean-green'
+          ? 'bg-emerald-100/40 border border-emerald-200/60 hover:border-emerald-300'
+          : 'bg-pink-100/40 border border-pink-200/60 hover:border-pink-300';
     }
   };
 

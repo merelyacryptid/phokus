@@ -208,7 +208,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = React.memo(({
               <h4 className="text-xs font-bold uppercase tracking-wider">Appearance Theme</h4>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 pt-1">
               {/* 1. Strawberry Silk Warm Pink (Default) */}
               <button
                 type="button"
@@ -239,7 +239,22 @@ export const SettingsModal: React.FC<SettingsModalProps> = React.memo(({
                 <span className="text-[9px] opacity-70 text-center leading-none">White & Pink</span>
               </button>
 
-              {/* 3. Pink & Dark Style */}
+              {/* 3. Clean Green Sage Theme */}
+              <button
+                type="button"
+                onClick={() => onThemeChange('clean-green')}
+                className={`p-2.5 rounded-2xl flex flex-col items-center justify-center space-y-1.5 transition-all ${
+                  theme === 'clean-green'
+                    ? 'ring-2 ring-emerald-600 bg-emerald-50 text-emerald-950 shadow-[0_0_12px_rgba(45,90,39,0.3)]'
+                    : isDark ? 'bg-white/[0.04] hover:bg-white/10 text-pink-200/70' : 'bg-pink-50/50 hover:bg-pink-50 text-pink-900/70'
+                }`}
+              >
+                <div className="w-5 h-5 rounded-full bg-gradient-to-tr from-[#557a4e] via-[#6f8f66] to-[#e2e5ba] border border-emerald-400 shadow-sm" />
+                <span className="text-[11px] font-bold text-center leading-tight">Clean Green</span>
+                <span className="text-[9px] opacity-70 text-center leading-none">Sage & Cream</span>
+              </button>
+
+              {/* 4. Pink & Dark Style */}
               <button
                 type="button"
                 onClick={() => onThemeChange('dark-mesh')}
@@ -254,7 +269,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = React.memo(({
                 <span className="text-[9px] opacity-70 text-center leading-none">Midnight & Pink</span>
               </button>
 
-              {/* 4. Matte Black & White */}
+              {/* 5. Matte Black & White */}
               <button
                 type="button"
                 onClick={() => onThemeChange('matte-black')}

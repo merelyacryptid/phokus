@@ -109,6 +109,35 @@
   transform: translateY(1px);
 }
 
+/* Clean Green Glass Panel & Button */
+.glass-panel-green {
+  background: rgba(240, 246, 238, 0.88);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(111, 143, 102, 0.32);
+  box-shadow: 0 10px 30px -10px rgba(74, 102, 68, 0.2);
+}
+
+.glass-btn-green {
+  background: rgba(255, 255, 255, 0.86);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border: 1px solid rgba(111, 143, 102, 0.38);
+  color: #173812;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+  box-shadow: 0 4px 12px rgba(85, 112, 77, 0.12);
+}
+.glass-btn-green:hover {
+  background: rgba(255, 255, 255, 0.98);
+  border-color: rgba(77, 122, 70, 0.65);
+  color: #0e240b;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(77, 122, 70, 0.22);
+}
+.glass-btn-green:active {
+  transform: translateY(1px);
+}
+
 
 /* Custom scrollbars */
 ::-webkit-scrollbar {
@@ -226,6 +255,23 @@
     url('/pip-bg-matte-black-2x.webp') type('image/webp') 2x,
     url('/pip-bg-matte-black.png') type('image/png') 1x,
     url('/pip-bg-matte-black-2x.png') type('image/png') 2x
+  );
+}
+
+.pip-bg-clean-green {
+  background-color: #6f8f66;
+  background-image: url('/pip-bg-clean-green.png');
+  background-image: -webkit-image-set(
+    url('/pip-bg-clean-green.webp') type('image/webp') 1x,
+    url('/pip-bg-clean-green-2x.webp') type('image/webp') 2x,
+    url('/pip-bg-clean-green.png') type('image/png') 1x,
+    url('/pip-bg-clean-green-2x.png') type('image/png') 2x
+  );
+  background-image: image-set(
+    url('/pip-bg-clean-green.webp') type('image/webp') 1x,
+    url('/pip-bg-clean-green-2x.webp') type('image/webp') 2x,
+    url('/pip-bg-clean-green.png') type('image/png') 1x,
+    url('/pip-bg-clean-green-2x.png') type('image/png') 2x
   );
 }
 

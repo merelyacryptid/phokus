@@ -73,7 +73,7 @@ export function App() {
   // Theme state: 'bunny-pink' (Strawberry Silk) is default
   const [theme, setTheme] = useState<ThemeMode>(() => {
     const saved = localStorage.getItem('phokus_theme');
-    const validThemes: ThemeMode[] = ['bunny-pink', 'light-aura', 'dark-mesh', 'matte-black'];
+    const validThemes: ThemeMode[] = ['bunny-pink', 'light-aura', 'clean-green', 'dark-mesh', 'matte-black'];
     if (saved && validThemes.includes(saved as ThemeMode)) {
       return saved as ThemeMode;
     }
@@ -619,10 +619,12 @@ export function App() {
       prev === 'bunny-pink'
         ? 'light-aura'
         : prev === 'light-aura'
-          ? 'dark-mesh'
-          : prev === 'dark-mesh'
-            ? 'matte-black'
-            : 'bunny-pink'
+          ? 'clean-green'
+          : prev === 'clean-green'
+            ? 'dark-mesh'
+            : prev === 'dark-mesh'
+              ? 'matte-black'
+              : 'bunny-pink'
     );
   }, []);
 
@@ -679,8 +681,13 @@ export function App() {
 
   return (
     <div
-      className={`min-h-screen w-full flex flex-col justify-between relative overflow-hidden transition-all duration-700 ${theme === 'dark-mesh' || theme === 'matte-black' ? 'text-white' : 'text-pink-950'
-        }`}
+      className={`min-h-screen w-full flex flex-col justify-between relative overflow-hidden transition-all duration-700 ${
+        theme === 'dark-mesh' || theme === 'matte-black'
+          ? 'text-white'
+          : theme === 'clean-green'
+            ? 'text-emerald-950'
+            : 'text-pink-950'
+      }`}
     >
       {/* Dynamic Smooth Aura Gradient with Film Grain (Matching Images 1 & 2) */}
       <AuraBackground theme={theme} />

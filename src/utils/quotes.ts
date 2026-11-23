@@ -19,7 +19,8 @@ export const ENCOURAGING_QUOTES: string[] = [
   "Breathe in calm purpose, breathe out doubt",
   "Great things are made of small things done with care",
   "Patience with yourself is the highest form of discipline",
-  "Cherish the stillness of this very moment"
+  "Cherish the stillness of this very moment",
+  "nothing changes if nothing changes"
 ];
 
 export function getRandomQuote(exclude?: string): string {

@@ -14,7 +14,8 @@ import {
   MoonStar,
   Contrast,
   Gamepad2,
-  HelpCircle
+  HelpCircle,
+  Leaf
 } from 'lucide-react';
 
 interface BottomBarProps {
@@ -55,6 +56,13 @@ const THEME_OPTIONS: ThemeOption[] = [
     ),
   },
   {
+    id: 'clean-green',
+    name: 'Clean Green',
+    icon: (isSelected) => (
+      <Leaf size={18} className={`stroke-[2.2] transition-colors ${isSelected ? 'text-emerald-700' : 'text-emerald-500'}`} />
+    ),
+  },
+  {
     id: 'dark-mesh',
     name: 'Dark Aura',
     icon: (isSelected) => (
@@ -90,8 +98,9 @@ export const BottomBar: React.FC<BottomBarProps> = React.memo(({
   const themeMenuRef = useRef<HTMLDivElement>(null);
 
   const isMatteBlack = theme === 'matte-black';
+  const isCleanGreen = theme === 'clean-green';
   const isDark = theme === 'dark-mesh' || isMatteBlack;
-  const btnClass = isMatteBlack ? 'glass-btn-matte' : isDark ? 'glass-btn-dark' : 'glass-btn-pink';
+  const btnClass = isMatteBlack ? 'glass-btn-matte' : isCleanGreen ? 'glass-btn-green' : isDark ? 'glass-btn-dark' : 'glass-btn-pink';
 
   useEffect(() => {
     const handleFullscreenChange = () => {
@@ -158,7 +167,7 @@ export const BottomBar: React.FC<BottomBarProps> = React.memo(({
           <ListTodo size={20} className="stroke-[2.2]" />
           {taskCount > 0 && (
             <span className={`absolute -top-1 -right-1 w-4 h-4 rounded-full text-[10px] font-bold flex items-center justify-center ${
-              isMatteBlack ? 'bg-white text-black shadow-md' : 'bg-pink-600 text-white shadow-[0_0_8px_rgba(244,63,94,0.5)]'
+              isMatteBlack ? 'bg-white text-black shadow-md' : isCleanGreen ? 'bg-emerald-700 text-white shadow-[0_0_8px_rgba(45,90,39,0.5)]' : 'bg-pink-600 text-white shadow-[0_0_8px_rgba(244,63,94,0.5)]'
             }`}>
               {taskCount}
             </span>
@@ -206,9 +215,11 @@ export const BottomBar: React.FC<BottomBarProps> = React.memo(({
           className={`flex items-center space-x-2 px-3 sm:px-3.5 py-2.5 rounded-2xl font-bold text-xs sm:text-sm transition-all duration-200 cursor-pointer ${
             isMatteBlack
               ? 'glass-btn-matte hover:text-neutral-200'
-              : isDark
-                ? 'glass-btn-dark hover:text-pink-300'
-                : 'glass-btn-pink hover:text-orange-600'
+              : isCleanGreen
+                ? 'glass-btn-green hover:text-emerald-900'
+                : isDark
+                  ? 'glass-btn-dark hover:text-pink-300'
+                  : 'glass-btn-pink hover:text-orange-600'
           }`}
         >
           <div className="flex items-center space-x-1">
@@ -216,7 +227,7 @@ export const BottomBar: React.FC<BottomBarProps> = React.memo(({
             <span>{stats.streakDays}</span>
           </div>
           <span className="opacity-25">|</span>
-          <div className={`flex items-center space-x-1 ${isMatteBlack ? 'text-white' : 'text-pink-500'}`}>
+          <div className={`flex items-center space-x-1 ${isMatteBlack ? 'text-white' : isCleanGreen ? 'text-emerald-800' : 'text-pink-500'}`}>
             <CarrotIcon size={14} level={3} />
             <span className="font-semibold text-xs hidden sm:inline">Stats</span>
           </div>
@@ -232,9 +243,11 @@ export const BottomBar: React.FC<BottomBarProps> = React.memo(({
                 className={`flex items-center p-1.5 rounded-2xl shadow-2xl backdrop-blur-xl border transition-all duration-200 whitespace-nowrap animate-fade-in ${
                   isMatteBlack
                     ? 'bg-[#151518]/95 border-neutral-700 shadow-black/80'
-                    : isDark
-                      ? 'bg-[#1a1324]/95 border-pink-500/30 shadow-black/80'
-                      : 'bg-white/95 border-pink-200 shadow-pink-200/50'
+                    : isCleanGreen
+                      ? 'bg-[#f4f7f2]/95 border-emerald-300/60 shadow-emerald-950/20'
+                      : isDark
+                        ? 'bg-[#1a1324]/95 border-pink-500/30 shadow-black/80'
+                        : 'bg-white/95 border-pink-200 shadow-pink-200/50'
                 }`}
               >
                 <div className="flex items-center space-x-1">
@@ -250,14 +263,18 @@ export const BottomBar: React.FC<BottomBarProps> = React.memo(({
                             isSelected
                               ? isMatteBlack
                                 ? 'bg-neutral-800 text-white shadow-sm ring-1 ring-white/40'
-                                : isDark
-                                  ? 'bg-pink-600/30 text-pink-200 shadow-sm ring-1 ring-pink-400/50'
-                                  : 'bg-pink-100 text-pink-700 shadow-sm ring-1 ring-pink-400/50'
+                                : isCleanGreen
+                                  ? 'bg-emerald-100 text-emerald-800 shadow-sm ring-1 ring-emerald-500/50'
+                                  : isDark
+                                    ? 'bg-pink-600/30 text-pink-200 shadow-sm ring-1 ring-pink-400/50'
+                                    : 'bg-pink-100 text-pink-700 shadow-sm ring-1 ring-pink-400/50'
                               : isMatteBlack
                                 ? 'text-neutral-400 hover:text-white hover:bg-neutral-800/60'
-                                : isDark
-                                  ? 'text-pink-300/70 hover:text-pink-100 hover:bg-white/10'
-                                  : 'text-pink-900/60 hover:text-pink-950 hover:bg-pink-100/60'
+                                : isCleanGreen
+                                  ? 'text-emerald-800/70 hover:text-emerald-950 hover:bg-emerald-100/50'
+                                  : isDark
+                                    ? 'text-pink-300/70 hover:text-pink-100 hover:bg-white/10'
+                                    : 'text-pink-900/60 hover:text-pink-950 hover:bg-pink-100/60'
                           }`}
                         >
                           {t.icon(isSelected)}
@@ -268,9 +285,11 @@ export const BottomBar: React.FC<BottomBarProps> = React.memo(({
                           className={`pointer-events-none absolute bottom-[calc(100%+8px)] left-1/2 -translate-x-1/2 px-2.5 py-1 rounded-lg text-[11px] font-semibold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-all duration-150 transform translate-y-1 group-hover:translate-y-0 shadow-lg z-50 ${
                             isMatteBlack
                               ? 'bg-neutral-900 text-white border border-neutral-700 shadow-black'
-                              : isDark
-                                ? 'bg-[#150f1d] text-pink-100 border border-pink-500/30 shadow-black'
-                                : 'bg-pink-950 text-white shadow-pink-950/20'
+                              : isCleanGreen
+                                ? 'bg-[#1b3815] text-white border border-emerald-700/40 shadow-emerald-950/30'
+                                : isDark
+                                  ? 'bg-[#150f1d] text-pink-100 border border-pink-500/30 shadow-black'
+                                  : 'bg-pink-950 text-white shadow-pink-950/20'
                           }`}
                         >
                           {t.name}
@@ -278,9 +297,11 @@ export const BottomBar: React.FC<BottomBarProps> = React.memo(({
                             className={`absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent ${
                               isMatteBlack
                                 ? 'border-t-neutral-900'
-                                : isDark
-                                  ? 'border-t-[#150f1d]'
-                                  : 'border-t-pink-950'
+                                : isCleanGreen
+                                  ? 'border-t-[#1b3815]'
+                                  : isDark
+                                    ? 'border-t-[#150f1d]'
+                                    : 'border-t-pink-950'
                             }`}
                           />
                         </div>

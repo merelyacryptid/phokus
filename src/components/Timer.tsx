@@ -72,8 +72,9 @@ export const Timer: React.FC<TimerProps> = React.memo(({
   onUpdateTaskDeadline,
 }) => {
   const isMatteBlack = theme === 'matte-black';
+  const isCleanGreen = theme === 'clean-green';
   const isDark = theme === 'dark-mesh' || isMatteBlack;
-  const btnClass = isMatteBlack ? 'glass-btn-matte' : isDark ? 'glass-btn-dark' : 'glass-btn-pink';
+  const btnClass = isMatteBlack ? 'glass-btn-matte' : isCleanGreen ? 'glass-btn-green' : isDark ? 'glass-btn-dark' : 'glass-btn-pink';
   const [isEditingTask, setIsEditingTask] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);
   const [editText, setEditText] = useState('');
@@ -103,6 +104,7 @@ export const Timer: React.FC<TimerProps> = React.memo(({
       'light-aura': '/pip-bg-light-aura-2x.webp',
       'dark-mesh': '/pip-bg-dark-mesh-2x.webp',
       'matte-black': '/pip-bg-matte-black-2x.webp',
+      'clean-green': '/pip-bg-clean-green-2x.webp',
     };
     (Object.entries(themePaths) as [ThemeMode, string][]).forEach(([key, src]) => {
       if (!pipBgImagesRef.current[key]) {
@@ -363,6 +365,17 @@ export const Timer: React.FC<TimerProps> = React.memo(({
       progressTrack: string;
       progressFill: string;
     }> = {
+      'clean-green': {
+        bg: '#6f8f66',
+        border: 'rgba(226, 229, 186, 0.45)',
+        modeText: '#183814',
+        digits: '#142f10',
+        subText: '#264c1f',
+        btnBg: '#2d5a27',
+        btnText: '#ffffff',
+        progressTrack: 'rgba(226, 229, 186, 0.5)',
+        progressFill: '#2d5a27',
+      },
       'matte-black': {
         bg: '#09090b',
         border: 'rgba(255, 255, 255, 0.25)',
@@ -666,7 +679,9 @@ export const Timer: React.FC<TimerProps> = React.memo(({
       origin: { y: 0.4 },
       colors: isMatteBlack 
         ? ['#ffffff', '#e4e4e7', '#a1a1aa', '#71717a'] 
-        : isDark ? ['#f43f5e', '#ec4899', '#fb7185', '#fda4af'] : ['#f43f5e', '#fb7185', '#fda4af']
+        : isCleanGreen
+          ? ['#2d5a27', '#6f8f66', '#e2e5ba', '#a3c299']
+          : isDark ? ['#f43f5e', '#ec4899', '#fb7185', '#fda4af'] : ['#f43f5e', '#fb7185', '#fda4af']
     });
 
     const completedTaskId = activeTask.id;
@@ -772,14 +787,18 @@ export const Timer: React.FC<TimerProps> = React.memo(({
                     isCompleting
                       ? isMatteBlack
                         ? 'bg-white text-black border border-white shadow-[0_0_10px_rgba(255,255,255,0.6)] scale-105'
-                        : isDark
-                          ? 'bg-pink-500 text-white border border-pink-400 shadow-[0_0_12px_rgba(244,63,94,0.6)] scale-105'
-                          : 'bg-pink-600 text-white border border-pink-500 shadow-[0_0_10px_rgba(244,63,94,0.4)] scale-105'
+                        : isCleanGreen
+                          ? 'bg-[#2d5a27] text-white border border-[#2d5a27] shadow-[0_0_10px_rgba(45,90,39,0.5)] scale-105'
+                          : isDark
+                            ? 'bg-pink-500 text-white border border-pink-400 shadow-[0_0_12px_rgba(244,63,94,0.6)] scale-105'
+                            : 'bg-pink-600 text-white border border-pink-500 shadow-[0_0_10px_rgba(244,63,94,0.4)] scale-105'
                       : isMatteBlack
                         ? 'border-2 border-neutral-400 hover:border-white bg-neutral-900 hover:bg-neutral-800 shadow-sm'
-                        : isDark
-                          ? 'border-2 border-pink-400/60 hover:border-pink-400 bg-white/5 hover:bg-pink-600/25 shadow-[0_0_10px_rgba(244,63,94,0.3)]'
-                          : 'border-2 border-pink-400 hover:border-pink-600 bg-white hover:bg-pink-100/60 shadow-sm'
+                        : isCleanGreen
+                          ? 'border-2 border-[#557a4e] hover:border-[#2d5a27] bg-white/80 hover:bg-white shadow-sm'
+                          : isDark
+                            ? 'border-2 border-pink-400/60 hover:border-pink-400 bg-white/5 hover:bg-pink-600/25 shadow-[0_0_10px_rgba(244,63,94,0.3)]'
+                            : 'border-2 border-pink-400 hover:border-pink-600 bg-white hover:bg-pink-100/60 shadow-sm'
                   }`}
                 >
                   <Check
@@ -806,7 +825,9 @@ export const Timer: React.FC<TimerProps> = React.memo(({
                     className={`text-lg sm:text-xl font-bold tracking-tight truncate transition-colors ${
                       isMatteBlack
                         ? 'text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.2)]'
-                        : isDark ? 'text-pink-100 drop-shadow-[0_0_10px_rgba(244,63,94,0.3)]' : 'text-pink-950 font-bold'
+                        : isCleanGreen
+                          ? 'text-[#142f10] drop-shadow-[0_1px_4px_rgba(255,255,255,0.4)]'
+                          : isDark ? 'text-pink-100 drop-shadow-[0_0_10px_rgba(244,63,94,0.3)]' : 'text-pink-950 font-bold'
                     }`}
                   >
                     {activeTask.title}
@@ -987,14 +1008,18 @@ export const Timer: React.FC<TimerProps> = React.memo(({
                 isActive
                   ? isMatteBlack
                     ? 'text-black bg-white shadow-[0_0_15px_rgba(255,255,255,0.35)] font-extrabold'
-                    : isDark
-                      ? 'text-pink-100 bg-pink-600/30 border border-pink-500/50 shadow-[0_0_15px_rgba(244,63,94,0.3)]'
-                      : 'text-pink-950 bg-white/90 shadow-sm border border-pink-200'
+                    : isCleanGreen
+                      ? 'text-[#142f10] bg-white/90 shadow-sm border border-emerald-300/80 font-extrabold'
+                      : isDark
+                        ? 'text-pink-100 bg-pink-600/30 border border-pink-500/50 shadow-[0_0_15px_rgba(244,63,94,0.3)]'
+                        : 'text-pink-950 bg-white/90 shadow-sm border border-pink-200'
                   : isMatteBlack
                     ? 'text-neutral-500 hover:text-white'
-                    : isDark
-                      ? 'text-pink-200/50 hover:text-pink-100'
-                      : 'text-pink-900/50 hover:text-pink-900'
+                    : isCleanGreen
+                      ? 'text-[#142f10]/60 hover:text-[#142f10]'
+                      : isDark
+                        ? 'text-pink-200/50 hover:text-pink-100'
+                        : 'text-pink-900/50 hover:text-pink-900'
               }`}
             >
               {label}
@@ -1019,14 +1044,18 @@ export const Timer: React.FC<TimerProps> = React.memo(({
                 isCompleted
                   ? isMatteBlack
                     ? 'fill-white text-white filter drop-shadow-[0_0_8px_rgba(255,255,255,0.7)]'
-                    : isDark
-                      ? 'fill-pink-400 text-pink-400 filter drop-shadow-[0_0_8px_rgba(244,63,94,0.7)]'
-                      : 'fill-amber-400 text-amber-400 filter drop-shadow'
+                    : isCleanGreen
+                      ? 'fill-[#2d5a27] text-[#2d5a27] filter drop-shadow-[0_0_6px_rgba(226,229,186,0.8)]'
+                      : isDark
+                        ? 'fill-pink-400 text-pink-400 filter drop-shadow-[0_0_8px_rgba(244,63,94,0.7)]'
+                        : 'fill-amber-400 text-amber-400 filter drop-shadow'
                   : isMatteBlack
                     ? 'text-neutral-700 fill-none'
-                    : isDark
-                      ? 'text-pink-950/60 fill-none'
-                      : 'text-pink-300/40 fill-none'
+                    : isCleanGreen
+                      ? 'text-[#142f10]/30 fill-none'
+                      : isDark
+                        ? 'text-pink-950/60 fill-none'
+                        : 'text-pink-300/40 fill-none'
               }`}
             />
           );
@@ -1052,7 +1081,9 @@ export const Timer: React.FC<TimerProps> = React.memo(({
           className={`text-7xl sm:text-8xl md:text-9xl font-bold tracking-tight select-none font-sans transition-all duration-300 ${
             isMatteBlack
               ? 'text-white drop-shadow-[0_0_24px_rgba(255,255,255,0.2)]'
-              : isDark ? 'text-white drop-shadow-[0_0_30px_rgba(244,63,94,0.3)]' : 'text-pink-950 drop-shadow-sm'
+              : isCleanGreen
+                ? 'text-[#142f10] drop-shadow-[0_1px_8px_rgba(255,255,255,0.4)]'
+                : isDark ? 'text-white drop-shadow-[0_0_30px_rgba(244,63,94,0.3)]' : 'text-pink-950 drop-shadow-sm'
           }`}
           style={{ fontVariantNumeric: 'tabular-nums' }}
         >
@@ -1061,15 +1092,17 @@ export const Timer: React.FC<TimerProps> = React.memo(({
 
         {/* Minimal Progress Bar under the clock */}
         <div className={`w-48 sm:w-64 h-1.5 rounded-full mt-2 overflow-hidden ${
-          isMatteBlack ? 'bg-neutral-800' : isDark ? 'bg-pink-950/60' : 'bg-pink-200/60'
+          isMatteBlack ? 'bg-neutral-800' : isCleanGreen ? 'bg-[#55774e]/40' : isDark ? 'bg-pink-950/60' : 'bg-pink-200/60'
         }`}>
           <div
             className={`h-full rounded-full transition-all duration-1000 ${
               isMatteBlack
                 ? 'bg-white shadow-[0_0_12px_rgba(255,255,255,0.8)]'
-                : isDark
-                  ? 'bg-gradient-to-r from-pink-500 via-rose-400 to-pink-300 shadow-[0_0_10px_rgba(244,63,94,0.6)]'
-                  : 'bg-gradient-to-r from-pink-400 to-rose-500'
+                : isCleanGreen
+                  ? 'bg-gradient-to-r from-[#2d5a27] via-[#4d7a46] to-[#e2e5ba] shadow-[0_0_10px_rgba(226,229,186,0.6)]'
+                  : isDark
+                    ? 'bg-gradient-to-r from-pink-500 via-rose-400 to-pink-300 shadow-[0_0_10px_rgba(244,63,94,0.6)]'
+                    : 'bg-gradient-to-r from-pink-400 to-rose-500'
             }`}
             style={{ width: `${progressPercent}%` }}
           />
@@ -1150,7 +1183,9 @@ export const Timer: React.FC<TimerProps> = React.memo(({
             isPiPActive 
               ? isMatteBlack
                 ? 'ring-2 ring-white shadow-[0_0_15px_rgba(255,255,255,0.5)]'
-                : 'ring-2 ring-pink-400 shadow-[0_0_15px_rgba(244,63,94,0.5)]' 
+                : isCleanGreen
+                  ? 'ring-2 ring-emerald-700 shadow-[0_0_15px_rgba(45,90,39,0.5)]'
+                  : 'ring-2 ring-pink-400 shadow-[0_0_15px_rgba(244,63,94,0.5)]' 
               : ''
           } ${btnClass}`}
         >

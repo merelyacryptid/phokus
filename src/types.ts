@@ -1,6 +1,6 @@
 export type TimerMode = 'focus' | 'shortBreak' | 'longBreak';
 
-export type ThemeMode = 'bunny-pink' | 'light-aura' | 'dark-mesh' | 'matte-black';
+export type ThemeMode = 'bunny-pink' | 'light-aura' | 'dark-mesh' | 'matte-black' | 'clean-green';
 
 export interface TimerSettings {
   focusMinutes: number; // default: 40

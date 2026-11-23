@@ -9,6 +9,7 @@ export const AuraBackground: React.FC<AuraBackgroundProps> = React.memo(({ theme
   const isDark = theme === 'dark-mesh';
   const isLightAura = theme === 'light-aura';
   const isMatteBlack = theme === 'matte-black';
+  const isCleanGreen = theme === 'clean-green';
 
   return (
     <div className="fixed inset-0 overflow-hidden pointer-events-none select-none z-0">
@@ -24,6 +25,47 @@ export const AuraBackground: React.FC<AuraBackgroundProps> = React.memo(({ theme
               className="aura-orb absolute w-[560px] sm:w-[720px] h-[85vh] rounded-[48%] opacity-30 blur-[50px] sm:blur-[60px]"
               style={{
                 background: 'radial-gradient(circle, rgba(255,255,255,0.08) 0%, rgba(200,200,210,0.03) 45%, transparent 75%)',
+              }}
+            />
+          </div>
+        </div>
+      ) : isCleanGreen ? (
+        /* Clean Green Theme: Calming Sage Green with Soft Radiant Glow Ring (Matching User Image) */
+        <div className="absolute inset-0 bg-[#6b8c63]">
+          {/* Base organic sage gradient matching outer wash */}
+          <div className="absolute inset-0 bg-gradient-to-br from-[#62845a] via-[#6f8f66] to-[#5b7a53]" />
+
+          {/* Central Sage Aura Glow & Radiant Halo Ring */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            {/* Outer soft ambient sage mist */}
+            <div 
+              className="aura-orb absolute w-[720px] sm:w-[860px] h-[95vh] rounded-[50%] opacity-70 blur-[40px] sm:blur-[55px] transform rotate-[12deg] animate-aura-light-cream"
+              style={{
+                background: 'radial-gradient(circle, rgba(162,189,152,0.8) 0%, rgba(111,143,102,0.5) 50%, transparent 80%)',
+              }}
+            />
+
+            {/* Glowing Golden-Ivory/Cream Halo Ring from the user image */}
+            <div 
+              className="aura-orb absolute w-[420px] sm:w-[560px] h-[420px] sm:h-[560px] rounded-full opacity-85 blur-[28px] sm:blur-[38px] animate-subtle-pulse"
+              style={{
+                background: 'radial-gradient(circle, rgba(115,148,103,0.1) 0%, rgba(226,229,186,0.92) 48%, rgba(235,238,205,0.75) 62%, rgba(111,143,102,0.2) 78%, transparent 100%)',
+              }}
+            />
+
+            {/* Calm Centered Matcha Core */}
+            <div 
+              className="aura-orb absolute w-[240px] sm:w-[320px] h-[240px] sm:h-[320px] rounded-full opacity-75 blur-[22px]"
+              style={{
+                background: 'radial-gradient(circle, #739467 0%, rgba(115,148,103,0.9) 60%, transparent 100%)',
+              }}
+            />
+
+            {/* Soft Top-Right Cream Sunlight Whisper */}
+            <div 
+              className="aura-orb absolute -top-16 -right-16 w-[500px] h-[65vh] rounded-[52%] opacity-45 blur-[36px] animate-aura-light-highlight"
+              style={{
+                background: 'radial-gradient(circle, rgba(235,238,205,0.6) 0%, rgba(186,209,178,0.3) 50%, transparent 80%)',
               }}
             />
           </div>

@@ -624,7 +624,7 @@ const TasksDrawerInner: React.FC<Omit<TasksDrawerProps, 'isOpen'>> = ({
                   isMatteBlack ? 'text-neutral-400' : isDark ? 'text-pink-300/75' : 'text-pink-900/70'
                 }`}
               >
-                Deadline (opt) — format: <span className="font-semibold">5 pm</span>, <span className="font-semibold">tom 3:30 pm</span>, <span className="font-semibold">Nov 12 12 pm</span>
+                Deadline (optional)
               </label>
               {parsedNewDeadline && (
                 <span
