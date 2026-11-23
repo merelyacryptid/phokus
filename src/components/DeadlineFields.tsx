@@ -25,15 +25,18 @@ export const DeadlineFields: React.FC<DeadlineFieldsProps> = ({
 }) => {
   const baseId = useId();
   const isMatteBlack = theme === 'matte-black';
+  const isCleanGreen = theme === 'clean-green';
   const isDark = theme === 'dark-mesh' || isMatteBlack;
 
   const fieldClass = isMatteBlack
     ? 'bg-[#151518] text-white border border-neutral-700 focus-visible:border-white focus-visible:ring-1 focus-visible:ring-white/50'
     : isDark
       ? 'bg-[#1f1b2b] text-white border border-pink-500/30 focus-visible:border-pink-400 focus-visible:ring-1 focus-visible:ring-pink-500/50'
-      : 'bg-pink-50 text-pink-950 border border-pink-200 focus-visible:border-pink-500 focus-visible:ring-1 focus-visible:ring-pink-400/50';
+      : isCleanGreen
+        ? 'bg-[#edf3e8] text-emerald-950 border border-emerald-300 focus-visible:border-emerald-600 focus-visible:ring-1 focus-visible:ring-emerald-400/50'
+        : 'bg-pink-50 text-pink-950 border border-pink-200 focus-visible:border-pink-500 focus-visible:ring-1 focus-visible:ring-pink-400/50';
 
-  const optionClass = isDark ? 'bg-[#1f1b2b] text-white' : 'bg-white text-pink-950';
+  const optionClass = isDark ? 'bg-[#1f1b2b] text-white' : isCleanGreen ? 'bg-white text-emerald-950' : 'bg-white text-pink-950';
 
   const handleHourChange = (nextHour: string) => {
     if (!nextHour) {
@@ -106,7 +109,7 @@ export const DeadlineFields: React.FC<DeadlineFieldsProps> = ({
           ))}
         </select>
 
-        <span className={`text-[11px] font-bold ${isDark ? 'text-pink-200/70' : 'text-pink-900/70'}`}>:</span>
+        <span className={`text-[11px] font-bold ${isDark ? 'text-pink-200/70' : isCleanGreen ? 'text-emerald-900/70' : 'text-pink-900/70'}`}>:</span>
 
         <label htmlFor={`${baseId}-minute`} className="sr-only">
           Deadline minute
@@ -133,7 +136,9 @@ export const DeadlineFields: React.FC<DeadlineFieldsProps> = ({
               ? 'border-neutral-700 bg-[#151518]'
               : isDark
                 ? 'border-pink-500/30 bg-[#1f1b2b]'
-                : 'border-pink-200 bg-pink-50'
+                : isCleanGreen
+                  ? 'border-emerald-300 bg-[#edf3e8]'
+                  : 'border-pink-200 bg-pink-50'
           }`}
         >
           {(['AM', 'PM'] as const).map((p) => {
@@ -148,10 +153,14 @@ export const DeadlineFields: React.FC<DeadlineFieldsProps> = ({
                   active
                     ? isMatteBlack
                       ? 'bg-white text-black'
-                      : 'bg-pink-600 text-white'
+                      : isCleanGreen
+                        ? 'bg-emerald-700 text-white'
+                        : 'bg-pink-600 text-white'
                     : isDark
                       ? 'text-pink-200/60 hover:text-white'
-                      : 'text-pink-900/60 hover:text-pink-950'
+                      : isCleanGreen
+                        ? 'text-emerald-900/60 hover:text-emerald-950'
+                        : 'text-pink-900/60 hover:text-pink-950'
                 }`}
               >
                 {p}

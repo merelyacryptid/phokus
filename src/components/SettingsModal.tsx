@@ -25,6 +25,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = React.memo(({
   const [shortBreakInput, setShortBreakInput] = useState<string>(String(settings.shortBreakMinutes));
   const [longBreakInput, setLongBreakInput] = useState<string>(String(settings.longBreakMinutes));
   const isMatteBlack = theme === 'matte-black';
+  const isCleanGreen = theme === 'clean-green';
   const isDark = theme === 'dark-mesh' || isMatteBlack;
 
   if (!isOpen) return null;
@@ -84,17 +85,21 @@ export const SettingsModal: React.FC<SettingsModalProps> = React.memo(({
 
       <div
         className={`relative w-full max-w-md max-h-[88vh] flex flex-col rounded-3xl p-6 shadow-2xl transition-all duration-300 ${
-          isDark
-            ? 'bg-[#140a12]/95 border border-pink-500/25 text-white shadow-2xl shadow-pink-950/60'
-            : 'bg-white/95 border border-pink-200 text-pink-950 shadow-pink-200/50'
+          isMatteBlack
+            ? 'bg-[#0f0f12] border border-neutral-700/80 text-white shadow-2xl shadow-black/95'
+            : isDark
+              ? 'bg-[#140a12]/95 border border-pink-500/25 text-white shadow-2xl shadow-pink-950/60'
+              : isCleanGreen
+                ? 'bg-[#f4f7f2]/95 border border-emerald-300/80 text-emerald-950 shadow-2xl shadow-emerald-950/20'
+                : 'bg-white/95 border border-pink-200 text-pink-950 shadow-pink-200/50'
         }`}
       >
         {/* Header */}
-        <div className="flex items-center justify-between pb-3 border-b border-pink-500/20 mb-4">
+        <div className={`flex items-center justify-between pb-3 border-b ${isCleanGreen ? 'border-emerald-500/20' : 'border-pink-500/20'} mb-4`}>
           <div className="flex items-center space-x-2.5">
             <div
               className={`p-2 rounded-xl ${
-                isDark ? 'bg-pink-600/20 text-pink-400 border border-pink-500/30' : 'bg-pink-100 text-pink-600'
+                isDark ? 'bg-pink-600/20 text-pink-400 border border-pink-500/30' : isCleanGreen ? 'bg-emerald-100 text-emerald-700' : 'bg-pink-100 text-pink-600'
               }`}
             >
               <Settings size={20} />
@@ -104,7 +109,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = React.memo(({
           <button
             onClick={onClose}
             className={`p-1.5 rounded-lg transition-colors ${
-              isDark ? 'hover:bg-white/10 text-pink-200/70 hover:text-pink-100' : 'hover:bg-pink-100 text-pink-800'
+              isDark ? 'hover:bg-white/10 text-pink-200/70 hover:text-pink-100' : isCleanGreen ? 'hover:bg-emerald-100 text-emerald-800' : 'hover:bg-pink-100 text-pink-800'
             }`}
           >
             <X size={18} />
@@ -117,7 +122,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = React.memo(({
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
-                <Clock size={16} className={isDark ? 'text-pink-400' : 'text-pink-600'} />
+                <Clock size={16} className={isDark ? 'text-pink-400' : isCleanGreen ? 'text-emerald-700' : 'text-pink-600'} />
                 <h4 className="text-xs font-bold uppercase tracking-wider">Timer Durations (Minutes)</h4>
               </div>
               <button
@@ -125,7 +130,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = React.memo(({
                 onClick={handleResetDefaults}
                 title="Reset to default 40 / 10 / 20"
                 className={`text-[11px] flex items-center space-x-1 ${
-                  isDark ? 'text-pink-300/60 hover:text-pink-200' : 'text-pink-900/50 hover:text-pink-900'
+                  isDark ? 'text-pink-300/60 hover:text-pink-200' : isCleanGreen ? 'text-emerald-900/60 hover:text-emerald-900' : 'text-pink-900/50 hover:text-pink-900'
                 }`}
               >
                 <RotateCcw size={12} />
@@ -134,8 +139,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = React.memo(({
             </div>
 
             <div className="grid grid-cols-3 gap-2.5">
-              <div className={`p-3 rounded-2xl ${isDark ? 'bg-white/[0.04] border border-pink-500/15' : 'bg-pink-50 border border-pink-100'}`}>
-                <label className={`block text-[11px] font-semibold mb-1 ${isDark ? 'text-pink-300/70' : 'text-pink-900/60'}`}>
+              <div className={`p-3 rounded-2xl ${isDark ? 'bg-white/[0.04] border border-pink-500/15' : isCleanGreen ? 'bg-emerald-50/80 border border-emerald-200/80' : 'bg-pink-50 border border-pink-100'}`}>
+                <label className={`block text-[11px] font-semibold mb-1 ${isDark ? 'text-pink-300/70' : isCleanGreen ? 'text-emerald-900/60' : 'text-pink-900/60'}`}>
                   Focus
                 </label>
                 <input
@@ -145,13 +150,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = React.memo(({
                   onChange={(e) => setFocusInput(e.target.value.replace(/[^0-9]/g, ''))}
                   placeholder="40"
                   className={`w-full text-center text-lg font-bold bg-transparent outline-none ${
-                    isDark ? 'text-pink-100' : 'text-pink-950'
+                    isDark ? 'text-pink-100' : isCleanGreen ? 'text-emerald-950' : 'text-pink-950'
                   }`}
                 />
               </div>
 
-              <div className={`p-3 rounded-2xl ${isDark ? 'bg-white/[0.04] border border-pink-500/15' : 'bg-pink-50 border border-pink-100'}`}>
-                <label className={`block text-[11px] font-semibold mb-1 ${isDark ? 'text-pink-300/70' : 'text-pink-900/60'}`}>
+              <div className={`p-3 rounded-2xl ${isDark ? 'bg-white/[0.04] border border-pink-500/15' : isCleanGreen ? 'bg-emerald-50/80 border border-emerald-200/80' : 'bg-pink-50 border border-pink-100'}`}>
+                <label className={`block text-[11px] font-semibold mb-1 ${isDark ? 'text-pink-300/70' : isCleanGreen ? 'text-emerald-900/60' : 'text-pink-900/60'}`}>
                   Short Break
                 </label>
                 <input
@@ -161,13 +166,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = React.memo(({
                   onChange={(e) => setShortBreakInput(e.target.value.replace(/[^0-9]/g, ''))}
                   placeholder="10"
                   className={`w-full text-center text-lg font-bold bg-transparent outline-none ${
-                    isDark ? 'text-pink-100' : 'text-pink-950'
+                    isDark ? 'text-pink-100' : isCleanGreen ? 'text-emerald-950' : 'text-pink-950'
                   }`}
                 />
               </div>
 
-              <div className={`p-3 rounded-2xl ${isDark ? 'bg-white/[0.04] border border-pink-500/15' : 'bg-pink-50 border border-pink-100'}`}>
-                <label className={`block text-[11px] font-semibold mb-1 ${isDark ? 'text-pink-300/70' : 'text-pink-900/60'}`}>
+              <div className={`p-3 rounded-2xl ${isDark ? 'bg-white/[0.04] border border-pink-500/15' : isCleanGreen ? 'bg-emerald-50/80 border border-emerald-200/80' : 'bg-pink-50 border border-pink-100'}`}>
+                <label className={`block text-[11px] font-semibold mb-1 ${isDark ? 'text-pink-300/70' : isCleanGreen ? 'text-emerald-900/60' : 'text-pink-900/60'}`}>
                   Long Break
                 </label>
                 <input
@@ -177,19 +182,19 @@ export const SettingsModal: React.FC<SettingsModalProps> = React.memo(({
                   onChange={(e) => setLongBreakInput(e.target.value.replace(/[^0-9]/g, ''))}
                   placeholder="20"
                   className={`w-full text-center text-lg font-bold bg-transparent outline-none ${
-                    isDark ? 'text-pink-100' : 'text-pink-950'
+                    isDark ? 'text-pink-100' : isCleanGreen ? 'text-emerald-950' : 'text-pink-950'
                   }`}
                 />
               </div>
             </div>
 
             <div className="flex items-center justify-between text-xs pt-1">
-              <span className={isDark ? 'text-pink-200/80' : 'text-pink-900/80'}>Long break interval (sessions):</span>
+              <span className={isDark ? 'text-pink-200/80' : isCleanGreen ? 'text-emerald-900/80' : 'text-pink-900/80'}>Long break interval (sessions):</span>
               <select
                 value={formData.longBreakInterval}
                 onChange={(e) => setFormData({ ...formData, longBreakInterval: parseInt(e.target.value) })}
                 className={`px-2.5 py-1 rounded-xl text-xs font-semibold outline-none ${
-                  isDark ? 'bg-white/10 text-pink-100 border border-pink-500/25' : 'bg-pink-50 text-pink-950 border border-pink-200'
+                  isDark ? 'bg-white/10 text-pink-100 border border-pink-500/25' : isCleanGreen ? 'bg-emerald-50 text-emerald-950 border border-emerald-300/80' : 'bg-pink-50 text-pink-950 border border-pink-200'
                 }`}
               >
                 <option value={2} className="bg-slate-900 text-white">Every 2 sessions</option>
@@ -202,9 +207,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = React.memo(({
           </div>
 
           {/* Section: Themes */}
-          <div className="space-y-2 pt-2 border-t border-pink-500/20">
+          <div className={`space-y-2 pt-2 border-t ${isCleanGreen ? 'border-emerald-500/20' : 'border-pink-500/20'}`}>
             <div className="flex items-center space-x-2">
-              <Palette size={16} className={isDark ? 'text-pink-400' : 'text-pink-600'} />
+              <Palette size={16} className={isDark ? 'text-pink-400' : isCleanGreen ? 'text-emerald-700' : 'text-pink-600'} />
               <h4 className="text-xs font-bold uppercase tracking-wider">Appearance Theme</h4>
             </div>
 
@@ -216,7 +221,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = React.memo(({
                 className={`p-2.5 rounded-2xl flex flex-col items-center justify-center space-y-1.5 transition-all ${
                   theme === 'bunny-pink'
                     ? 'ring-2 ring-pink-500 bg-pink-100/90 text-pink-950 shadow-[0_0_12px_rgba(244,63,94,0.25)]'
-                    : isDark ? 'bg-white/[0.04] hover:bg-white/10 text-pink-200/70' : 'bg-pink-50/50 hover:bg-pink-50 text-pink-900/70'
+                    : isDark ? 'bg-white/[0.04] hover:bg-white/10 text-pink-200/70' : isCleanGreen ? 'bg-emerald-50/50 hover:bg-emerald-50 text-emerald-900/70' : 'bg-pink-50/50 hover:bg-pink-50 text-pink-900/70'
                 }`}
               >
                 <div className="w-5 h-5 rounded-full bg-gradient-to-tr from-amber-100 via-pink-200 to-pink-400 border border-pink-300 shadow-sm" />
@@ -231,7 +236,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = React.memo(({
                 className={`p-2.5 rounded-2xl flex flex-col items-center justify-center space-y-1.5 transition-all ${
                   theme === 'light-aura'
                     ? 'ring-2 ring-pink-500 bg-pink-100/90 text-pink-950 shadow-[0_0_12px_rgba(244,63,94,0.25)]'
-                    : isDark ? 'bg-white/[0.04] hover:bg-white/10 text-pink-200/70' : 'bg-pink-50/50 hover:bg-pink-50 text-pink-900/70'
+                    : isDark ? 'bg-white/[0.04] hover:bg-white/10 text-pink-200/70' : isCleanGreen ? 'bg-emerald-50/50 hover:bg-emerald-50 text-emerald-900/70' : 'bg-pink-50/50 hover:bg-pink-50 text-pink-900/70'
                 }`}
               >
                 <div className="w-5 h-5 rounded-full bg-gradient-to-tr from-white via-pink-100 to-pink-300 border border-pink-300 shadow-sm" />
@@ -245,13 +250,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = React.memo(({
                 onClick={() => onThemeChange('clean-green')}
                 className={`p-2.5 rounded-2xl flex flex-col items-center justify-center space-y-1.5 transition-all ${
                   theme === 'clean-green'
-                    ? 'ring-2 ring-emerald-600 bg-emerald-50 text-emerald-950 shadow-[0_0_12px_rgba(45,90,39,0.3)]'
-                    : isDark ? 'bg-white/[0.04] hover:bg-white/10 text-pink-200/70' : 'bg-pink-50/50 hover:bg-pink-50 text-pink-900/70'
+                    ? 'ring-2 ring-emerald-600 bg-emerald-100/90 text-emerald-950 shadow-[0_0_12px_rgba(45,90,39,0.3)]'
+                    : isDark ? 'bg-white/[0.04] hover:bg-white/10 text-pink-200/70' : isCleanGreen ? 'bg-emerald-50/50 hover:bg-emerald-50 text-emerald-900/70' : 'bg-pink-50/50 hover:bg-pink-50 text-pink-900/70'
                 }`}
               >
                 <div className="w-5 h-5 rounded-full bg-gradient-to-tr from-[#557a4e] via-[#6f8f66] to-[#e2e5ba] border border-emerald-400 shadow-sm" />
                 <span className="text-[11px] font-bold text-center leading-tight">Clean Green</span>
-                <span className="text-[9px] opacity-70 text-center leading-none">Sage & Cream</span>
+                <span className="text-[9px] opacity-70 text-center leading-none">Sage & Blossom</span>
               </button>
 
               {/* 4. Pink & Dark Style */}
@@ -261,7 +266,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = React.memo(({
                 className={`p-2.5 rounded-2xl flex flex-col items-center justify-center space-y-1.5 transition-all ${
                   theme === 'dark-mesh'
                     ? 'ring-2 ring-pink-500 bg-pink-950/70 text-pink-100 shadow-[0_0_15px_rgba(244,63,94,0.3)]'
-                    : isDark ? 'bg-white/[0.04] hover:bg-white/10 text-pink-200/70' : 'bg-pink-50/50 hover:bg-pink-50 text-pink-900/70'
+                    : isDark ? 'bg-white/[0.04] hover:bg-white/10 text-pink-200/70' : isCleanGreen ? 'bg-emerald-50/50 hover:bg-emerald-50 text-emerald-900/70' : 'bg-pink-50/50 hover:bg-pink-50 text-pink-900/70'
                 }`}
               >
                 <div className="w-5 h-5 rounded-full bg-gradient-to-tr from-pink-500 via-purple-900 to-[#10050e] border border-pink-400 shadow-sm" />
@@ -276,7 +281,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = React.memo(({
                 className={`p-2.5 rounded-2xl flex flex-col items-center justify-center space-y-1.5 transition-all ${
                   theme === 'matte-black'
                     ? 'ring-2 ring-white bg-neutral-900 text-white shadow-[0_0_15px_rgba(255,255,255,0.2)]'
-                    : isDark ? 'bg-white/[0.04] hover:bg-white/10 text-neutral-300' : 'bg-pink-50/50 hover:bg-pink-50 text-pink-900/70'
+                    : isDark ? 'bg-white/[0.04] hover:bg-white/10 text-neutral-300' : isCleanGreen ? 'bg-emerald-50/50 hover:bg-emerald-50 text-emerald-900/70' : 'bg-pink-50/50 hover:bg-pink-50 text-pink-900/70'
                 }`}
               >
                 <div className="w-5 h-5 rounded-full bg-gradient-to-tr from-black via-neutral-900 to-white border border-neutral-500 shadow-sm" />
@@ -287,33 +292,33 @@ export const SettingsModal: React.FC<SettingsModalProps> = React.memo(({
           </div>
 
           {/* Section: Sound & Notifications */}
-          <div className="space-y-3 pt-2 border-t border-pink-500/20">
+          <div className={`space-y-3 pt-2 border-t ${isCleanGreen ? 'border-emerald-500/20' : 'border-pink-500/20'}`}>
             <div className="flex items-center space-x-2">
-              <Volume2 size={16} className={isDark ? 'text-pink-400' : 'text-pink-600'} />
+              <Volume2 size={16} className={isDark ? 'text-pink-400' : isCleanGreen ? 'text-emerald-700' : 'text-pink-600'} />
               <h4 className="text-xs font-bold uppercase tracking-wider">Sound & Chimes</h4>
             </div>
 
             <div className="space-y-2.5 text-xs">
               <div className="flex items-center justify-between">
-                <span className={isDark ? 'text-pink-200/80' : 'text-pink-900/80'}>Session completion alert</span>
+                <span className={isDark ? 'text-pink-200/80' : isCleanGreen ? 'text-emerald-900/80' : 'text-pink-900/80'}>Session completion alert</span>
                 <input
                   type="checkbox"
                   checked={formData.soundAlerts}
                   onChange={(e) => setFormData({ ...formData, soundAlerts: e.target.checked })}
-                  className="w-4 h-4 accent-pink-500 rounded cursor-pointer"
+                  className={`w-4 h-4 rounded cursor-pointer ${isCleanGreen ? 'accent-emerald-600' : 'accent-pink-500'}`}
                 />
               </div>
 
               {formData.soundAlerts && (
                 <>
                   <div className="flex items-center justify-between">
-                    <span className={isDark ? 'text-pink-200/70' : 'text-pink-900/70'}>Chime tone</span>
+                    <span className={isDark ? 'text-pink-200/70' : isCleanGreen ? 'text-emerald-900/70' : 'text-pink-900/70'}>Chime tone</span>
                     <div className="flex items-center space-x-2">
                       <select
                         value={formData.soundType}
                         onChange={(e) => setFormData({ ...formData, soundType: e.target.value as TimerSettings['soundType'] })}
                         className={`px-2 py-1 rounded-xl text-xs font-medium outline-none ${
-                          isDark ? 'bg-white/10 text-pink-100 border border-pink-500/25' : 'bg-pink-50 text-pink-950 border border-pink-200'
+                          isDark ? 'bg-white/10 text-pink-100 border border-pink-500/25' : isCleanGreen ? 'bg-emerald-50 text-emerald-950 border border-emerald-300/80' : 'bg-pink-50 text-pink-950 border border-pink-200'
                         }`}
                       >
                         <option value="crystal" className="bg-slate-900 text-white">Crystal Tone</option>
@@ -326,7 +331,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = React.memo(({
                         onClick={handleTestChime}
                         title="Test chime sound"
                         className={`p-1.5 rounded-lg transition-colors ${
-                          isDark ? 'bg-pink-600/20 hover:bg-pink-600/30 text-pink-300' : 'bg-pink-100 hover:bg-pink-200'
+                          isDark ? 'bg-pink-600/20 hover:bg-pink-600/30 text-pink-300' : isCleanGreen ? 'bg-emerald-100 hover:bg-emerald-200 text-emerald-800' : 'bg-pink-100 hover:bg-pink-200'
                         }`}
                       >
                         <Play size={12} className="ml-0.5" />
@@ -335,7 +340,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = React.memo(({
                   </div>
 
                   <div className="flex items-center justify-between">
-                    <span className={isDark ? 'text-pink-200/70' : 'text-pink-900/70'}>Alert volume</span>
+                    <span className={isDark ? 'text-pink-200/70' : isCleanGreen ? 'text-emerald-900/70' : 'text-pink-900/70'}>Alert volume</span>
                     <div className="flex items-center space-x-2 w-36">
                       {formData.soundVolume === 0 ? <VolumeX size={14} /> : <Volume2 size={14} />}
                       <input
@@ -345,7 +350,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = React.memo(({
                         step="0.05"
                         value={formData.soundVolume}
                         onChange={(e) => setFormData({ ...formData, soundVolume: parseFloat(e.target.value) })}
-                        className="w-full accent-pink-500 cursor-pointer"
+                        className={`w-full cursor-pointer ${isCleanGreen ? 'accent-emerald-600' : 'accent-pink-500'}`}
                       />
                     </div>
                   </div>
@@ -353,19 +358,19 @@ export const SettingsModal: React.FC<SettingsModalProps> = React.memo(({
               )}
 
               <div className="flex items-center justify-between">
-                <span className={isDark ? 'text-pink-200/80' : 'text-pink-900/80'}>Subtle clock tick sound</span>
+                <span className={isDark ? 'text-pink-200/80' : isCleanGreen ? 'text-emerald-900/80' : 'text-pink-900/80'}>Subtle clock tick sound</span>
                 <input
                   type="checkbox"
                   checked={formData.tickSound}
                   onChange={(e) => setFormData({ ...formData, tickSound: e.target.checked })}
-                  className="w-4 h-4 accent-pink-500 rounded cursor-pointer"
+                  className={`w-4 h-4 rounded cursor-pointer ${isCleanGreen ? 'accent-emerald-600' : 'accent-pink-500'}`}
                 />
               </div>
 
               <div className="flex items-center justify-between">
                 <div className="flex flex-col pr-2">
-                  <span className={isDark ? 'text-pink-200/80' : 'text-pink-900/80'}>5m & 2m warning bell</span>
-                  <span className={`text-[10px] ${isDark ? 'text-pink-300/60' : 'text-pink-900/60'}`}>
+                  <span className={isDark ? 'text-pink-200/80' : isCleanGreen ? 'text-emerald-900/80' : 'text-pink-900/80'}>5m & 2m warning bell</span>
+                  <span className={`text-[10px] ${isDark ? 'text-pink-300/60' : isCleanGreen ? 'text-emerald-900/60' : 'text-pink-900/60'}`}>
                     Gentle bell when 5m left in focus, 2m in break
                   </span>
                 </div>
@@ -375,7 +380,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = React.memo(({
                     onClick={handleTestSmallBell}
                     title="Test warning bell sound"
                     className={`p-1.5 rounded-lg transition-colors ${
-                      isDark ? 'bg-pink-600/20 hover:bg-pink-600/30 text-pink-300' : 'bg-pink-100 hover:bg-pink-200 text-pink-700'
+                      isDark ? 'bg-pink-600/20 hover:bg-pink-600/30 text-pink-300' : isCleanGreen ? 'bg-emerald-100 hover:bg-emerald-200 text-emerald-800' : 'bg-pink-100 hover:bg-pink-200 text-pink-700'
                     }`}
                   >
                     <Play size={12} className="ml-0.5" />
@@ -384,15 +389,15 @@ export const SettingsModal: React.FC<SettingsModalProps> = React.memo(({
                     type="checkbox"
                     checked={formData.warningBell !== false}
                     onChange={(e) => setFormData({ ...formData, warningBell: e.target.checked })}
-                    className="w-4 h-4 accent-pink-500 rounded cursor-pointer"
+                    className={`w-4 h-4 rounded cursor-pointer ${isCleanGreen ? 'accent-emerald-600' : 'accent-pink-500'}`}
                   />
                 </div>
               </div>
 
               <div className="flex items-center justify-between">
                 <div className="flex flex-col pr-2">
-                  <span className={isDark ? 'text-pink-200/80' : 'text-pink-900/80'}>Task completion pop</span>
-                  <span className={`text-[10px] ${isDark ? 'text-pink-300/60' : 'text-pink-900/60'}`}>
+                  <span className={isDark ? 'text-pink-200/80' : isCleanGreen ? 'text-emerald-900/80' : 'text-pink-900/80'}>Task completion pop</span>
+                  <span className={`text-[10px] ${isDark ? 'text-pink-300/60' : isCleanGreen ? 'text-emerald-900/60' : 'text-pink-900/60'}`}>
                     Satisfying pop sound when checking off a task
                   </span>
                 </div>
@@ -402,7 +407,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = React.memo(({
                     onClick={handleTestTaskSound}
                     title="Test task completed sound"
                     className={`p-1.5 rounded-lg transition-colors ${
-                      isDark ? 'bg-pink-600/20 hover:bg-pink-600/30 text-pink-300' : 'bg-pink-100 hover:bg-pink-200 text-pink-700'
+                      isDark ? 'bg-pink-600/20 hover:bg-pink-600/30 text-pink-300' : isCleanGreen ? 'bg-emerald-100 hover:bg-emerald-200 text-emerald-800' : 'bg-pink-100 hover:bg-pink-200 text-pink-700'
                     }`}
                   >
                     <Play size={12} className="ml-0.5" />
@@ -411,7 +416,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = React.memo(({
                     type="checkbox"
                     checked={formData.taskSound !== false}
                     onChange={(e) => setFormData({ ...formData, taskSound: e.target.checked })}
-                    className="w-4 h-4 accent-pink-500 rounded cursor-pointer"
+                    className={`w-4 h-4 rounded cursor-pointer ${isCleanGreen ? 'accent-emerald-600' : 'accent-pink-500'}`}
                   />
                 </div>
               </div>
@@ -419,40 +424,40 @@ export const SettingsModal: React.FC<SettingsModalProps> = React.memo(({
           </div>
 
           {/* Section: Mascot & Automation */}
-          <div className="space-y-3 pt-2 border-t border-pink-500/20">
+          <div className={`space-y-3 pt-2 border-t ${isCleanGreen ? 'border-emerald-500/20' : 'border-pink-500/20'}`}>
             <div className="flex items-center space-x-2">
-              <Sparkles size={16} className={isDark ? 'text-pink-400' : 'text-pink-600'} />
+              <Sparkles size={16} className={isDark ? 'text-pink-400' : isCleanGreen ? 'text-emerald-700' : 'text-pink-600'} />
               <h4 className="text-xs font-bold uppercase tracking-wider">Mascot & Flow</h4>
             </div>
 
             <div className="space-y-2.5 text-xs">
               <div className="flex items-center justify-between">
-                <span className={isDark ? 'text-pink-200/80' : 'text-pink-900/80'}>Display Bunny Mascot</span>
+                <span className={isDark ? 'text-pink-200/80' : isCleanGreen ? 'text-emerald-900/80' : 'text-pink-900/80'}>Display Bunny Mascot</span>
                 <input
                   type="checkbox"
                   checked={formData.showBunnyMascot}
                   onChange={(e) => setFormData({ ...formData, showBunnyMascot: e.target.checked })}
-                  className="w-4 h-4 accent-pink-500 rounded cursor-pointer"
+                  className={`w-4 h-4 rounded cursor-pointer ${isCleanGreen ? 'accent-emerald-600' : 'accent-pink-500'}`}
                 />
               </div>
 
               <div className="flex items-center justify-between">
-                <span className={isDark ? 'text-pink-200/80' : 'text-pink-900/80'}>Auto-start breaks</span>
+                <span className={isDark ? 'text-pink-200/80' : isCleanGreen ? 'text-emerald-900/80' : 'text-pink-900/80'}>Auto-start breaks</span>
                 <input
                   type="checkbox"
                   checked={formData.autoStartBreaks}
                   onChange={(e) => setFormData({ ...formData, autoStartBreaks: e.target.checked })}
-                  className="w-4 h-4 accent-pink-500 rounded cursor-pointer"
+                  className={`w-4 h-4 rounded cursor-pointer ${isCleanGreen ? 'accent-emerald-600' : 'accent-pink-500'}`}
                 />
               </div>
 
               <div className="flex items-center justify-between">
-                <span className={isDark ? 'text-pink-200/80' : 'text-pink-900/80'}>Auto-start focus after break</span>
+                <span className={isDark ? 'text-pink-200/80' : isCleanGreen ? 'text-emerald-900/80' : 'text-pink-900/80'}>Auto-start focus after break</span>
                 <input
                   type="checkbox"
                   checked={formData.autoStartFocus}
                   onChange={(e) => setFormData({ ...formData, autoStartFocus: e.target.checked })}
-                  className="w-4 h-4 accent-pink-500 rounded cursor-pointer"
+                  className={`w-4 h-4 rounded cursor-pointer ${isCleanGreen ? 'accent-emerald-600' : 'accent-pink-500'}`}
                 />
               </div>
             </div>
@@ -460,12 +465,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = React.memo(({
         </div>
 
         {/* Footer actions */}
-        <div className="pt-4 border-t border-pink-500/20 flex items-center justify-end space-x-2 mt-4">
+        <div className={`pt-4 border-t ${isCleanGreen ? 'border-emerald-500/20' : 'border-pink-500/20'} flex items-center justify-end space-x-2 mt-4`}>
           <button
             type="button"
             onClick={onClose}
             className={`px-4 py-2 rounded-2xl text-xs font-semibold transition-colors ${
-              isDark ? 'hover:bg-white/10 text-pink-200/70 hover:text-pink-100' : 'hover:bg-pink-100 text-pink-900/70'
+              isDark ? 'hover:bg-white/10 text-pink-200/70 hover:text-pink-100' : isCleanGreen ? 'hover:bg-emerald-100 text-emerald-900/70 hover:text-emerald-950' : 'hover:bg-pink-100 text-pink-900/70'
             }`}
           >
             Cancel
@@ -473,7 +478,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = React.memo(({
           <button
             type="button"
             onClick={handleSave}
-            className="px-5 py-2 rounded-2xl text-xs font-bold transition-all bg-pink-600 hover:bg-pink-500 text-white shadow-[0_0_12px_rgba(244,63,94,0.4)]"
+            className={`px-5 py-2 rounded-2xl text-xs font-bold transition-all text-white ${
+              isCleanGreen
+                ? 'bg-emerald-700 hover:bg-emerald-600 shadow-[0_0_12px_rgba(45,90,39,0.35)]'
+                : 'bg-pink-600 hover:bg-pink-500 shadow-[0_0_12px_rgba(244,63,94,0.4)]'
+            }`}
           >
             Save Preferences
           </button>

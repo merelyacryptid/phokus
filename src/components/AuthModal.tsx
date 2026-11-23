@@ -60,6 +60,7 @@ export const AuthModal: React.FC<AuthModalProps> = React.memo(({
   const [isSavingNickname, setIsSavingNickname] = useState(false);
 
   const isMatteBlack = theme === 'matte-black';
+  const isCleanGreen = theme === 'clean-green';
   const isDark = theme === 'dark-mesh' || isMatteBlack;
 
   if (!isOpen) return null;
@@ -303,11 +304,13 @@ export const AuthModal: React.FC<AuthModalProps> = React.memo(({
             ? 'bg-[#0f0f12] border border-neutral-700/80 text-white shadow-2xl shadow-black/95'
             : isDark
               ? 'bg-[#140a12]/95 border border-pink-500/25 text-white shadow-2xl shadow-pink-950/60'
-              : 'bg-white/95 border border-pink-200 text-pink-950 shadow-pink-200/50'
+              : isCleanGreen
+                ? 'bg-[#f4f7f2]/95 border border-emerald-300/80 text-emerald-950 shadow-2xl shadow-emerald-950/20'
+                : 'bg-white/95 border border-pink-200 text-pink-950 shadow-pink-200/50'
         }`}
       >
         {/* Header */}
-        <div className="flex items-center justify-between pb-3 border-b border-pink-500/20 mb-3">
+        <div className={`flex items-center justify-between pb-3 border-b ${isCleanGreen ? 'border-emerald-500/20' : 'border-pink-500/20'} mb-3`}>
           <div className="flex items-center space-x-2.5">
             <div
               className={`p-2 rounded-xl ${
@@ -315,7 +318,9 @@ export const AuthModal: React.FC<AuthModalProps> = React.memo(({
                   ? 'bg-neutral-800 text-neutral-200 border border-neutral-700'
                   : isDark
                     ? 'bg-pink-600/20 text-pink-400 border border-pink-500/30'
-                    : 'bg-pink-100 text-pink-600'
+                    : isCleanGreen
+                      ? 'bg-emerald-100 text-emerald-700'
+                      : 'bg-pink-100 text-pink-600'
               }`}
             >
               <User size={20} />
@@ -339,7 +344,9 @@ export const AuthModal: React.FC<AuthModalProps> = React.memo(({
                 ? 'hover:bg-neutral-800 text-neutral-400 hover:text-white'
                 : isDark
                   ? 'hover:bg-white/10 text-pink-200/70 hover:text-pink-100'
-                  : 'hover:bg-pink-100 text-pink-800'
+                  : isCleanGreen
+                    ? 'hover:bg-emerald-100 text-emerald-800'
+                    : 'hover:bg-pink-100 text-pink-800'
             }`}
           >
             <X size={18} />
@@ -354,7 +361,9 @@ export const AuthModal: React.FC<AuthModalProps> = React.memo(({
                 ? 'bg-neutral-900/60 border border-neutral-800'
                 : isDark
                   ? 'bg-white/[0.04] border border-pink-500/15'
-                  : 'bg-pink-50 border border-pink-100'
+                  : isCleanGreen
+                    ? 'bg-emerald-50/80 border border-emerald-200/80'
+                    : 'bg-pink-50 border border-pink-100'
             }`}>
               <div className="flex items-center space-x-3">
                 <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-lg shrink-0 ${
@@ -362,7 +371,9 @@ export const AuthModal: React.FC<AuthModalProps> = React.memo(({
                     ? 'bg-neutral-800 text-white border border-neutral-700'
                     : isDark
                       ? 'bg-pink-600/25 text-pink-300 border border-pink-400/40 shadow-[0_0_10px_rgba(244,63,94,0.3)]'
-                      : 'bg-pink-200 text-pink-800'
+                      : isCleanGreen
+                        ? 'bg-emerald-200 text-emerald-900 border border-emerald-300/60 shadow-[0_0_10px_rgba(45,90,39,0.2)]'
+                        : 'bg-pink-200 text-pink-800'
                 }`}>
                   {(editNickname.trim() ? editNickname : currentUser.name).charAt(0).toUpperCase()}
                 </div>
@@ -381,7 +392,9 @@ export const AuthModal: React.FC<AuthModalProps> = React.memo(({
                             ? 'bg-neutral-800 text-white border border-neutral-600 focus:border-white'
                             : isDark
                               ? 'bg-white/10 text-white border border-pink-500/40 focus:border-pink-400'
-                              : 'bg-white text-pink-950 border border-pink-300 focus:border-pink-500'
+                              : isCleanGreen
+                                ? 'bg-white text-emerald-950 border border-emerald-300 focus:border-emerald-500'
+                                : 'bg-white text-pink-950 border border-pink-300 focus:border-pink-500'
                         }`}
                       />
                       <button
@@ -391,7 +404,9 @@ export const AuthModal: React.FC<AuthModalProps> = React.memo(({
                         className={`p-1.5 rounded-xl transition-all active:scale-95 shrink-0 ${
                           isMatteBlack
                             ? 'bg-white text-black hover:bg-neutral-200'
-                            : 'bg-pink-600 text-white hover:bg-pink-500 shadow-sm'
+                            : isCleanGreen
+                              ? 'bg-emerald-700 text-white hover:bg-emerald-600 shadow-sm'
+                              : 'bg-pink-600 text-white hover:bg-pink-500 shadow-sm'
                         }`}
                       >
                         {isSavingNickname ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} className="stroke-[2.5]" />}
@@ -406,7 +421,9 @@ export const AuthModal: React.FC<AuthModalProps> = React.memo(({
                         className={`p-1.5 rounded-xl transition-all active:scale-95 shrink-0 ${
                           isMatteBlack
                             ? 'hover:bg-neutral-800 text-neutral-400 hover:text-white'
-                            : 'hover:bg-pink-200/60 text-pink-700/70 hover:text-pink-950'
+                            : isCleanGreen
+                              ? 'hover:bg-emerald-200/60 text-emerald-800 hover:text-emerald-950'
+                              : 'hover:bg-pink-200/60 text-pink-700/70 hover:text-pink-950'
                         }`}
                       >
                         <X size={13} />
@@ -414,7 +431,7 @@ export const AuthModal: React.FC<AuthModalProps> = React.memo(({
                     </form>
                   ) : (
                     <div className="flex items-center space-x-1.5">
-                      <p className={`font-bold truncate text-base ${isMatteBlack ? 'text-white' : isDark ? 'text-pink-100' : 'text-pink-950'}`}>
+                      <p className={`font-bold truncate text-base ${isMatteBlack ? 'text-white' : isDark ? 'text-pink-100' : isCleanGreen ? 'text-emerald-950' : 'text-pink-950'}`}>
                         {currentUser.name}
                       </p>
                       <button
@@ -426,27 +443,29 @@ export const AuthModal: React.FC<AuthModalProps> = React.memo(({
                             ? 'hover:bg-neutral-800 text-neutral-400 hover:text-white'
                             : isDark
                               ? 'hover:bg-white/10 text-pink-300/70 hover:text-pink-100'
-                              : 'hover:bg-pink-200/60 text-pink-700/70 hover:text-pink-950'
+                              : isCleanGreen
+                                ? 'hover:bg-emerald-200/60 text-emerald-800 hover:text-emerald-950'
+                                : 'hover:bg-pink-200/60 text-pink-700/70 hover:text-pink-950'
                         }`}
                       >
                         <Pencil size={13} />
                       </button>
                     </div>
                   )}
-                  <p className={`text-xs truncate ${isMatteBlack ? 'text-neutral-400' : isDark ? 'text-pink-300/60' : 'text-pink-900/60'}`}>
+                  <p className={`text-xs truncate ${isMatteBlack ? 'text-neutral-400' : isDark ? 'text-pink-300/60' : isCleanGreen ? 'text-emerald-900/60' : 'text-pink-900/60'}`}>
                     {currentUser.email}
                   </p>
                 </div>
               </div>
 
-              <div className="mt-4 pt-3 border-t border-pink-500/15 grid grid-cols-2 gap-2 text-center">
+              <div className={`mt-4 pt-3 border-t ${isCleanGreen ? 'border-emerald-500/20' : 'border-pink-500/15'} grid grid-cols-2 gap-2 text-center`}>
                 <div className="p-2 rounded-xl bg-white/5">
-                  <p className={`text-xs ${isDark ? 'text-pink-300/50' : 'text-pink-900/50'}`}>Total Focus</p>
-                  <p className="text-sm font-bold text-pink-300">{currentUser.stats.totalFocusMinutes}m</p>
+                  <p className={`text-xs ${isDark ? 'text-pink-300/50' : isCleanGreen ? 'text-emerald-900/60' : 'text-pink-900/50'}`}>Total Focus</p>
+                  <p className={`text-sm font-bold ${isCleanGreen ? 'text-emerald-700' : 'text-pink-300'}`}>{currentUser.stats.totalFocusMinutes}m</p>
                 </div>
                 <div className="p-2 rounded-xl bg-white/5">
-                  <p className={`text-xs ${isDark ? 'text-pink-300/50' : 'text-pink-900/50'}`}>Streak</p>
-                  <p className="text-sm font-bold text-pink-300">{currentUser.stats.streakDays} days</p>
+                  <p className={`text-xs ${isDark ? 'text-pink-300/50' : isCleanGreen ? 'text-emerald-900/60' : 'text-pink-900/50'}`}>Streak</p>
+                  <p className={`text-sm font-bold ${isCleanGreen ? 'text-emerald-700' : 'text-pink-300'}`}>{currentUser.stats.streakDays} days</p>
                 </div>
               </div>
             </div>
@@ -533,11 +552,11 @@ export const AuthModal: React.FC<AuthModalProps> = React.memo(({
             <form onSubmit={handleSubmit} className="space-y-3">
               {isSignUp && (
                 <div className="space-y-1">
-                  <label className={`text-xs font-semibold ${isDark ? 'text-pink-200/80' : 'text-pink-950/70'}`}>
+                  <label className={`text-xs font-semibold ${isDark ? 'text-pink-200/80' : isCleanGreen ? 'text-emerald-950/70' : 'text-pink-950/70'}`}>
                     Your Name
                   </label>
                   <div className="relative">
-                    <User size={16} className={`absolute left-3 top-2.5 ${isDark ? 'text-neutral-400' : 'text-neutral-500'}`} />
+                    <User size={16} className={`absolute left-3 top-2.5 ${isDark ? 'text-neutral-400' : isCleanGreen ? 'text-emerald-800/60' : 'text-neutral-500'}`} />
                     <input
                       type="text"
                       required
@@ -549,7 +568,9 @@ export const AuthModal: React.FC<AuthModalProps> = React.memo(({
                           ? 'bg-neutral-900 text-white placeholder-neutral-500 border border-neutral-700 focus:border-white'
                           : isDark
                             ? 'bg-white/[0.06] text-pink-100 placeholder-pink-300/30 border border-pink-500/25 focus:border-pink-500'
-                            : 'bg-pink-50 text-pink-950 placeholder-pink-900/40 border border-pink-200 focus:border-pink-500'
+                            : isCleanGreen
+                              ? 'bg-emerald-50/70 text-emerald-950 placeholder-emerald-900/40 border border-emerald-200 focus:border-emerald-500'
+                              : 'bg-pink-50 text-pink-950 placeholder-pink-900/40 border border-pink-200 focus:border-pink-500'
                       }`}
                     />
                   </div>
@@ -557,11 +578,11 @@ export const AuthModal: React.FC<AuthModalProps> = React.memo(({
               )}
 
               <div className="space-y-1">
-                <label className={`text-xs font-semibold ${isDark ? 'text-pink-200/80' : 'text-pink-950/70'}`}>
+                <label className={`text-xs font-semibold ${isDark ? 'text-pink-200/80' : isCleanGreen ? 'text-emerald-950/70' : 'text-pink-950/70'}`}>
                   Email Address
                 </label>
                 <div className="relative">
-                  <Mail size={16} className={`absolute left-3 top-2.5 ${isDark ? 'text-neutral-400' : 'text-neutral-500'}`} />
+                  <Mail size={16} className={`absolute left-3 top-2.5 ${isDark ? 'text-neutral-400' : isCleanGreen ? 'text-emerald-800/60' : 'text-neutral-500'}`} />
                   <input
                     type="email"
                     required
@@ -573,18 +594,20 @@ export const AuthModal: React.FC<AuthModalProps> = React.memo(({
                         ? 'bg-neutral-900 text-white placeholder-neutral-500 border border-neutral-700 focus:border-white'
                         : isDark
                           ? 'bg-white/[0.06] text-pink-100 placeholder-pink-300/30 border border-pink-500/25 focus:border-pink-500'
-                          : 'bg-pink-50 text-pink-950 placeholder-pink-900/40 border border-pink-200 focus:border-pink-500'
+                          : isCleanGreen
+                            ? 'bg-emerald-50/70 text-emerald-950 placeholder-emerald-900/40 border border-emerald-200 focus:border-emerald-500'
+                            : 'bg-pink-50 text-pink-950 placeholder-pink-900/40 border border-pink-200 focus:border-pink-500'
                     }`}
                   />
                 </div>
               </div>
 
               <div className="space-y-1">
-                <label className={`text-xs font-semibold ${isDark ? 'text-pink-200/80' : 'text-pink-950/70'}`}>
+                <label className={`text-xs font-semibold ${isDark ? 'text-pink-200/80' : isCleanGreen ? 'text-emerald-950/70' : 'text-pink-950/70'}`}>
                   Password
                 </label>
                 <div className="relative">
-                  <Lock size={16} className={`absolute left-3 top-2.5 ${isDark ? 'text-neutral-400' : 'text-neutral-500'}`} />
+                  <Lock size={16} className={`absolute left-3 top-2.5 ${isDark ? 'text-neutral-400' : isCleanGreen ? 'text-emerald-800/60' : 'text-neutral-500'}`} />
                   <input
                     type={showPassword ? 'text' : 'password'}
                     required
@@ -596,7 +619,9 @@ export const AuthModal: React.FC<AuthModalProps> = React.memo(({
                         ? 'bg-neutral-900 text-white placeholder-neutral-500 border border-neutral-700 focus:border-white'
                         : isDark
                           ? 'bg-white/[0.06] text-pink-100 placeholder-pink-300/30 border border-pink-500/25 focus:border-pink-500'
-                          : 'bg-pink-50 text-pink-950 placeholder-pink-900/40 border border-pink-200 focus:border-pink-500'
+                          : isCleanGreen
+                            ? 'bg-emerald-50/70 text-emerald-950 placeholder-emerald-900/40 border border-emerald-200 focus:border-emerald-500'
+                            : 'bg-pink-50 text-pink-950 placeholder-pink-900/40 border border-pink-200 focus:border-pink-500'
                     }`}
                   />
                   <button
@@ -615,7 +640,9 @@ export const AuthModal: React.FC<AuthModalProps> = React.memo(({
                 className={`w-full py-2.5 rounded-2xl font-semibold text-sm transition-all flex items-center justify-center space-x-2 shadow-sm ${
                   isMatteBlack
                     ? 'bg-white hover:bg-neutral-200 text-black shadow-[0_0_12px_rgba(255,255,255,0.25)]'
-                    : 'bg-pink-600 hover:bg-pink-500 text-white shadow-[0_0_12px_rgba(244,63,94,0.35)]'
+                    : isCleanGreen
+                      ? 'bg-emerald-700 hover:bg-emerald-600 text-white shadow-[0_0_12px_rgba(45,90,39,0.35)]'
+                      : 'bg-pink-600 hover:bg-pink-500 text-white shadow-[0_0_12px_rgba(244,63,94,0.35)]'
                 }`}
               >
                 {isLoading ? (
@@ -640,7 +667,9 @@ export const AuthModal: React.FC<AuthModalProps> = React.memo(({
                       ? 'text-neutral-300 hover:text-white'
                       : isDark
                         ? 'text-pink-300 hover:text-pink-100'
-                        : 'text-pink-700 hover:text-pink-950'
+                        : isCleanGreen
+                          ? 'text-emerald-700 hover:text-emerald-950'
+                          : 'text-pink-700 hover:text-pink-950'
                   }`}
                 >
                   {isSignUp ? 'Already have an account? Sign in' : "Don't have an account? Sign up"}
@@ -663,7 +692,9 @@ export const AuthModal: React.FC<AuthModalProps> = React.memo(({
                     ? 'bg-neutral-800/80 hover:bg-neutral-700 text-neutral-300'
                     : isDark
                       ? 'bg-white/[0.06] hover:bg-white/10 text-pink-200'
-                      : 'bg-pink-100/70 hover:bg-pink-100 text-pink-900'
+                      : isCleanGreen
+                        ? 'bg-emerald-100/70 hover:bg-emerald-100 text-emerald-950'
+                        : 'bg-pink-100/70 hover:bg-pink-100 text-pink-900'
                 }`}
               >
                 Load Demo Stats & Profile

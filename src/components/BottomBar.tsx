@@ -322,14 +322,18 @@ export const BottomBar: React.FC<BottomBarProps> = React.memo(({
               isThemeMenuOpen
                 ? isMatteBlack
                   ? 'ring-2 ring-white/50 bg-neutral-800'
-                  : isDark
-                    ? 'ring-2 ring-pink-500/60 bg-pink-600/20'
-                    : 'ring-2 ring-pink-400/60 bg-pink-100'
+                  : isCleanGreen
+                    ? 'ring-2 ring-emerald-500/60 bg-emerald-100'
+                    : isDark
+                      ? 'ring-2 ring-pink-500/60 bg-pink-600/20'
+                      : 'ring-2 ring-pink-400/60 bg-pink-100'
                 : ''
             }`}
           >
             {theme === 'matte-black' ? (
               <Contrast size={20} className="stroke-[2.2] text-white" />
+            ) : isCleanGreen ? (
+              <Leaf size={20} className="stroke-[2.2] text-emerald-700" />
             ) : isDark ? (
               <MoonStar size={20} className="stroke-[2.2] text-pink-300 drop-shadow-[0_0_6px_rgba(244,63,94,0.5)]" />
             ) : theme === 'light-aura' ? (
@@ -351,7 +355,9 @@ export const BottomBar: React.FC<BottomBarProps> = React.memo(({
                 ? 'bg-neutral-800 text-white border border-neutral-600 hover:bg-neutral-700 shadow-md'
                 : isDark
                   ? 'bg-pink-950/50 text-pink-200 border border-pink-500/35 hover:bg-pink-900/40 shadow-[0_0_10px_rgba(244,63,94,0.2)]'
-                  : 'bg-pink-100 text-pink-700 border border-pink-300 hover:bg-pink-200'
+                  : isCleanGreen
+                    ? 'bg-emerald-100 text-emerald-800 border border-emerald-300 hover:bg-emerald-200 shadow-sm'
+                    : 'bg-pink-100 text-pink-700 border border-pink-300 hover:bg-pink-200'
               : btnClass
           }`}
         >

@@ -140,6 +140,7 @@ export const CarrotContributionGraph: React.FC<CarrotContributionGraphProps> = R
   todayKey,
 }) => {
   const isMatteBlack = theme === 'matte-black';
+  const isCleanGreen = theme === 'clean-green';
   const isDark = theme === 'dark-mesh' || isMatteBlack;
   const [hoveredCell, setHoveredCell] = useState<DayCell | null>(null);
   const [starTextToggle, setStarTextToggle] = useState(false);
@@ -242,13 +243,15 @@ return (
       ? 'bg-neutral-900/60 border border-neutral-800'
       : isDark
         ? 'bg-white/[0.04] border border-pink-500/15'
-        : 'bg-pink-50/80 border border-pink-100/90'
+        : isCleanGreen
+          ? 'bg-emerald-50/80 border border-emerald-200/80'
+          : 'bg-pink-50/80 border border-pink-100/90'
       }`}
   >
     {/* Header Info */}
     <div className="flex items-center justify-between mb-3">
       <div className="flex items-center space-x-2">
-        <Calendar size={15} className={isDark ? 'text-pink-400' : 'text-pink-600'} />
+        <Calendar size={15} className={isDark ? 'text-pink-400' : isCleanGreen ? 'text-emerald-700' : 'text-pink-600'} />
         <h4 className="text-xs font-bold uppercase tracking-wider">
           Focus Harvest (Days Focused)
         </h4>
@@ -258,7 +261,7 @@ return (
       <div className="text-right">
         {hoveredCell ? (
           <div className="flex items-center space-x-1.5 text-xs font-medium">
-            <span className={isDark ? 'text-pink-200' : 'text-pink-900'}>
+            <span className={isDark ? 'text-pink-200' : isCleanGreen ? 'text-emerald-950' : 'text-pink-900'}>
               {hoveredCell.formattedDate}:
             </span>
             {hoveredCell.isFuture ? (
@@ -278,7 +281,7 @@ return (
               <span>{totalCarrots} carrots</span>
               <CarrotIcon size={13} level={2} />
             </span>
-            <span className={`text-[11px] ${isDark ? 'text-pink-300/50' : 'text-pink-900/50'}`}>
+            <span className={`text-[11px] ${isDark ? 'text-pink-300/50' : isCleanGreen ? 'text-emerald-900/60' : 'text-pink-900/50'}`}>
               ({totalHoursInRange} hrs total)
             </span>
           </div>
@@ -296,7 +299,7 @@ return (
             {weeks.map((w, idx) => (
               <div
                 key={idx}
-                className="w-5 text-left text-pink-400/70"
+                className={`w-5 text-left ${isDark ? 'text-pink-400/70' : isCleanGreen ? 'text-emerald-700/70' : 'text-pink-400/70'}`}
                 style={{ marginRight: '3px' }}
               >
                 {w.monthLabel || ''}
@@ -307,7 +310,7 @@ return (
           {/* Grid Rows: 7 days of the week */}
           <div className="flex">
             {/* Day Labels on left (Mon, Wed, Fri) */}
-            <div className="flex flex-col justify-between pr-2 text-[9px] font-semibold text-pink-300/50 py-0.5">
+            <div className={`flex flex-col justify-between pr-2 text-[9px] font-semibold py-0.5 ${isDark ? 'text-pink-300/50' : isCleanGreen ? 'text-emerald-800/50' : 'text-pink-300/50'}`}>
               <span className="h-5 leading-5 opacity-0">Sun</span>
               <span className="h-5 leading-5">Mon</span>
               <span className="h-5 leading-5 opacity-0">Tue</span>
@@ -337,7 +340,9 @@ return (
                           } ${cell.isToday
                             ? isMatteBlack
                               ? 'ring-1.5 ring-white shadow-[0_0_6px_rgba(255,255,255,0.6)]'
-                              : 'ring-1.5 ring-pink-500 shadow-[0_0_6px_rgba(244,63,94,0.6)]'
+                              : isCleanGreen
+                                ? 'ring-1.5 ring-emerald-600 shadow-[0_0_6px_rgba(45,90,39,0.5)]'
+                                : 'ring-1.5 ring-pink-500 shadow-[0_0_6px_rgba(244,63,94,0.6)]'
                             : ''
                           }`}
                       >
@@ -364,10 +369,12 @@ return (
           ? 'bg-white/[0.04] border border-white/10'
           : isDark
             ? 'bg-pink-950/40 border border-pink-500/20 shadow-sm'
-            : 'bg-white/80 border border-pink-200/80 shadow-sm'
+            : isCleanGreen
+              ? 'bg-white/80 border border-emerald-200/80 shadow-sm'
+              : 'bg-white/80 border border-pink-200/80 shadow-sm'
           }`}
       >
-        <div className="w-20 h-20 sm:w-22 sm:h-22 rounded-2xl overflow-hidden bg-white/95 p-1 flex items-center justify-center shadow-sm border border-pink-100/70 mb-2">
+        <div className={`w-20 h-20 sm:w-22 sm:h-22 rounded-2xl overflow-hidden bg-white/95 p-1 flex items-center justify-center shadow-sm border ${isCleanGreen ? 'border-emerald-100/70' : 'border-pink-100/70'} mb-2`}>
           <img
             src={currentReaction.image}
             alt={currentReaction.alt}
@@ -376,14 +383,14 @@ return (
         </div>
 
         <p
-          className={`text-xs font-bold text-center leading-snug min-h-[32px] flex items-center justify-center transition-all duration-300 ${isDark ? 'text-pink-200' : 'text-pink-950'
+          className={`text-xs font-bold text-center leading-snug min-h-[32px] flex items-center justify-center transition-all duration-300 ${isDark ? 'text-pink-200' : isCleanGreen ? 'text-emerald-950' : 'text-pink-950'
             }`}
         >
           {currentReaction.text}
         </p>
 
         <span
-          className={`text-[10px] mt-1 font-medium opacity-60 text-center ${isDark ? 'text-pink-300/70' : 'text-pink-900/70'
+          className={`text-[10px] mt-1 font-medium opacity-60 text-center ${isDark ? 'text-pink-300/70' : isCleanGreen ? 'text-emerald-900/70' : 'text-pink-900/70'
             }`}
         >
           Today ({todayHours} hrs)
@@ -392,7 +399,7 @@ return (
     </div>
 
     {/* Legend & Details Footer */}
-    <div className="flex items-center justify-between pt-3 mt-3 border-t border-pink-500/15 text-[11px]">
+    <div className={`flex items-center justify-between pt-3 mt-3 border-t ${isCleanGreen ? 'border-emerald-500/15' : 'border-pink-500/15'} text-[11px]`}>
       <div className="flex items-center space-x-1.5 text-xs text-orange-400 font-medium">
         <CarrotIcon size={13} level={3} theme={theme} />
         <span>Each carrot = a day of deep focus</span>
